@@ -20,7 +20,7 @@ def send_email(
     try:
         message = MIMEMultipart("alternative")
         message["Subject"] = f"Daily Summary Email for {recipient_name}"
-        message["From"] = smtp_username
+        message["From"] = f"Daily Summary <{smtp_username}>"
         message["To"] = recipient_email
 
         text = f"""\
