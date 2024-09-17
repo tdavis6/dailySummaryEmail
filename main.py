@@ -25,7 +25,6 @@ if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
 
-
 if __name__ == "__main__":
     try:
         weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
