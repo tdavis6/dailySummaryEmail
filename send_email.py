@@ -24,6 +24,8 @@ def send_email(
         message["To"] = recipient_email
 
         text = f"""\
+{recipient_name},
+
 {weather_data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {weather_data['city']}, {weather_data['state']}: \
 {weather_data['forecast']['properties']['periods'][0]['detailedForecast']}
 
@@ -33,6 +35,7 @@ Here are the tasks for the day:"""
                 text = text + f"\n - {task.content}, due {task.due.date}, with priority {task.priority}"
             else:
                 text = text + f"\n - {task.content} with priority {task.priority}"
+
         html = f"""\
         <html>
         <body>
