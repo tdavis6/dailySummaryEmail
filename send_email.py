@@ -1,9 +1,7 @@
 import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 from datetime import datetime
-
 
 def send_email(
         recipient_email,
