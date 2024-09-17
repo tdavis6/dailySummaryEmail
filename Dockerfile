@@ -2,6 +2,7 @@ FROM python:3.12.6-slim
 
 # Install cron
 RUN apt-get update && apt-get install -y cron
+RUN apt-get purge -y python-software-properties software-properties-common && apt-get clean -y && apt-get autoclean -y && apt-get autoremove -y && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set the working directory
 WORKDIR /app
@@ -13,7 +14,7 @@ COPY . /app
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Add the cron job
-RUN echo "0 6 * * * /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySummaryEmail
+RUN echo "0 6 * * * root /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySummaryEmail
 
 # Give execution rights on the cron job file
 RUN chmod 0644 /etc/cron.d/dailySummaryEmail
@@ -28,4 +29,4 @@ RUN crontab /etc/cron.d/dailySummaryEmail
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD cron -f && tail -f /var/log/cron.log
+CMD cron && tail -f /var/log/cron.log
