@@ -19,7 +19,7 @@ RUN echo "0 6 * * * root /usr/local/bin/python /app/main.py" > /etc/cron.d/daily
 # Give execution rights on the cron job file
 RUN chmod 0644 /etc/cron.d/dailySummaryEmail
 
-# Set the permissions of main.py to allow it to be ran by the cron job
+# Set the permissions of /app files to allow them to be ran by the cronjob
 RUN chmod a+x /app/*
 
 # Apply cron job
@@ -29,4 +29,4 @@ RUN crontab /etc/cron.d/dailySummaryEmail
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+CMD ["sh", "-c", "cron && tail -f /var/log/cron.log"]
