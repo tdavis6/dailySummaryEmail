@@ -18,6 +18,9 @@ RUN echo "0 6 * * * /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySumma
 # Give execution rights on the cron job file
 RUN chmod 0644 /etc/cron.d/dailySummaryEmail
 
+# Set the permissions of main.py to allow it to be ran by the cron job
+RUN chmod a+x /app/*
+
 # Apply cron job
 RUN crontab /etc/cron.d/dailySummaryEmail
 
@@ -25,4 +28,4 @@ RUN crontab /etc/cron.d/dailySummaryEmail
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD cron && tail -f /var/log/cron.log
+CMD cron -f && tail -f /var/log/cron.log
