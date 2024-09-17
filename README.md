@@ -11,12 +11,12 @@ To change the time of day that the email is sent, edit the cron job definition i
 If you want to run this manually, run ``python main.py`` in the container console.
 
 ## Environment Variables
-- WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (optional)
-- LATITUDE: The latitude you wish to use for the weather. (optional)
-- LONGITUDE: The longitude you wish to use for the weather. (optional)
-- TODOIST_API_KEY: Your Todoist API key (optional)
+- WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (required)
+- LATITUDE: The latitude you wish to use for the weather. (required)
+- LONGITUDE: The longitude you wish to use for the weather. (required)
+- TODOIST_API_KEY: Your Todoist API key (required)
 - RECIPIENT_EMAIL: The recipient's email (required)
-- RECIPIENT_NAME: The name that the email is addressed to (optional)
+- RECIPIENT_NAME: The name that the email is addressed to (required)
 - SENDER_EMAIL: The sending email (required)
 - SMTP_USERNAME: The username of the sending account on the SMTP server (required)
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
