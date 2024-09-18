@@ -8,7 +8,7 @@ a US government agency.
 
 To change the time of day that the email is sent, edit the cron job definition in the Dockerfile.
 
-If you want to run this manually, run ``python main.py`` in the container console.
+If you want to run this manually, run ``/usr/local/bin/python /app/main.py`` in the container console.
 
 ## Environment Variables
 - WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (required)
