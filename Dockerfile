@@ -11,7 +11,7 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed dependencies specified in requirements.txt
-RUN pip install --no-cache-dir --root-user-action -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Add the cron job
 RUN echo "* * * * * root /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySummaryEmail
