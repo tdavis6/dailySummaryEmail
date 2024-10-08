@@ -30,9 +30,15 @@ def send_email(
 Here are the tasks for the day:"""
         for task in todoist_data:
             if task.due.date != datetime.today().strftime("%Y-%m-%d"):
-                text = text + f"\n - {task.content}, due {task.due.date}, with priority {(5-task.priority)}"
+                if task.priority == 1:
+                    text = text + f"\n - {task.content}, due {task.due.date}"
+                else:
+                    text = text + f"\n - {task.content}, due {task.due.date}, priority {(5-task.priority)}"
             else:
-                text = text + f"\n - {task.content} with priority {(5-task.priority)}"
+                if task.priority == 1:
+                    text = text + f"\n - {task.content}"
+                else:
+                    text = text + f"\n - {task.content}, priority {(5-task.priority)}"
 
         html = f"""\
         <html>

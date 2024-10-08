@@ -11,10 +11,10 @@ WORKDIR /app
 COPY . /app
 
 # Install any needed dependencies specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --root-user-action -r requirements.txt
 
 # Add the cron job
-RUN echo "0 6 * * * root /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySummaryEmail
+RUN echo "* * * * * root /usr/local/bin/python /app/main.py" > /etc/cron.d/dailySummaryEmail
 
 # Give execution rights on the cron job file
 RUN chmod 0644 /etc/cron.d/dailySummaryEmail
@@ -29,4 +29,4 @@ RUN crontab /etc/cron.d/dailySummaryEmail
 RUN touch /var/log/cron.log
 
 # Run the command on container startup
-CMD ["sh", "-c", "cron && tail -f /var/log/cron.log"]
+CMD cron && tail -f /var/log/cron.log
