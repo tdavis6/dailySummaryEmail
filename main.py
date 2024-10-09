@@ -34,7 +34,7 @@ if not HOUR:
     HOUR = 6 # Defaults to 6 AM
 
 if not MINUTE:
-    MINUTE = 0
+    MINUTE = 00
 
 if __name__ == "__main__":
     try:
