@@ -20,6 +20,6 @@ To change the time of day that the email is sent, use the MINUTE and HOUR enviro
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- TIMEZONE: The timezone that the user lives in. This will be used for the times in the emails
+- TIMEZONE: The timezone that the user lives in. This will be used for the times in the emails. Refer to [pytz package documentation](https://pypi.org/project/pytz/) for timezones. (required)
 - HOUR: The hour to send the email. (Defaults to 6) (optional)
 - MINUTE: The minute to send the email. (Defaults to 00) (Optional)
