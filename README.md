@@ -6,7 +6,8 @@ but I am working on more. Feel free to request any todo app with an issue)
 Unfortunately, the weather component only works in the United States because the used API is from the NWS,
 a US government agency.
 
-To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
+To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
+All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
 ## Environment Variables
 - WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (required)
