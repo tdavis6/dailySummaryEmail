@@ -6,9 +6,7 @@ but I am working on more. Feel free to request any todo app with an issue)
 Unfortunately, the weather component only works in the United States because the used API is from the NWS,
 a US government agency.
 
-To change the time of day that the email is sent, edit the cron job definition in the Dockerfile.
-
-If you want to run this manually, run ``/usr/local/bin/python /app/main.py`` in the container console.
+To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
 ## Environment Variables
 - WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (required)
@@ -22,3 +20,6 @@ If you want to run this manually, run ``/usr/local/bin/python /app/main.py`` in 
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
+- TIMEZONE: The timezone that the user lives in. This will be used for the times in the emails
+- HOUR: The hour to send the email. (Defaults to 6) (optional)
+- MINUTE: The minute to send the email. (Defaults to 00) (Optional)

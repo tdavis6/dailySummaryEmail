@@ -1,3 +1,4 @@
+pytz~=2024.2
 python-dotenv~=1.0.1
 requests~=2.32.3
 todoist_api_python~=2.1.7

@@ -1,5 +1,8 @@
 import os
 from dotenv import load_dotenv
+import datetime
+import time
+import pytz
 
 from get_forecast import get_forecast
 from send_email import send_email
@@ -20,25 +23,45 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_HOST = os.getenv("SMTP_HOST")
 SMTP_PORT = os.getenv("SMTP_PORT")
+TIMEZONE = os.getenv("TIMEZONE")
+HOUR = os.getenv("HOUR")
+MINUTE = os.getenv("MINUTE")
 
 if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
+if not HOUR:
+    HOUR = 6 # Defaults to 6 AM
+
+if not MINUTE:
+    MINUTE = 0
 
 if __name__ == "__main__":
     try:
-        weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
-        todoist_data = get_todoist_tasks(TODOIST_API_KEY)
-        send_email(
-            RECIPIENT_EMAIL,
-            RECIPIENT_NAME,
-            SENDER_EMAIL,
-            SMTP_USERNAME,
-            SMTP_PASSWORD,
-            SMTP_HOST,
-            SMTP_PORT,
-            weather_data,
-            todoist_data
-        )
-    except Exception as e:
-        print(f"Error occurred: {e}")
+        timezone = pytz.timezone(TIMEZONE)
+    except pytz.UnknownTimeZoneError:
+        print(f"Timezone {TIMEZONE} is not valid")
+        exit()
+    while True: #I'm working on a more efficient method
+        if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
+            try:
+                weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
+                todoist_data = get_todoist_tasks(TODOIST_API_KEY)
+                send_email(
+                    RECIPIENT_EMAIL,
+                    RECIPIENT_NAME,
+                    SENDER_EMAIL,
+                    SMTP_USERNAME,
+                    SMTP_PASSWORD,
+                    SMTP_HOST,
+                    SMTP_PORT,
+                    weather_data,
+                    todoist_data,
+                    timezone
+                )
+                print("Email sent.")
+            except Exception as e:
+                print(f"Error occurred: {e}")
+        else:
+            print(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
+        time.sleep(60)

@@ -1,7 +1,7 @@
 import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from datetime import datetime
+import datetime
 
 def send_email(
         recipient_email,
@@ -12,7 +12,8 @@ def send_email(
         smtp_host,
         smtp_port,
         weather_data,
-        todoist_data
+        todoist_data,
+        timezone
 ) -> None:
 
     try:
@@ -29,11 +30,11 @@ def send_email(
 
 Here are the tasks for the day:"""
         for task in todoist_data:
-            if task.due.date != datetime.today().strftime("%Y-%m-%d"):
+            if task.due.date != datetime.datetime.now(timezone).strftime("%Y-%m-%d"):
                 if task.priority == 1:
-                    text = text + f"\n - {task.content}, due {task.due.date}"
+                    text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}"
                 else:
-                    text = text + f"\n - {task.content}, due {task.due.date}, priority {(5-task.priority)}"
+                    text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}, priority {(5-task.priority)}"
             else:
                 if task.priority == 1:
                     text = text + f"\n - {task.content}"
