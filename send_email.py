@@ -22,6 +22,9 @@ def send_email(
     iso_pattern_with_hm = re.compile(
         r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$"
     )
+    iso_pattern_with_hmZ = re.compile(
+        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?Z$"
+    )
 
     try:
         message = MIMEMultipart("alternative")
@@ -35,30 +38,15 @@ def send_email(
 {weather_data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {weather_data['city']}, {weather_data['state']}: \
 {weather_data['forecast']['properties']['periods'][0]['detailedForecast']}"""
 
-        if todoist_data != None:
+        if todoist_data is not None:
             text = text + "\n\nHere are the tasks for the day:"
             for task in todoist_data:
-                if task.due.date != datetime.datetime.now(timezone).strftime("%Y-%m-%d"):
-                    if iso_pattern_with_hm.match(task.due.datetime):
-                        if task.priority == 1:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}"
-                        else:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}, priority {(5-task.priority)}"
-                    else:
-                        if task.priority == 1:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}"
-                        else:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}, priority {(5-task.priority)}"
-                elif task.due.datetime:
-                    if task.priority == 1:
-                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}"
-                    else:
-                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}, priority {(5-task.priority)}"
+                text = text + f"\n\n - [{task.content}]({task.url})"
+                if task.due.timezone is not None:
+                    text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).astimezone(tz=pytz.timezone(TIMEZONE)).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
                 else:
-                    if task.priority == 1:
-                        text = text + f"\n\n - [{task.content}]({task.url})"
-                    else:
-                        text = text + f"\n\n - [{task.content}]({task.url}), priority {(5-task.priority)}"
+                    text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
+                text = text + f", priority {(5-task.priority)}" if task.priority != 1 else text + ""
         else:
             text = text + "\n\nThere are no tasks in Todoist!"
 
