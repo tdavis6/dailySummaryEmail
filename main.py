@@ -34,7 +34,7 @@ if not HOUR:
     HOUR = 6 # Defaults to 6 AM
 
 if not MINUTE:
-    MINUTE = 00
+    MINUTE = 00 # Defaults to 00 minutes
 
 if __name__ == "__main__":
     try:
@@ -59,7 +59,6 @@ if __name__ == "__main__":
                     todoist_data,
                     timezone
                 )
-                print("Email sent.")
             except Exception as e:
                 print(f"Error occurred: {e}")
         else:
