@@ -5,6 +5,7 @@ import datetime
 import re
 import markdown
 import pytz
+import logging
 
 def send_email(
         recipient_email,
@@ -59,6 +60,7 @@ def send_email(
         message.attach(part_2)
 
         print(text)
+        logging.info(text)
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
@@ -67,5 +69,7 @@ def send_email(
                 sender_email, recipient_email, message.as_string()
             )
         print("Email sent.")
+        logging.info("Email sent.")
     except Exception as e:
         print(f"Error occurred: {e}")
+        logging.critical(f"Error occurred: {e}")

@@ -1,3 +1,5 @@
+import logging
+
 import requests
 
 def get_forecast(weather_api_key, latitude, longitude):
@@ -8,7 +10,6 @@ def get_forecast(weather_api_key, latitude, longitude):
         gridpoint_data = response.json()
     else:
         raise Exception(f"Failed to retrieve gridpoint data: {response.status_code}")
-
     # Get city
     city = gridpoint_data['properties']['relativeLocation']['properties']['city']
 

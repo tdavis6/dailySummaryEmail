@@ -3,6 +3,7 @@ from dotenv import load_dotenv
 import datetime
 import time
 import pytz
+import logging
 
 from get_forecast import get_forecast
 from send_email import send_email
@@ -40,10 +41,12 @@ if not MINUTE:
 
 if __name__ == "__main__":
     print(f"Running version {VERSION}")
+    logging.info(f"Running version {VERSION}")
     try:
         timezone = pytz.timezone(TIMEZONE)
     except pytz.UnknownTimeZoneError:
         print(f"Timezone {TIMEZONE} is not valid")
+        logging.critical(f"Timezone {TIMEZONE} is not valid")
         exit()
     while True: #I'm working on a more efficient method
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
@@ -65,6 +68,8 @@ if __name__ == "__main__":
                 )
             except Exception as e:
                 print(f"Error occurred: {e}")
+                logging.critical(f"Error occurred: {e}")
         else:
             print(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
+            logging.info(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
         time.sleep(60)
