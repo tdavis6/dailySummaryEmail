@@ -8,6 +8,8 @@ from get_forecast import get_forecast
 from send_email import send_email
 from get_todoist_tasks import get_todoist_tasks
 
+VERSION = "0.1.0 (1)"
+
 # Load the environment variables from the .env file
 load_dotenv()
 
@@ -37,6 +39,7 @@ if not MINUTE:
     MINUTE = 00 # Defaults to 00 minutes
 
 if __name__ == "__main__":
+    print(f"Running version {VERSION}")
     try:
         timezone = pytz.timezone(TIMEZONE)
     except pytz.UnknownTimeZoneError:
