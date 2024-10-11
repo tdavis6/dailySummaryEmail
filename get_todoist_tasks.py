@@ -1,6 +1,4 @@
 from datetime import datetime
-from lib2to3.pytree import convert
-
 from todoist_api_python.api import TodoistAPI
 from todoist_api_python.models import Task
 import pytz
