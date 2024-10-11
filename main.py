@@ -57,7 +57,8 @@ if __name__ == "__main__":
                     SMTP_PORT,
                     weather_data,
                     todoist_data,
-                    timezone
+                    timezone,
+                    TIMEZONE
                 )
             except Exception as e:
                 print(f"Error occurred: {e}")

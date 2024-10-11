@@ -4,6 +4,7 @@ from email.mime.multipart import MIMEMultipart
 import datetime
 import re
 import markdown
+import pytz
 
 def send_email(
         recipient_email,
@@ -15,7 +16,8 @@ def send_email(
         smtp_port,
         weather_data,
         todoist_data,
-        timezone
+        timezone,
+        TIMEZONE
 ) -> None:
     iso_pattern_with_hm = re.compile(
         r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$"
@@ -39,9 +41,9 @@ def send_email(
                 if task.due.date != datetime.datetime.now(timezone).strftime("%Y-%m-%d"):
                     if iso_pattern_with_hm.match(task.due.datetime):
                         if task.priority == 1:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}"
                         else:
-                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}, priority {(5-task.priority)}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}, priority {(5-task.priority)}"
                     else:
                         if task.priority == 1:
                             text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}"
@@ -49,9 +51,9 @@ def send_email(
                             text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}, priority {(5-task.priority)}"
                 elif task.due.datetime:
                     if task.priority == 1:
-                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}"
+                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}"
                     else:
-                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}, priority {(5-task.priority)}"
+                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").astimezone(pytz.timezone(task.due.timezone if task.due.timezone else TIMEZONE)).strftime("at %H:%M")}, priority {(5-task.priority)}"
                 else:
                     if task.priority == 1:
                         text = text + f"\n\n - [{task.content}]({task.url})"
