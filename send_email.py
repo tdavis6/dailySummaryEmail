@@ -3,6 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 import datetime
 import re
+import markdown
 
 def send_email(
         recipient_email,
@@ -38,42 +39,36 @@ def send_email(
                 if task.due.date != datetime.datetime.now(timezone).strftime("%Y-%m-%d"):
                     if iso_pattern_with_hm.match(task.due.datetime):
                         if task.priority == 1:
-                            text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}"
                         else:
-                            text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}, priority {(5-task.priority)}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("%A, %B %d, %Y at %H:%M")}, priority {(5-task.priority)}"
                     else:
                         if task.priority == 1:
-                            text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}"
                         else:
-                            text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}, priority {(5-task.priority)}"
+                            text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.date, "%Y-%m-%d").strftime("%A, %B %d, %Y")}, priority {(5-task.priority)}"
                 elif task.due.datetime:
                     if task.priority == 1:
-                        text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}"
+                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}"
                     else:
-                        text = text + f"\n - {task.content}, due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}, priority {(5-task.priority)}"
+                        text = text + f"\n\n - [{task.content}]({task.url}), due {datetime.datetime.strptime(task.due.datetime, "%Y-%m-%dT%H:%M:%S").strftime("at %H:%M")}, priority {(5-task.priority)}"
                 else:
                     if task.priority == 1:
-                        text = text + f"\n - {task.content}"
+                        text = text + f"\n\n - [{task.content}]({task.url})"
                     else:
-                        text = text + f"\n - {task.content}, priority {(5-task.priority)}"
+                        text = text + f"\n\n - [{task.content}]({task.url}), priority {(5-task.priority)}"
         else:
             text = text + "\n\nThere are no tasks in Todoist!"
 
-        html = f"""\
-        <html>
-        <body>
-        <p>
-        </p>
-        </body>
-        </html>"""
+        html = markdown.markdown(text)
+
         part_1 = MIMEText(text, "plain")
-        #part_2 = MIMEText(html, "html")
+        part_2 = MIMEText(html, "html")
 
         message.attach(part_1)
-        #message.attach(part_2)
+        message.attach(part_2)
 
         print(text)
-        print(html)
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:

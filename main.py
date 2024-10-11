@@ -46,7 +46,7 @@ if __name__ == "__main__":
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
             try:
                 weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
-                todoist_data = get_todoist_tasks(TODOIST_API_KEY)
+                todoist_data = get_todoist_tasks(TODOIST_API_KEY=TODOIST_API_KEY, TIMEZONE=TIMEZONE)
                 send_email(
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
