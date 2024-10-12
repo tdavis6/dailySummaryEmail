@@ -8,6 +8,7 @@ import logging
 from get_forecast import get_forecast
 from send_email import send_email
 from get_todoist_tasks import get_todoist_tasks
+from get_ical_events import get_ics_events
 
 VERSION = "0.1.0 (3)"
 
@@ -29,6 +30,7 @@ SMTP_PORT = os.getenv("SMTP_PORT")
 TIMEZONE = os.getenv("TIMEZONE")
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
+WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 
 if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
@@ -53,6 +55,9 @@ if __name__ == "__main__":
             try:
                 weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
                 todoist_data = get_todoist_tasks(TODOIST_API_KEY=TODOIST_API_KEY, TIMEZONE=TIMEZONE)
+                cal_data = ""
+                for link in WEBCAL_LINKS.split(","):
+                    cal_data = cal_data + get_ics_events(url=link, timezone=TIMEZONE)
                 send_email(
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
@@ -63,6 +68,7 @@ if __name__ == "__main__":
                     SMTP_PORT,
                     weather_data,
                     todoist_data,
+                    cal_data,
                     timezone,
                     TIMEZONE
                 )

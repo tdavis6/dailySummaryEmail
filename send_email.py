@@ -7,6 +7,7 @@ import markdown
 import pytz
 import logging
 
+
 def send_email(
         recipient_email,
         recipient_name,
@@ -17,6 +18,7 @@ def send_email(
         smtp_port,
         weather_data,
         todoist_data,
+        cal_data,
         timezone,
         TIMEZONE
 ) -> None:
@@ -35,12 +37,12 @@ def send_email(
 
         text = f"""\
 {recipient_name},
-
+## Today's Weather
 {weather_data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {weather_data['city']}, {weather_data['state']}: \
 {weather_data['forecast']['properties']['periods'][0]['detailedForecast']}"""
 
         if todoist_data is not None:
-            text = text + "\n\nHere are the tasks for the day:"
+            text = text + "\n\n## Here are the tasks for the day:"
             for task in todoist_data:
                 text = text + f"\n\n - [{task.content}]({task.url})"
                 if task.due.timezone is not None:
@@ -49,7 +51,13 @@ def send_email(
                     text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
                 text = text + f", priority {(5-task.priority)}" if task.priority != 1 else text + ""
         else:
-            text = text + "\n\nThere are no tasks in Todoist!"
+            text = text + "\n\n## There are no tasks in Todoist!\n\n"
+
+        if cal_data is not None:
+            text = text + "\n\n## Here are the events for the day:"
+            text = text + cal_data
+        else:
+            text = text + "\n\n## There are no events in your calendar!"
 
         html = markdown.markdown(text)
 
