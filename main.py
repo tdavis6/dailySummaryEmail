@@ -9,7 +9,7 @@ from get_forecast import get_forecast
 from send_email import send_email
 from get_todoist_tasks import get_todoist_tasks
 
-VERSION = "0.1.0 (2)"
+VERSION = "0.1.0 (3)"
 
 # Load the environment variables from the .env file
 load_dotenv()
