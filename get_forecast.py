@@ -1,5 +1,4 @@
 import logging
-
 import requests
 
 def get_forecast(weather_api_key, latitude, longitude):
@@ -9,6 +8,7 @@ def get_forecast(weather_api_key, latitude, longitude):
     if response.status_code == 200:
         gridpoint_data = response.json()
     else:
+        logging.error(f"Failed to retrieve gridpoint data: {response.status_code}")
         return f"Failed to retrieve gridpoint data: {response.status_code}"
     # Get city
     city = gridpoint_data['properties']['relativeLocation']['properties']['city']
@@ -26,6 +26,7 @@ def get_forecast(weather_api_key, latitude, longitude):
     if response.status_code == 200:
         forecast_data = response.json()
     else:
+        logging.error(f"Failed to retrieve forecast data: {response.status_code}")
         return f"Failed to retrieve forecast data: {response.status_code}"
 
     data = {
