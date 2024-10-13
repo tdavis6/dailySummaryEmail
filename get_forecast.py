@@ -27,7 +27,6 @@ def get_forecast(weather_api_key, latitude, longitude):
         forecast_data = response.json()
     else:
         logging.error(f"Failed to retrieve forecast data: {response.status_code}")
-        return f"Failed to retrieve forecast data: {response.status_code}"
 
     data = {
         "city": city,

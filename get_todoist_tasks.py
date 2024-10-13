@@ -14,5 +14,4 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE) -> list[Task]:
         return sorted_todoist_data
 
     except Exception as e:
-        print(f"Error occurred: {e}")
         logging.critical(f"Error occurred: {e}")

@@ -10,7 +10,7 @@ from send_email import send_email
 from get_todoist_tasks import get_todoist_tasks
 from get_ical_events import get_ics_events
 
-VERSION = "0.1.0 (3)"
+VERSION = "0.1.0 (4)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -36,28 +36,30 @@ if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
 if not HOUR:
-    HOUR = 6 # Defaults to 6 AM
+    HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to 6 AM
 
 if not MINUTE:
-    MINUTE = 00 # Defaults to 00 minutes
+    MINUTE = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).minute) # Defaults to 00 minutes
 
 if __name__ == "__main__":
-    print(f"Running version {VERSION}")
     logging.info(f"Running version {VERSION}")
+    print(f"Running version {VERSION}")
     try:
         timezone = pytz.timezone(TIMEZONE)
     except pytz.UnknownTimeZoneError:
-        print(f"Timezone {TIMEZONE} is not valid")
         logging.critical(f"Timezone {TIMEZONE} is not valid")
         exit()
     while True: #I'm working on a more efficient method
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
             try:
                 weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
+                logging.debug("Weather data received")
                 todoist_data = get_todoist_tasks(TODOIST_API_KEY=TODOIST_API_KEY, TIMEZONE=TIMEZONE)
+                logging.debug("Todoist data received")
                 cal_data = ""
                 for link in WEBCAL_LINKS.split(","):
                     cal_data = cal_data + get_ics_events(url=link, timezone=TIMEZONE)
+                logging.debug("Calendar data received")
                 send_email(
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
@@ -73,9 +75,8 @@ if __name__ == "__main__":
                     TIMEZONE
                 )
             except Exception as e:
-                print(f"Error occurred: {e}")
                 logging.critical(f"Error occurred: {e}")
         else:
-            print(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
             logging.info(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
+            print(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
         time.sleep(60)

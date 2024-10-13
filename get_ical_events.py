@@ -1,6 +1,6 @@
 import requests
 from icalendar import Calendar
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 import pytz
 import logging
 
@@ -17,15 +17,18 @@ def parse_icalendar(ical_data: str) -> Calendar:
     calendar = Calendar.from_ical(ical_data)
     return calendar
 
+def convert_to_local_timezone(event_time, timezone):
+    if isinstance(event_time, datetime) and event_time.tzinfo is not None:
+        local_timezone = pytz.timezone(timezone)
+        event_time = event_time.astimezone(local_timezone)
+    return event_time
+
 def is_event_today(event, timezone) -> bool:
     event_start = event.get("dtstart").dt
     event_end = event.get("dtend").dt if event.get("dtend") else event_start
 
-    # Normalize to local timezone if datetime objects
-    if isinstance(event_start, datetime) and event_start.tzinfo is not None:
-        local_timezone = pytz.timezone(timezone)  # Replace with your timezone
-        event_start = event_start.astimezone(local_timezone)
-        event_end = event_end.astimezone(local_timezone)
+    event_start = convert_to_local_timezone(event_start, timezone)
+    event_end = convert_to_local_timezone(event_end, timezone)
 
     if isinstance(event_start, datetime):
         event_date = event_start.date()
@@ -34,7 +37,7 @@ def is_event_today(event, timezone) -> bool:
 
     return event_date == date.today()
 
-def get_ics_events(url: str, timezone:str):
+def get_ics_events(url: str, timezone: str):
     text = ""
     try:
         ical_data = fetch_icalendar(url)
@@ -47,6 +50,10 @@ def get_ics_events(url: str, timezone:str):
             if component.name == "VEVENT" and is_event_today(component, timezone):
                 event_start = component.get("dtstart").dt
                 event_end = component.get("dtend").dt if component.get("dtend") else None
+
+                event_start = convert_to_local_timezone(event_start, timezone)
+                event_end = convert_to_local_timezone(event_end, timezone)
+
                 today_events.append((component, event_start, event_end))
 
         # Sort events by their start time
@@ -54,17 +61,15 @@ def get_ics_events(url: str, timezone:str):
 
         # Process and display sorted events
         for event, start, end in today_events:
-            event_start_str = start.strftime('%H:%M') if isinstance(start, datetime) else str(start)
-            event_end_str = end.strftime('%H:%M') if end and isinstance(end, datetime) else str(end)
-
-            text = text + f"\n\n### {event.get('summary')}"
-            text = text + f"\n\nStarts at {event_start_str}"
+            text += f"\n\n### {event.get('summary')}"
+            description = event.get('description')
+            if description:
+                text += f"\n\n{description}"
+            text += f"\n\nStarts at {start.strftime('%H:%M') if isinstance(start, datetime) else str(start)}"
             if end:
-                text = text + f"\n\nEnds at {event_end_str}"
-            print("")
+                text += f"\n\nEnds at {end.strftime('%H:%M') if end and isinstance(end, datetime) else str(end)}"
 
     except Exception as e:
-        print(f"An error occurred: {e}")
         logging.critical(f"An error occurred: {e}")
 
     return text

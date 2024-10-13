@@ -36,13 +36,12 @@ def send_email(
         message["To"] = recipient_email
 
         text = f"""\
-{recipient_name},
-## Today's Weather
+# Weather
 {weather_data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {weather_data['city']}, {weather_data['state']}: \
 {weather_data['forecast']['properties']['periods'][0]['detailedForecast']}"""
 
         if todoist_data is not None:
-            text = text + "\n\n## Here are the tasks for the day:"
+            text = text + "\n\n# Tasks"
             for task in todoist_data:
                 text = text + f"\n\n - [{task.content}]({task.url})"
                 if task.due.timezone is not None:
@@ -51,13 +50,13 @@ def send_email(
                     text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
                 text = text + f", priority {(5-task.priority)}" if task.priority != 1 else text + ""
         else:
-            text = text + "\n\n## There are no tasks in Todoist!\n\n"
+            None
 
         if cal_data is not None:
-            text = text + "\n\n## Here are the events for the day:"
+            text = text + "\n\n# Events"
             text = text + cal_data
         else:
-            text = text + "\n\n## There are no events in your calendar!"
+            None
 
         html = markdown.markdown(text)
 
@@ -67,8 +66,8 @@ def send_email(
         message.attach(part_1)
         message.attach(part_2)
 
-        print(text)
         logging.info(text)
+        print(text)
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
@@ -76,8 +75,7 @@ def send_email(
             server.sendmail(
                 sender_email, recipient_email, message.as_string()
             )
-        print("Email sent.")
         logging.info("Email sent.")
+        print("Email sent.")
     except Exception as e:
-        print(f"Error occurred: {e}")
         logging.critical(f"Error occurred: {e}")
