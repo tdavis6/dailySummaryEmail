@@ -36,10 +36,10 @@ if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
 if not HOUR:
-    HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to 6 AM
+    HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to current time
 
 if not MINUTE:
-    MINUTE = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).minute) # Defaults to 00 minutes
+    MINUTE = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).minute) # Defaults to current time
 
 if __name__ == "__main__":
     logging.info(f"Running version {VERSION}")
