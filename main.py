@@ -77,6 +77,6 @@ if __name__ == "__main__":
             except Exception as e:
                 logging.critical(f"Error occurred: {e}")
         else:
-            logging.info(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
-            print(f"Waiting until {HOUR}:{MINUTE} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{datetime.datetime.now(timezone).minute}. Waiting 60 seconds.")
+            logging.info(f"Waiting until {"0" + str(HOUR) if len(str(HOUR)) == 1 else str(HOUR)}:{"0" + str(MINUTE) if len(str(MINUTE)) == 1 else str(MINUTE)} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{"0" + str(datetime.datetime.now(timezone).minute) if len(str(datetime.datetime.now(timezone).minute)) == 1 else str(datetime.datetime.now(timezone).minute)}. Waiting 60 seconds.")
+            print(f"Waiting until {"0" + str(HOUR) if len(str(HOUR)) == 1 else str(HOUR)}:{"0" + str(MINUTE) if len(str(MINUTE)) == 1 else str(MINUTE)} to send the message. Current time: {"0" + str(datetime.datetime.now(timezone).hour) if len(str(datetime.datetime.now(timezone).hour)) == 1 else str(datetime.datetime.now(timezone).hour)}:{"0" + str(datetime.datetime.now(timezone).minute) if len(str(datetime.datetime.now(timezone).minute)) == 1 else str(datetime.datetime.now(timezone).minute)}. Waiting 60 seconds.")
         time.sleep(60)
