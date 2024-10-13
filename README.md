@@ -24,5 +24,5 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string, seperated by commas. ('url1,url2,url3')
 - TIMEZONE: The timezone that the user lives in. This will be used for the times in the emails. 
 Refer to [pytz package documentation](https://pypi.org/project/pytz/) for timezones. (required)
-- HOUR: The hour to send the email. Do not include a leading zero (6, not 06). (Defaults to the time when the container started.) (optional)
+- HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
