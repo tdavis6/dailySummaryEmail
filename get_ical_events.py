@@ -47,14 +47,20 @@ def get_ics_events(url: str, timezone: str):
         today_events = []
 
         for component in calendar.walk():
-            if component.name == "VEVENT" and is_event_today(component, timezone):
-                event_start = component.get("dtstart").dt
-                event_end = component.get("dtend").dt if component.get("dtend") else None
+            if component.name == "VEVENT":
+                # Check the status of the event and ensure it is not cancelled or declined
+                event_status = component.get('STATUS')
+                if event_status and event_status.upper() in ['CANCELLED', 'DECLINED']:
+                    continue
 
-                event_start = convert_to_local_timezone(event_start, timezone)
-                event_end = convert_to_local_timezone(event_end, timezone)
+                if is_event_today(component, timezone):
+                    event_start = component.get("dtstart").dt
+                    event_end = component.get("dtend").dt if component.get("dtend") else None
 
-                today_events.append((component, event_start, event_end))
+                    event_start = convert_to_local_timezone(event_start, timezone)
+                    event_end = convert_to_local_timezone(event_end, timezone)
+
+                    today_events.append((component, event_start, event_end))
 
         # Sort events by their start time
         today_events.sort(key=lambda x: x[1])
