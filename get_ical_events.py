@@ -70,7 +70,7 @@ def get_ics_events(url: str, timezone: str):
             text += f"\n\n### {event.get('summary')}"
             description = event.get('description')
             if description:
-                text += f"\n\n{description}"
+                text += f"\n\n*{description}*"
             text += f"\n\nStarts at {start.strftime('%H:%M') if isinstance(start, datetime) else str(start)}"
             if end:
                 text += f"\n\nEnds at {end.strftime('%H:%M') if end and isinstance(end, datetime) else str(end)}"
