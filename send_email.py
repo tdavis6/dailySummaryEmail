@@ -1,10 +1,8 @@
 import smtplib, ssl
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-import datetime
 import re
 import markdown
-import pytz
 import logging
 
 
@@ -16,12 +14,11 @@ def send_email(
         smtp_password,
         smtp_host,
         smtp_port,
+        date_string,
         weather_string,
         todo_data,
         cal_data,
-        quote_string,
-        timezone,
-        TIMEZONE
+        quote_string
 ) -> None:
     iso_pattern_with_hm = re.compile(
         r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$"
@@ -37,6 +34,9 @@ def send_email(
         message["To"] = recipient_email
 
         text = f""""""
+
+        if date_string is not None:
+            text += date_string
 
         if weather_string is not None:
             text += weather_string

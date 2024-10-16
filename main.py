@@ -5,6 +5,7 @@ import time
 import pytz
 import logging
 
+from get_date import get_current_date_in_timezone
 from get_cal_data import get_cal_data
 from get_forecast import get_forecast
 from get_todo_tasks import get_todo_tasks
@@ -55,6 +56,7 @@ if __name__ == "__main__":
     while True: #I'm working on a more efficient method
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
             try:
+                date_string = get_current_date_in_timezone(timezone)
                 weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
                 todo_string = get_todo_tasks(TIMEZONE, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE)
@@ -67,12 +69,11 @@ if __name__ == "__main__":
                     SMTP_PASSWORD,
                     SMTP_HOST,
                     SMTP_PORT,
+                    date_string,
                     weather_string,
                     todo_string,
                     cal_string,
-                    quote_string,
-                    timezone,
-                    TIMEZONE
+                    quote_string
                 )
             except Exception as e:
                 logging.critical(f"Error occurred: {e}")

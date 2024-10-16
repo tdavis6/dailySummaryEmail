@@ -33,8 +33,7 @@ def get_forecast(weather_api_key, latitude, longitude):
         "state": state,
         "forecast": forecast_data
     }
-    weather_string = f"""\
-# Weather
+    weather_string = f"""\n\n# Weather
 {data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {data['city']}, {data['state']}: \
 {data['forecast']['properties']['periods'][0]['detailedForecast']}"""
 
