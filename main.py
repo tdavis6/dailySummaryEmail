@@ -1,20 +1,19 @@
-import os
-from dotenv import load_dotenv
 import datetime
-import time
-import pytz
 import logging
+import os
+import time
 
-from get_date import get_current_date_in_timezone
+import pytz
+from dotenv import load_dotenv
+
 from get_cal_data import get_cal_data
+from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
-from get_todo_tasks import get_todo_tasks
 from get_quote import get_quote
-
+from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-
-VERSION = "0.1.0 (5)"
+VERSION = "0.1.0 (6)"
 
 # Load the environment variables from the .env file
 load_dotenv()

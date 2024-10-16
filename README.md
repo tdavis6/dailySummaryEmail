@@ -29,3 +29,7 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 Refer to [pytz package documentation](https://pypi.org/project/pytz/) for timezones. (required)
 - HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
+
+## Attribution
+
+Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
