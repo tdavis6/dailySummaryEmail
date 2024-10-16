@@ -61,6 +61,7 @@ if __name__ == "__main__":
                 todo_string = get_todo_tasks(TIMEZONE, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE)
                 quote_string = get_quote()
+
                 send_email(
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
