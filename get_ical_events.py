@@ -1,6 +1,6 @@
 import requests
 from icalendar import Calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 import pytz
 import logging
 
@@ -17,27 +17,41 @@ def parse_icalendar(ical_data: str) -> Calendar:
     calendar = Calendar.from_ical(ical_data)
     return calendar
 
-def convert_to_local_timezone(event_time, timezone):
-    if isinstance(event_time, datetime) and event_time.tzinfo is not None:
-        local_timezone = pytz.timezone(timezone)
-        event_time = event_time.astimezone(local_timezone)
+def make_aware(event_time, timezone):
+    """Converts given datetime/date to an aware datetime in the specified timezone."""
+    local_timezone = pytz.timezone(timezone)
+
+    if isinstance(event_time, datetime):
+        if event_time.tzinfo is None:
+            event_time = local_timezone.localize(event_time)
+        else:
+            event_time = event_time.astimezone(local_timezone)
+    elif isinstance(event_time, date):
+        event_time = local_timezone.localize(datetime.combine(event_time, datetime.min.time()))
+
     return event_time
 
 def is_event_today(event, timezone) -> bool:
+    """Checks if the event occurs today."""
     event_start = event.get("dtstart").dt
-    event_end = event.get("dtend").dt if event.get("dtend") else event_start
+    event_end = event.get("dtend") and event.get("dtend").dt or event_start
 
-    event_start = convert_to_local_timezone(event_start, timezone)
-    event_end = convert_to_local_timezone(event_end, timezone)
+    event_start = make_aware(event_start, timezone)
+    event_end = make_aware(event_end, timezone)
 
-    if isinstance(event_start, datetime):
-        event_date = event_start.date()
-    else:
-        event_date = event_start
+    # Use only the date part for comparison
+    event_start_date = event_start.date()
+    event_end_date = event_end.date()
 
-    return event_date == date.today()
+    today = date.today()
+    return event_start_date <= today <= event_end_date
+
+def is_all_day_event(event) -> bool:
+    """Determines if the event is an all-day event."""
+    return isinstance(event.get("dtstart").dt, date) and not isinstance(event.get("dtstart").dt, datetime)
 
 def get_ics_events(url: str, timezone: str):
+    """Fetches and processes ICS events."""
     text = ""
     try:
         ical_data = fetch_icalendar(url)
@@ -55,10 +69,10 @@ def get_ics_events(url: str, timezone: str):
 
                 if is_event_today(component, timezone):
                     event_start = component.get("dtstart").dt
-                    event_end = component.get("dtend").dt if component.get("dtend") else None
+                    event_end = component.get("dtend") and component.get("dtend").dt or None
 
-                    event_start = convert_to_local_timezone(event_start, timezone)
-                    event_end = convert_to_local_timezone(event_end, timezone)
+                    event_start = make_aware(event_start, timezone)
+                    event_end = make_aware(event_end, timezone) if event_end else None
 
                     today_events.append((component, event_start, event_end))
 
@@ -71,9 +85,14 @@ def get_ics_events(url: str, timezone: str):
             description = event.get('description')
             if description:
                 text += f"\n\n*{description}*"
-            text += f"\n\nStarts at {start.strftime('%H:%M') if isinstance(start, datetime) else str(start)}"
-            if end:
-                text += f"\n\nEnds at {end.strftime('%H:%M') if end and isinstance(end, datetime) else str(end)}"
+
+            if is_all_day_event(event):
+                text += "\n\n(All day event)"
+            else:
+                if start:
+                    text += f"\n\nStarts at {start.strftime('%H:%M %Z')}"
+                if end:
+                    text += f"\n\nEnds at {end.strftime('%H:%M %Z')}"
 
     except Exception as e:
         logging.critical(f"An error occurred: {e}")

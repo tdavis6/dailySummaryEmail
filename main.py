@@ -5,12 +5,15 @@ import time
 import pytz
 import logging
 
+from get_cal_data import get_cal_data
 from get_forecast import get_forecast
-from send_email import send_email
-from get_todoist_tasks import get_todoist_tasks
-from get_ical_events import get_ics_events
+from get_todo_tasks import get_todo_tasks
+from get_quote import get_quote
 
-VERSION = "0.1.0 (4)"
+from send_email import send_email
+
+
+VERSION = "0.1.0 (5)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -52,14 +55,10 @@ if __name__ == "__main__":
     while True: #I'm working on a more efficient method
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
             try:
-                weather_data = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
-                logging.debug("Weather data received")
-                todoist_data = get_todoist_tasks(TODOIST_API_KEY=TODOIST_API_KEY, TIMEZONE=TIMEZONE)
-                logging.debug("Todoist data received")
-                cal_data = ""
-                for link in WEBCAL_LINKS.split(","):
-                    cal_data = cal_data + get_ics_events(url=link, timezone=TIMEZONE)
-                logging.debug("Calendar data received")
+                weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
+                todo_string = get_todo_tasks(TIMEZONE, TODOIST_API_KEY)
+                cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE)
+                quote_string = get_quote()
                 send_email(
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
@@ -68,9 +67,10 @@ if __name__ == "__main__":
                     SMTP_PASSWORD,
                     SMTP_HOST,
                     SMTP_PORT,
-                    weather_data,
-                    todoist_data,
-                    cal_data,
+                    weather_string,
+                    todo_string,
+                    cal_string,
+                    quote_string,
                     timezone,
                     TIMEZONE
                 )

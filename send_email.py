@@ -16,9 +16,10 @@ def send_email(
         smtp_password,
         smtp_host,
         smtp_port,
-        weather_data,
-        todoist_data,
+        weather_string,
+        todo_data,
         cal_data,
+        quote_string,
         timezone,
         TIMEZONE
 ) -> None:
@@ -35,28 +36,20 @@ def send_email(
         message["From"] = f"Daily Summary <{smtp_username}>"
         message["To"] = recipient_email
 
-        text = f"""\
-# Weather
-{weather_data['forecast']['properties']['periods'][0]['name']}'s Weather Forecast for {weather_data['city']}, {weather_data['state']}: \
-{weather_data['forecast']['properties']['periods'][0]['detailedForecast']}"""
+        text = f""""""
 
-        if todoist_data is not None:
-            text = text + "\n\n# Tasks"
-            for task in todoist_data:
-                text = text + f"\n\n - [{task.content}]({task.url})"
-                if task.due.timezone is not None:
-                    text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).astimezone(tz=pytz.timezone(TIMEZONE)).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
-                else:
-                    text = text + f", due {datetime.datetime.fromisoformat(task.due.datetime).strftime("at %H:%M")}" if task.due.datetime is not None else text + ""
-                text = text + f", priority {(5-task.priority)}" if task.priority != 1 else text + ""
-        else:
-            None
+        if weather_string is not None:
+            text += weather_string
+
+        if todo_data is not None:
+            text += todo_data
 
         if cal_data is not None:
-            text = text + "\n\n# Events"
-            text = text + cal_data
-        else:
-            None
+            text += cal_data
+
+        if quote_string is not None:
+            text += quote_string
+
 
         html = markdown.markdown(text)
 
