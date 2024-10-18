@@ -13,7 +13,7 @@ from get_quote import get_quote
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.1.0 (7)"
+VERSION = "0.1.0 (8)"
 
 # Load the environment variables from the .env file
 load_dotenv()

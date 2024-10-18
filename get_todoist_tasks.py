@@ -61,9 +61,9 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE) -> str:
 
                     if is_overdue:
                         if task.due.datetime is not None:
-                            text += f", due {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('at %H:%M on %Y-%m-%d')}"
+                            text += f", due {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('at %H:%M on %A, %B %d, %Y')}"
                         else:
-                            text += f", due on {task.due.date}"
+                            text += f", due on {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('%A, %B %d, %Y')}"
                     else:
                         if task.due.datetime is not None:
                             text += f", due {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('at %H:%M')}"
