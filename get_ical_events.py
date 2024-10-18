@@ -1,8 +1,10 @@
+import logging
+from datetime import datetime, date
+
+import pytz
 import requests
 from icalendar import Calendar
-from datetime import datetime, date, timedelta
-import pytz
-import logging
+
 
 def fetch_icalendar(url: str) -> str:
     if url.startswith("webcal://"):
@@ -13,9 +15,11 @@ def fetch_icalendar(url: str) -> str:
 
     return response.text
 
+
 def parse_icalendar(ical_data: str) -> Calendar:
     calendar = Calendar.from_ical(ical_data)
     return calendar
+
 
 def make_aware(event_time, timezone):
     """Converts given datetime/date to an aware datetime in the specified timezone."""
@@ -27,9 +31,12 @@ def make_aware(event_time, timezone):
         else:
             event_time = event_time.astimezone(local_timezone)
     elif isinstance(event_time, date):
-        event_time = local_timezone.localize(datetime.combine(event_time, datetime.min.time()))
+        event_time = local_timezone.localize(
+            datetime.combine(event_time, datetime.min.time())
+        )
 
     return event_time
+
 
 def is_event_today(event, timezone) -> bool:
     """Checks if the event occurs today."""
@@ -46,9 +53,13 @@ def is_event_today(event, timezone) -> bool:
     today = date.today()
     return event_start_date <= today <= event_end_date
 
+
 def is_all_day_event(event) -> bool:
     """Determines if the event is an all-day event."""
-    return isinstance(event.get("dtstart").dt, date) and not isinstance(event.get("dtstart").dt, datetime)
+    return isinstance(event.get("dtstart").dt, date) and not isinstance(
+        event.get("dtstart").dt, datetime
+    )
+
 
 def get_ics_events(url: str, timezone: str):
     """Fetches and processes ICS events."""
@@ -63,26 +74,28 @@ def get_ics_events(url: str, timezone: str):
         for component in calendar.walk():
             if component.name == "VEVENT":
                 # Check the status of the event and ensure it is not cancelled or declined
-                event_status = component.get('STATUS')
-                if event_status and event_status.upper() in ['CANCELLED', 'DECLINED']:
+                event_status = component.get("STATUS")
+                if event_status and event_status.upper() in ["CANCELLED", "DECLINED"]:
                     continue
 
                 if is_event_today(component, timezone):
                     event_start = component.get("dtstart").dt
-                    event_end = component.get("dtend") and component.get("dtend").dt or None
+                    event_end = (
+                            component.get("dtend") and component.get("dtend").dt or None
+                    )
 
                     event_start = make_aware(event_start, timezone)
                     event_end = make_aware(event_end, timezone) if event_end else None
 
                     today_events.append((component, event_start, event_end))
 
-        # Sort events by their start time
-        today_events.sort(key=lambda x: x[1])
+        # Sort events by their start time relative to the Unix epoch
+        today_events.sort(key=lambda x: x[1].timestamp())
 
         # Process and display sorted events
         for event, start, end in today_events:
             text += f"\n\n### {event.get('summary')}"
-            description = event.get('description')
+            description = event.get("description")
             if description:
                 text += f"\n\n*{description}*"
 
@@ -90,9 +103,15 @@ def get_ics_events(url: str, timezone: str):
                 text += "\n\n(All day event)"
             else:
                 if start:
-                    text += f"\n\nStarts at {start.strftime('%H:%M %Z')}"
+                    if start.date() == date.today():
+                        text += f"\n\nStarts at {start.strftime('%H:%M')}"
+                    else:
+                        text += f"\n\nStarts at {start.strftime('%H:%M on %A, %B %d, %Y')}"
                 if end:
-                    text += f"\n\nEnds at {end.strftime('%H:%M %Z')}"
+                    if end.date() == date.today():
+                        text += f"\n\nEnds at {end.strftime('%H:%M')}"
+                    else:
+                        text += f"\n\nEnds at {end.strftime('%H:%M on %A, %B %d, %Y')}"
 
     except Exception as e:
         logging.critical(f"An error occurred: {e}")
