@@ -19,16 +19,18 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
 - WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (optional, required for
   weather compatibility)
-- LATITUDE: The latitude you wish to use for the weather. (optional, required for weather compatibility)
-- LONGITUDE: The longitude you wish to use for the weather. (optional, required for weather compatibility)
+- LATITUDE: The latitude you wish to use for the weather. (optional)
+- LONGITUDE: The longitude you wish to use for the weather. (optional)
+- ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
+  are not given)
 - TODOIST_API_KEY: Your Todoist API key (optional, required for Todoist compatibility)
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email.
   Use one string, seperated by commas. Do not use "" or '' around the entire string. (Optional, required for calendar
   compatibility)
-- TIMEZONE: The timezone that the user lives in. This will be used for the times in the emails. 
-Refer to [pytz package documentation](https://pypi.org/project/pytz/) for timezones. (required)
 - HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
+
+NOTE: You MUST provide either a coordinate pair or an address.
 
 ## Attribution
 
