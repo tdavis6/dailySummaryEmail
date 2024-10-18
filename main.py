@@ -7,9 +7,11 @@ import pytz
 from dotenv import load_dotenv
 
 from get_cal_data import get_cal_data
+from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
 from get_quote import get_quote
+from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
@@ -22,6 +24,7 @@ load_dotenv()
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
+ADDRESS = os.getenv("ADDRESS")
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
 RECIPIENT_NAME = os.getenv("RECIPIENT_NAME")
@@ -30,13 +33,17 @@ SMTP_USERNAME = os.getenv("SMTP_USERNAME")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_HOST = os.getenv("SMTP_HOST")
 SMTP_PORT = os.getenv("SMTP_PORT")
-TIMEZONE = os.getenv("TIMEZONE")
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 
 if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
+
+if not LATITUDE or not LONGITUDE:
+    LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+
+TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
 
 if not HOUR:
     HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to current time
