@@ -46,11 +46,12 @@ def is_event_today(event, timezone) -> bool:
     event_start = make_aware(event_start, timezone)
     event_end = make_aware(event_end, timezone)
 
+    today = datetime.now(pytz.timezone(timezone)).date()  # Local system date
+
     # Use only the date part for comparison
     event_start_date = event_start.date()
     event_end_date = event_end.date()
 
-    today = date.today()
     return event_start_date <= today <= event_end_date
 
 
@@ -97,7 +98,7 @@ def get_ics_events(url: str, timezone: str):
             text += f"\n\n### {event.get('summary')}"
             description = event.get("description")
             if description:
-                text += f"\n\n*{description}*"
+                text += f"\n\n{description}"
 
             if is_all_day_event(event):
                 text += "\n\n(All day event)"
@@ -106,7 +107,9 @@ def get_ics_events(url: str, timezone: str):
                     if start.date() == date.today():
                         text += f"\n\nStarts at {start.strftime('%H:%M')}"
                     else:
-                        text += f"\n\nStarts at {start.strftime('%H:%M on %A, %B %d, %Y')}"
+                        text += (
+                            f"\n\nStarts at {start.strftime('%H:%M on %A, %B %d, %Y')}"
+                        )
                 if end:
                     if end.date() == date.today():
                         text += f"\n\nEnds at {end.strftime('%H:%M')}"
