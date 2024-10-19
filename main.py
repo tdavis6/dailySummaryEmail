@@ -2,7 +2,6 @@ import datetime
 import logging
 import os
 import time
-
 import pytz
 from dotenv import load_dotenv
 
