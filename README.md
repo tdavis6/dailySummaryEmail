@@ -22,10 +22,10 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - LATITUDE: The latitude you wish to use for the weather. (optional)
 - LONGITUDE: The longitude you wish to use for the weather. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
-  are not given)
+  are not given. Use quotes.)
 - TODOIST_API_KEY: Your Todoist API key (optional, required for Todoist compatibility)
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email.
-  Use one string, seperated by commas. Do not use "" or '' around the entire string. (Optional, required for calendar
+  Use one string, seperated by commas. Do not quotes. (Optional, required for calendar
   compatibility)
 - HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
