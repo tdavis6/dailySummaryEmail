@@ -19,8 +19,8 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
 - WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (optional, required for
   weather compatibility)
-- LATITUDE: The latitude you wish to use for the weather. (optional)
-- LONGITUDE: The longitude you wish to use for the weather. (optional)
+- LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
+- LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
   are not given. Use quotes.)
 - TODOIST_API_KEY: Your Todoist API key (optional, required for Todoist compatibility)
