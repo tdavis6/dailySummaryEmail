@@ -29,6 +29,7 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
   compatibility)
 - HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
+- LOGGING_LEVEL: Level for logging (defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
