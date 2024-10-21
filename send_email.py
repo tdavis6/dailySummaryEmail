@@ -64,11 +64,11 @@ def send_email(
         logging.info(text)
 
         context = ssl.create_default_context()
-        with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
-            server.login(smtp_username, smtp_password)
-            server.sendmail(
-                sender_email, recipient_email, message.as_string()
-            )
+        #with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
+        #    server.login(smtp_username, smtp_password)
+        #    server.sendmail(
+        #        sender_email, recipient_email, message.as_string()
+        #    )
         logging.info("Email sent.")
     except Exception as e:
         logging.critical(f"Error occurred: {e}")
