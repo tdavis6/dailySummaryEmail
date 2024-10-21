@@ -10,7 +10,6 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE) -> str:
     text = ""
     try:
         todoist_data = api.get_tasks(filter="due before: tomorrow")
-        logging.debug(todoist_data)
 
         def get_due_datetime_and_priority(task):
             if task.due.datetime is not None:

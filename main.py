@@ -35,6 +35,12 @@ TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
+LOGGING_LEVEL=os.getenv("LOGGING_LEVEL")
+
+if not LOGGING_LEVEL:
+    LOGGING_LEVEL = logging.INFO
+else:
+    logging.basicConfig(level=logging.getLevelName(LOGGING_LEVEL))
 
 if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
@@ -52,7 +58,6 @@ if not MINUTE:
 
 if __name__ == "__main__":
     logging.info(f"Running version {VERSION}")
-    print(f"Running version {VERSION}")
     try:
         timezone = pytz.timezone(TIMEZONE)
     except pytz.UnknownTimeZoneError:
@@ -85,5 +90,4 @@ if __name__ == "__main__":
                 logging.critical(f"Error occurred: {e}")
         else:
             logging.info(f"Waiting until {"0" + str(HOUR) if len(str(HOUR)) == 1 else str(HOUR)}:{"0" + str(MINUTE) if len(str(MINUTE)) == 1 else str(MINUTE)} to send the message. Current time: {datetime.datetime.now(timezone).hour}:{"0" + str(datetime.datetime.now(timezone).minute) if len(str(datetime.datetime.now(timezone).minute)) == 1 else str(datetime.datetime.now(timezone).minute)}. Waiting 60 seconds.")
-            print(f"Waiting until {"0" + str(HOUR) if len(str(HOUR)) == 1 else str(HOUR)}:{"0" + str(MINUTE) if len(str(MINUTE)) == 1 else str(MINUTE)} to send the message. Current time: {"0" + str(datetime.datetime.now(timezone).hour) if len(str(datetime.datetime.now(timezone).hour)) == 1 else str(datetime.datetime.now(timezone).hour)}:{"0" + str(datetime.datetime.now(timezone).minute) if len(str(datetime.datetime.now(timezone).minute)) == 1 else str(datetime.datetime.now(timezone).minute)}. Waiting 60 seconds.")
         time.sleep(60)
