@@ -1,17 +1,15 @@
 import logging
-
-from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 
 
 def get_timezone(lat, lon):
     try:
-        # Initialize geolocator and timezone finder
-        geolocator = Nominatim(user_agent="timezone_locator")
-        tf = TimezoneFinder()
+        # Convert latitude and longitude to float
+        lat = float(lat)
+        lon = float(lon)
 
-        # Get the location information
-        location = geolocator.reverse((lat, lon), exactly_one=True)
+        # Initialize timezone finder
+        tf = TimezoneFinder()
 
         # Get the timezone name
         timezone_str = tf.timezone_at(lng=lon, lat=lat)

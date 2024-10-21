@@ -1,5 +1,4 @@
 import logging
-import re
 import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
@@ -22,13 +21,6 @@ def send_email(
         cal_data,
         quote_string
 ) -> None:
-    iso_pattern_with_hm = re.compile(
-        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?$"
-    )
-    iso_pattern_with_hmZ = re.compile(
-        r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?Z$"
-    )
-
     try:
         message = MIMEMultipart("alternative")
         message["Subject"] = f"Daily Summary Email for {recipient_name}"
