@@ -1,7 +1,7 @@
-from geopy.geocoders import Nominatim
+from geopy.geocoders import Photon
 
 
 def get_coordinates(address):
-    geolocator = Nominatim(user_agent="dailySummaryEmail")
+    geolocator = Photon()
     location = geolocator.geocode(address)
     return location.latitude, location.longitude
