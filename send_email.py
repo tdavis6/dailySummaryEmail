@@ -17,8 +17,8 @@ def send_email(
         smtp_port,
         date_string,
         weather_string,
-        todo_data,
-        cal_data,
+        todo_string,
+        cal_string,
         quote_string
 ) -> None:
     try:
@@ -35,11 +35,11 @@ def send_email(
         if weather_string is not None:
             text += weather_string
 
-        if todo_data is not None:
-            text += todo_data
+        if todo_string is not None:
+            text += todo_string
 
-        if cal_data is not None:
-            text += cal_data
+        if cal_string is not None:
+            text += cal_string
 
         if quote_string is not None:
             text += quote_string
