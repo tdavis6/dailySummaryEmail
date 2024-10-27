@@ -4,6 +4,7 @@ import os
 import time
 import pytz
 from dotenv import load_dotenv
+from geopy.exc import GeocoderUnavailable
 
 from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
@@ -14,7 +15,7 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.1.0 (14)"
+VERSION = "0.1.0 (15)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -46,7 +47,14 @@ if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
 if not LATITUDE or not LONGITUDE:
-    LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+    while True:
+        try:
+            LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+            break
+        except GeocoderUnavailable:
+            logging.warning("Geocoder unavailable. Trying again in 30 seconds.")
+            time.sleep(30)
+            continue
 
 TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
 
