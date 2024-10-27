@@ -17,8 +17,9 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (optional, required for
+- WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (free) (optional, required for
   weather compatibility)
+- WOTD: True or False. Enables WOTD. (optional, required for WOTD) (defaults to false)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
 - LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude

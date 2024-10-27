@@ -19,6 +19,7 @@ def send_email(
         weather_string,
         todo_string,
         cal_string,
+        wotd_string,
         quote_string
 ) -> None:
     try:
@@ -41,9 +42,11 @@ def send_email(
         if cal_string is not None:
             text += cal_string
 
+        if wotd_string is not None:
+            text += wotd_string
+
         if quote_string is not None:
             text += quote_string
-
 
         html = markdown.markdown(text)
 

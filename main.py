@@ -10,12 +10,13 @@ from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
+from get_wotd import get_wotd
 from get_quote import get_quote
 from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.1.0 (15)"
+VERSION = "0.2.0-beta (16)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -29,6 +30,7 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_HOST = os.getenv("SMTP_HOST")
 SMTP_PORT = os.getenv("SMTP_PORT")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+WOTD = os.getenv("WOTD")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
@@ -78,6 +80,7 @@ if __name__ == "__main__":
                 weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
                 todo_string = get_todo_tasks(TIMEZONE, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE)
+                wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
                 quote_string = get_quote()
 
                 send_email(
@@ -92,6 +95,7 @@ if __name__ == "__main__":
                     weather_string,
                     todo_string,
                     cal_string,
+                    wotd_string,
                     quote_string
                 )
             except Exception as e:
