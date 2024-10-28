@@ -40,10 +40,24 @@ HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
 LOGGING_LEVEL=os.getenv("LOGGING_LEVEL")
 
-if not LOGGING_LEVEL:
-    LOGGING_LEVEL = logging.INFO
+# Reset logging configuration
+for handler in logging.root.handlers[:]:
+    logging.root.removeHandler(handler)
+
+# Validate and set logging level
+if LOGGING_LEVEL:
+    try:
+        logging_level = getattr(logging, LOGGING_LEVEL.upper(), None)
+        if not isinstance(logging_level, int):
+            raise ValueError(f"Invalid log level: {LOGGING_LEVEL}")
+        logging.basicConfig(level=logging_level)
+    except Exception as e:
+        logging.basicConfig(level=logging.INFO)
+        logging.warning(
+            f"Invalid LOGGING_LEVEL provided. Defaulting to INFO. Error: {e}"
+        )
 else:
-    logging.basicConfig(level=logging.getLevelName(LOGGING_LEVEL))
+    logging.basicConfig(level=logging.INFO)
 
 if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
