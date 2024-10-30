@@ -1,5 +1,6 @@
 # Daily Summary Email
-A simple program that emails the user the weather and any tasks on their to-do list at 6 AM daily
+## Summary
+A simple program that emails the user the weather and any tasks on their to-do list at a designated time daily
 (Only Todoist is currently supported, 
 but I am working on more. Feel free to request any todo app with an issue)
 
@@ -32,6 +33,10 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
 
 NOTE: You MUST provide either a coordinate pair or an address.
+
+## Weather API Key Setup
+- Register for an account at [WeatherAPI.com](https://www.weatherapi.com/), using the free plan.
+- Paste API key into the WEATHER_API_KEY environment variable. Do not use quotes.
 
 ## Attribution
 
