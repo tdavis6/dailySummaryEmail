@@ -43,6 +43,9 @@ def get_forecast(weather_api_key, latitude, longitude, unit_system, time_system)
             precip_unit = "mm"
             wind_unit = "kph"
 
+        # Get the UV index
+        uv_index = forecast["uv"]
+
         # Convert times based on time_system
         sunrise = datetime.strptime(astro["sunrise"], "%I:%M %p")
         sunset = datetime.strptime(astro["sunset"], "%I:%M %p")
@@ -63,6 +66,7 @@ Temperature: {min_temp}{temp_unit} to {max_temp}{temp_unit}\n
 Humidity: {forecast['avghumidity']}%\n
 Precipitation: {precipitation} {precip_unit}\n
 Wind Speed: {wind_speed} {wind_unit}\n
+UV Index: {uv_index}\n
 Sunrise: {sunrise_str}\n
 Sunset: {sunset_str}\n"""
 
