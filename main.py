@@ -16,7 +16,7 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.2.0-beta (19)"
+VERSION = "0.3.0 (20)"
 
 # Load the environment variables from the .env file
 load_dotenv()
