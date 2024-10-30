@@ -3,9 +3,6 @@ A simple program that emails the user the weather and any tasks on their to-do l
 (Only Todoist is currently supported, 
 but I am working on more. Feel free to request any todo app with an issue)
 
-Unfortunately, the weather component only works in the United States because the used API is from the NWS,
-a US government agency.
-
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
@@ -17,8 +14,10 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- WEATHER_API_KEY: Your NWS weather API key. Currently, this is your email address as a string. (free) (optional, required for
+- WEATHER_API_KEY: Your WeatherAPI.com weather API key. (free) (optional, required for
   weather compatibility)
+- UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
+- TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24hr)
 - WOTD: True or False. Enables WOTD. (optional, required for WOTD) (defaults to false)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
 - LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)

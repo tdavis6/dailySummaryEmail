@@ -16,7 +16,7 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.2.0-beta (18)"
+VERSION = "0.2.0-beta (19)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -30,6 +30,8 @@ SMTP_PASSWORD = os.getenv("SMTP_PASSWORD")
 SMTP_HOST = os.getenv("SMTP_HOST")
 SMTP_PORT = os.getenv("SMTP_PORT")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+UNIT_SYSTEM = os.getenv("UNIT_SYSTEM")
+TIME_SYSTEM = os.getenv("TIME_SYSTEM")
 WOTD = os.getenv("WOTD")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
@@ -71,6 +73,11 @@ if not LATITUDE or not LONGITUDE:
             logging.warning("Geocoder unavailable. Trying again in 30 seconds.")
             time.sleep(30)
             continue
+if not UNIT_SYSTEM:
+    UNIT_SYSTEM = "METRIC" # Defaults to metric
+
+if not TIME_SYSTEM:
+    TIME_SYSTEM = "24HR" # Defaults to 24hr time
 
 TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
 
@@ -91,9 +98,9 @@ if __name__ == "__main__":
         if int(datetime.datetime.now(timezone).hour) == int(HOUR) and int(datetime.datetime.now(timezone).minute) == int(MINUTE):
             try:
                 date_string = get_current_date_in_timezone(timezone)
-                weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE)
-                todo_string = get_todo_tasks(TIMEZONE, TODOIST_API_KEY)
-                cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE)
+                weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE, UNIT_SYSTEM, TIME_SYSTEM)
+                todo_string = get_todo_tasks(TIMEZONE, TIME_SYSTEM, TODOIST_API_KEY)
+                cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE, TIME_SYSTEM)
                 wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
                 quote_string = get_quote()
 

@@ -60,5 +60,5 @@ def get_wotd():
     wotd_string = ""
     wotd_string += "\n\n# Word of the Day"
     wotd_string += f"\n\n{second_paragraph}"
-    logging.info(wotd_string)
+    logging.debug(wotd_string)
     return wotd_string
