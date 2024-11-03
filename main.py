@@ -16,7 +16,7 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.3.0 (21)"
+VERSION = "0.3.0 (22)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -33,6 +33,7 @@ WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 UNIT_SYSTEM = os.getenv("UNIT_SYSTEM")
 TIME_SYSTEM = os.getenv("TIME_SYSTEM")
 WOTD = os.getenv("WOTD")
+QOTD = os.getenv("QOTD")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
@@ -102,7 +103,7 @@ if __name__ == "__main__":
                 todo_string = get_todo_tasks(TIMEZONE, TIME_SYSTEM, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE, TIME_SYSTEM)
                 wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
-                quote_string = get_quote()
+                quote_string = get_quote() if QOTD in ["True", "true", True] else ""
 
                 send_email(
                     RECIPIENT_EMAIL,

@@ -19,7 +19,8 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
   weather compatibility)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24HR)
-- WOTD: True or False. Enables WOTD. (optional, required for WOTD) (defaults to false)
+- WOTD: True or False. Enables the Word of the Day. (optional, required for WOTD) (defaults to false)
+- QOTD: True or False. Enables the Quote of the Day. (optional, required for QOTD) (defaults to false)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
 - LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
