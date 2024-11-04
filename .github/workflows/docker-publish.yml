@@ -6,7 +6,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push-image:
@@ -35,8 +34,11 @@ jobs:
           VERSION=$(jq -r '.version' version.json)
           # Sanitize the Docker tag by replacing invalid characters
           VERSION_TAG=$(echo "$VERSION" | tr '+:/' '---')
+          # Make repository name lowercase
+          IMAGE_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
