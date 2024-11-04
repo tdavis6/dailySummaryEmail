@@ -1,8 +1,8 @@
 import requests
 
 def get_quote():
-    url = "https://zenquotes.io/api/random"
-    text = """"""
+    url = "https://zenquotes.io/api/today"
+    text = ""
 
     response = requests.get(url).json()
 
