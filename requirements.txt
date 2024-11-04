@@ -9,4 +9,4 @@ geopy~=2.4.1
 icalendar~=6.0.0
 python-dateutil~=2.9.0.post0
 todoist_api_python~=2.1.7
-sudoku~=2.0.0 #https://pypi.org/project/py-sudoku/#description
+py-sudoku~=2.0.0
