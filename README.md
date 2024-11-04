@@ -19,8 +19,6 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
   weather compatibility)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24HR)
-- WOTD: True or False. Enables the Word of the Day. (optional, required for WOTD) (defaults to false)
-- QOTD: True or False. Enables the Quote of the Day. (optional, required for QOTD) (defaults to false)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
 - LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
@@ -29,6 +27,9 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email.
   Use one string, seperated by commas. Do not quotes. (Optional, required for calendar
   compatibility)
+- PUZZLES: True or False. Enables puzzles. (optional, required for puzzles) (defaults to false)
+- WOTD: True or False. Enables the Word of the Day. (optional, required for WOTD) (defaults to false)
+- QOTD: True or False. Enables the Quote of the Day. (optional, required for QOTD) (defaults to false)
 - HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
 - MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
@@ -42,3 +43,5 @@ NOTE: You MUST provide either a coordinate pair or an address.
 ## Attribution
 
 Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
+
+Geocoding provided by [Nominatim](https://nominatim.org/).

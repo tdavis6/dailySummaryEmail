@@ -4,19 +4,19 @@ import os
 import time
 import pytz
 from dotenv import load_dotenv
-from geopy.exc import GeocoderUnavailable
 
 from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
+from get_puzzles import get_puzzles
 from get_wotd import get_wotd
 from get_quote import get_quote
 from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.3.0 (22)"
+VERSION = "0.3.0 (23)"
 
 # Load the environment variables from the .env file
 load_dotenv()
@@ -32,13 +32,15 @@ SMTP_PORT = os.getenv("SMTP_PORT")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 UNIT_SYSTEM = os.getenv("UNIT_SYSTEM")
 TIME_SYSTEM = os.getenv("TIME_SYSTEM")
-WOTD = os.getenv("WOTD")
-QOTD = os.getenv("QOTD")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
+PUZZLES = os.getenv("PUZZLES")
+WOTD = os.getenv("WOTD")
+QOTD = os.getenv("QOTD")
+
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
 LOGGING_LEVEL=os.getenv("LOGGING_LEVEL")
@@ -66,14 +68,8 @@ if not SMTP_PORT:
     SMTP_PORT = 465 # Defaults to SSL
 
 if not LATITUDE or not LONGITUDE:
-    while True:
-        try:
-            LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-            break
-        except GeocoderUnavailable:
-            logging.warning("Geocoder unavailable. Trying again in 30 seconds.")
-            time.sleep(30)
-            continue
+    LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+
 if not UNIT_SYSTEM:
     UNIT_SYSTEM = "METRIC" # Defaults to metric
 
@@ -81,6 +77,7 @@ if not TIME_SYSTEM:
     TIME_SYSTEM = "24HR" # Defaults to 24hr time
 
 TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
+logging.info(f"Timezone set to {TIMEZONE} based on the coordinate pair {LATITUDE},{LONGITUDE}.")
 
 if not HOUR:
     HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to current time
@@ -102,6 +99,7 @@ if __name__ == "__main__":
                 weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE, UNIT_SYSTEM, TIME_SYSTEM)
                 todo_string = get_todo_tasks(TIMEZONE, TIME_SYSTEM, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE, TIME_SYSTEM)
+                puzzles_string, puzzles_ans_string = get_puzzles() if PUZZLES in ["True", "true", True] else ("", "")
                 wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
                 quote_string = get_quote() if QOTD in ["True", "true", True] else ""
 
@@ -117,8 +115,10 @@ if __name__ == "__main__":
                     weather_string,
                     todo_string,
                     cal_string,
+                    puzzles_string,
                     wotd_string,
-                    quote_string
+                    quote_string,
+                    puzzles_ans_string
                 )
             except Exception as e:
                 logging.critical(f"Error occurred: {e}")
