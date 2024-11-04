@@ -8,6 +8,7 @@ To change the time of day that the email is sent, use the MINUTE and HOUR enviro
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
 ## Environment Variables
+See .env.example for an example .env file.
 - RECIPIENT_EMAIL: The recipient's email (required)
 - RECIPIENT_NAME: The name that the email is addressed to (required)
 - SENDER_EMAIL: The sending email (required)
