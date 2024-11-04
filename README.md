@@ -1,4 +1,5 @@
 # Daily Summary Email
+[![Create and publish a Docker image](https://github.com/tdavis6/dailySummaryEmail/actions/workflows/docker-publish.yml/badge.svg?branch=release)](https://github.com/tdavis6/dailySummaryEmail/actions/workflows/docker-publish.yml)
 ## Summary
 A simple program that emails the user the weather and any tasks on their to-do list at a designated time daily
 (Only Todoist is currently supported, 
