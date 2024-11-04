@@ -29,11 +29,11 @@ jobs:
       - name: Install jq
         run: sudo apt-get install jq
 
-      - name: Read version from version.json
+      - name: Read version from version.json and sanitize
         id: get_version
         run: |
           VERSION=$(jq -r '.version' version.json)
-          # Sanitize the Docker tag here
+          # Sanitize the Docker tag by replacing invalid characters
           VERSION_TAG=$(echo "$VERSION" | tr '+:/' '---')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
@@ -44,6 +44,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta
@@ -58,13 +61,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}:${{ env.VERSION_TAG }}
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.VERSION_TAG }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
 
@@ -74,7 +77,7 @@ jobs:
           COMMITS=$(git log --pretty=format:"%h - %s" $(git describe --tags --abbrev=0 @^)..@)
           echo "COMMITS=$COMMITS" >> $GITHUB_ENV
 
-      - name: Check prerelease conditions
+      - name: Determine if version is a prerelease
         id: prerelease_check
         run: |
           VERSION=${{ env.VERSION }}
