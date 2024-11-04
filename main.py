@@ -2,6 +2,7 @@ import datetime
 import logging
 import os
 import time
+import json
 import pytz
 from dotenv import load_dotenv
 
@@ -16,7 +17,8 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-VERSION = "0.3.0 (25)"
+with open("version.json", "r"):
+    VERSION = json.load(open("version.json"))["version"]
 
 # Load the environment variables from the .env file
 load_dotenv()
