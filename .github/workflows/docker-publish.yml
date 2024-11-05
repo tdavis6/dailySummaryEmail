@@ -55,14 +55,14 @@ jobs:
             echo "pre_release_type=" >> $GITHUB_ENV
           fi
 
-      - name: Get Commit Messages for Release Notes
+      - name: Get All Relevant Commit Messages for Release Notes
         id: commit_messages
         run: |
-          # Find the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
-          # Get commits between the previous and current tags
-          COMMITS=$(git log "$PREV_TAG"..HEAD --pretty=format:"* %s" | sed 's/[^[:print:]]//g') # Remove any non-printable characters
-          # Replace newlines with spaces and remove extra whitespace
+          # Find the last stable (non-pre-release) tag
+          LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
+          # Get commits from the last stable tag up to the current release
+          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %s" | sed 's/[^[:print:]]//g')
+          # Format commit messages as a single line with spaces between them
           COMMITS=$(echo "$COMMITS" | tr '\n' ' ' | sed 's/  */ /g; s/^ //; s/ $//')
           # Sanitize to ensure valid env variable format
           COMMITS=$(echo "$COMMITS" | sed 's/\\/\\\\/g; s/`/\\`/g')
