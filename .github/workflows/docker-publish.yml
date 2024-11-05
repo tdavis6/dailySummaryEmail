@@ -37,7 +37,8 @@ jobs:
           
           # Retrieve and sanitize the repository owner/repo name
           repo="${{ github.repository }}"
-          IMAGE_NAME=$(echo "${repo}" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9.-')
+          REPO_NAME=$(basename "$repo")
+          IMAGE_NAME=$(echo "${REPO_NAME}" | tr '[:upper:]' '[:lower:]' | tr -cd 'a-z0-9-')
           
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
