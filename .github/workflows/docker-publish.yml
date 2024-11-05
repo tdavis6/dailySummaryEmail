@@ -91,12 +91,13 @@ jobs:
           # Build the Docker image with the version-specific tag
           docker build -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} .
           
-          # Apply tags based on the version type and branch
+          # Apply the latest-dev tag for all releases, regardless of stability
+          docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
+          docker push ghcr.io/${{ env.repo_name }}:latest-dev
+
+          # Apply tags based on the version type
           if [ "${{ env.pre_release }}" = "true" ]; then
-            # Apply general pre-release tags for alpha, beta, rc, and dev versions
-            docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
-            docker push ghcr.io/${{ env.repo_name }}:latest-dev
-          
+            # Apply specific pre-release tags for alpha, beta, rc, and general dev
             if [ "${{ env.pre_release_type }}" == "alpha" ]; then
               docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-alpha
               docker push ghcr.io/${{ env.repo_name }}:latest-alpha
