@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - release
+      - dev  # Trigger on pushes to the dev branch
 
 jobs:
   release:
@@ -74,12 +75,19 @@ jobs:
           # Build the Docker image with the version-specific tag
           docker build -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} .
           # Determine the appropriate tag for latest or latest-dev
-          if [ "${{ env.pre_release }}" = "true" ]; then
+          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
+            # On dev branch, tag as latest-dev
             docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
             docker push ghcr.io/${{ env.repo_name }}:latest-dev
           else
-            docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
-            docker push ghcr.io/${{ env.repo_name }}:latest
+            # On release branch, tag as latest
+            if [ "${{ env.pre_release }}" = "true" ]; then
+              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
+              docker push ghcr.io/${{ env.repo_name }}:latest-dev
+            else
+              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
+              docker push ghcr.io/${{ env.repo_name }}:latest
+            fi
           fi
           # Push the version-specific tag
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
