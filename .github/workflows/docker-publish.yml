@@ -33,12 +33,12 @@ jobs:
         run: |
           VERSION=$(jq -r '.version' version.json)
           # Sanitize the Docker tag by replacing invalid characters
-          VERSION_TAG=$(echo "$VERSION" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]')
+          VERSION_TAG=$(echo "$VERSION" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:].-')
           
           # Replace invalid characters in repo name and ensure lowercase
-          repo="${{ github.repository }}"
-          IMAGE_NAME=$(echo "${repo}" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]')
-      
+          repo="${{ github.repository_owner }}/${{ github.repository }}"
+          IMAGE_NAME=$(echo "${repo}" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:].-')
+          
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "VERSION_TAG=$VERSION_TAG" >> $GITHUB_ENV
           echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
