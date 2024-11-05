@@ -19,24 +19,22 @@ See .env.example for an example .env file.
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- WEATHER_API_KEY: Your WeatherAPI.com weather API key. (free) (optional, required for
-  weather compatibility)
+- WEATHER_API_KEY: Your WeatherAPI.com weather API key. (free) (optional)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24HR)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
 - LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
   are not given. Use quotes.)
-- TODOIST_API_KEY: Your Todoist API key (optional, required for Todoist compatibility)
+- TODOIST_API_KEY: Your Todoist API key (optional)
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email.
-  Use one string, seperated by commas. Do not quotes. (Optional, required for calendar
-  compatibility)
-- PUZZLES: True or False. Enables puzzles. (optional, required for puzzles) (defaults to false)
-- WOTD: True or False. Enables the Word of the Day. (optional, required for WOTD) (defaults to false)
-- QOTD: True or False. Enables the Quote of the Day. (optional, required for QOTD) (defaults to false)
-- HOUR: The hour to send the email. (Defaults to the time when the container started.) (optional)
-- MINUTE: The minute to send the email. (Defaults to the time when the container started.) (Optional)
-- LOGGING_LEVEL: Level for logging (defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
+  Use one string, seperated by commas. Do not quotes. (optional)
+- PUZZLES: True or False. Enables puzzles. (optional, defaults to false)
+- WOTD: True or False. Enables the Word of the Day. (optional, defaults to false)
+- QOTD: True or False. Enables the Quote of the Day. (optional, defaults to false)
+- HOUR: The hour to send the email. (optional, defaults to the time when the container started)
+- MINUTE: The minute to send the email. (optional, defaults to the time when the container started)
+- LOGGING_LEVEL: Level for logging (optional, defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
