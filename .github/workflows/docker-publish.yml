@@ -36,7 +36,7 @@ jobs:
           VERSION_TAG=$(echo "$VERSION" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:].-')
           
           # Replace invalid characters in repo name and ensure lowercase
-          repo="${{ github.repository_owner }}/${{ github.repository }}"
+          repo="${{ github.repository }}"
           IMAGE_NAME=$(echo "${repo}" | tr '+:/' '---' | tr '[:upper:]' '[:lower:]' | tr -cd '[:alnum:].-')
           
           echo "VERSION=$VERSION" >> $GITHUB_ENV
