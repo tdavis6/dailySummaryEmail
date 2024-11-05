@@ -1,10 +1,10 @@
-name: Release on Push to Release Branch
+name: Release on Push to Main Branch
 
 on:
   push:
     branches:
-      - release
-      - dev  # Trigger on pushes to the dev branch
+      - main  # Trigger on pushes to the main branch
+      - dev   # Trigger on pushes to the dev branch
 
 jobs:
   release:
@@ -108,8 +108,8 @@ jobs:
             fi
           fi
           
-          # If on the release branch and not a pre-release, apply the latest tag
-          if [ "${{ github.ref }}" == "refs/heads/release" ] && [ "${{ env.pre_release }}" = "false" ]; then
+          # If on the main branch and not a pre-release, apply the latest tag
+          if [ "${{ github.ref }}" == "refs/heads/main" ] && [ "${{ env.pre_release }}" = "false" ]; then
             docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
             docker push ghcr.io/${{ env.repo_name }}:latest
           fi
