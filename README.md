@@ -46,7 +46,6 @@ NOTE: You MUST provide either a coordinate pair or an address.
 - Paste API key into the WEATHER_API_KEY environment variable. Do not use quotes.
 
 ## Attribution
+- Geocoding provided by [Nominatim](https://nominatim.org/).
 
-Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
-
-Geocoding provided by [Nominatim](https://nominatim.org/).
+- Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
