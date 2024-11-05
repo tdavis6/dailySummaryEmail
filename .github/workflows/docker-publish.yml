@@ -62,8 +62,10 @@ jobs:
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
           # Get commits between the previous and current tags
           COMMITS=$(git log "$PREV_TAG"..HEAD --pretty=format:"* %s" | sed 's/[^[:print:]]//g') # Remove any non-printable characters
-          # Sanitize the output to ensure valid env variable format
-          COMMITS=$(echo "$COMMITS" | sed 's/\\/\\\\/g; s/`/\\`/g; s/$/\\n/' | tr -d '\r')
+          # Remove any newlines from the commit messages
+          COMMITS=$(echo "$COMMITS" | tr '\n' ' ' | sed 's/\\n/ /g')
+          # Sanitize to ensure valid env variable format
+          COMMITS=$(echo "$COMMITS" | sed 's/\\/\\\\/g; s/`/\\`/g')
           echo "commits=${COMMITS}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
