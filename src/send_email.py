@@ -19,6 +19,7 @@ def send_email(
         weather_string,
         todo_string,
         cal_string,
+        rss_string,
         puzzles_string,
         wotd_string,
         quote_string,
@@ -43,6 +44,9 @@ def send_email(
 
         if cal_string is not None:
             text += cal_string + "\n\n"
+
+        if rss_string is not None:
+            text += rss_string + "\n\n"
 
         if puzzles_string is not None:
             text += puzzles_string+ "\n\n"

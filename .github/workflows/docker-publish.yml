@@ -47,6 +47,9 @@ jobs:
           elif [[ "${{ env.version }}" == *"-beta"* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
             echo "pre_release_type=beta" >> $GITHUB_ENV
+          elif [[ "${{ env.version }}" == *"-rc"* ]]; then
+            echo "pre_release=true" >> $GITHUB_ENV
+            echo "pre_release_type=rc" >> $GITHUB_ENV
           elif [[ "${{ env.version }}" =~ ^v0\..* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
             echo "pre_release_type=dev" >> $GITHUB_ENV
@@ -90,7 +93,7 @@ jobs:
           
           # Apply tags based on the version type and branch
           if [ "${{ env.pre_release }}" = "true" ]; then
-            # Apply specific pre-release tags for alpha, beta, and general dev
+            # Apply general pre-release tags for alpha, beta, rc, and dev versions
             docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
             docker push ghcr.io/${{ env.repo_name }}:latest-dev
           
@@ -100,6 +103,9 @@ jobs:
             elif [ "${{ env.pre_release_type }}" == "beta" ]; then
               docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-beta
               docker push ghcr.io/${{ env.repo_name }}:latest-beta
+            elif [ "${{ env.pre_release_type }}" == "rc" ]; then
+              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-rc
+              docker push ghcr.io/${{ env.repo_name }}:latest-rc
             fi
           fi
           
