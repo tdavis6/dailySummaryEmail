@@ -40,6 +40,7 @@ jobs:
       - name: Determine if Pre-release
         id: prerelease_check
         run: |
+          # Check if the version is a pre-release
           if [[ "${{ env.version }}" == *"-alpha"* || "${{ env.version }}" == *"-beta"* || "${{ env.version }}" =~ ^v0\..* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
           else
@@ -60,7 +61,7 @@ jobs:
         with:
           tag_name: ${{ env.version }}
           release_name: ${{ env.version }}
-          prerelease: ${{ github.ref == 'refs/heads/dev' }}  # Set prerelease to true for dev branch
+          prerelease: ${{ env.pre_release }}  # Use pre_release determined from the version
           body: |
             Automated release of version ${{ env.version }}
 
