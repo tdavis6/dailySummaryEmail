@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensure full history is fetched
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -41,13 +43,26 @@ jobs:
             echo "pre_release=false" >> $GITHUB_ENV
           fi
 
+      - name: Get Commit Messages for Release Notes
+        id: commit_messages
+        run: |
+          # Find the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^)
+          # Get commits between the previous and current tags
+          COMMITS=$(git log "$PREV_TAG"..HEAD --pretty=format:"* %s")
+          echo "commits=$COMMITS" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.version }}
           release_name: ${{ env.version }}
           prerelease: ${{ env.pre_release }}
-          body: "Automated release of version ${{ env.version }}"
+          body: |
+            Automated release of version ${{ env.version }}
+
+            ### Commits in this release:
+            ${{ env.commits }}
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
