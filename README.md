@@ -27,8 +27,8 @@ See .env.example for an example .env file.
 - ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
   are not given. Use quotes.)
 - TODOIST_API_KEY: Your Todoist API key (optional)
-- WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email.
-  Use one string, seperated by commas. Do not quotes. (optional)
+- WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
+- RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
 - PUZZLES: True or False. Enables puzzles. (optional, defaults to false)
 - WOTD: True or False. Enables the Word of the Day. (optional, defaults to false)
 - QOTD: True or False. Enables the Quote of the Day. (optional, defaults to false)

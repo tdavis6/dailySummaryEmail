@@ -10,6 +10,7 @@ from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
+from get_rss import get_rss
 from get_puzzles import get_puzzles
 from get_wotd import get_wotd
 from get_quote import get_quote
@@ -39,6 +40,7 @@ LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
+RSS_LINKS = os.getenv("RSS_LINKS")
 PUZZLES = os.getenv("PUZZLES")
 WOTD = os.getenv("WOTD")
 QOTD = os.getenv("QOTD")
@@ -101,6 +103,7 @@ if __name__ == "__main__":
                 weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE, UNIT_SYSTEM, TIME_SYSTEM)
                 todo_string = get_todo_tasks(TIMEZONE, TIME_SYSTEM, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE, TIME_SYSTEM)
+                rss_string = get_rss(RSS_LINKS)
                 puzzles_string, puzzles_ans_string = get_puzzles() if PUZZLES in ["True", "true", True] else ("", "")
                 wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
                 quote_string = get_quote() if QOTD in ["True", "true", True] else ""
@@ -117,6 +120,7 @@ if __name__ == "__main__":
                     weather_string,
                     todo_string,
                     cal_string,
+                    rss_string,
                     puzzles_string,
                     wotd_string,
                     quote_string,
