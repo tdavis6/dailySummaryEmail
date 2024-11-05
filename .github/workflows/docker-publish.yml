@@ -37,14 +37,22 @@ jobs:
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
           echo "repo_name=$REPO_NAME" >> $GITHUB_ENV
 
-      - name: Determine if Pre-release
+      - name: Determine if Pre-release and Type
         id: prerelease_check
         run: |
-          # Check if the version is a pre-release
-          if [[ "${{ env.version }}" == *"-alpha"* || "${{ env.version }}" == *"-beta"* || "${{ env.version }}" =~ ^v0\..* ]]; then
+          # Check if the version is a pre-release and determine type
+          if [[ "${{ env.version }}" == *"-alpha"* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
+            echo "pre_release_type=alpha" >> $GITHUB_ENV
+          elif [[ "${{ env.version }}" == *"-beta"* ]]; then
+            echo "pre_release=true" >> $GITHUB_ENV
+            echo "pre_release_type=beta" >> $GITHUB_ENV
+          elif [[ "${{ env.version }}" =~ ^v0\..* ]]; then
+            echo "pre_release=true" >> $GITHUB_ENV
+            echo "pre_release_type=dev" >> $GITHUB_ENV
           else
             echo "pre_release=false" >> $GITHUB_ENV
+            echo "pre_release_type=" >> $GITHUB_ENV
           fi
 
       - name: Get Commit Messages for Release Notes
@@ -75,20 +83,27 @@ jobs:
         run: |
           # Build the Docker image with the version-specific tag
           docker build -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} .
-          # Determine the appropriate tag for latest or latest-dev
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            # On dev branch, tag as latest-dev
+          
+          # Apply tags based on the version type and branch
+          if [ "${{ env.pre_release }}" = "true" ]; then
+            # Apply specific pre-release tags for alpha, beta, and general dev
             docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
             docker push ghcr.io/${{ env.repo_name }}:latest-dev
-          else
-            # On release branch, tag as latest
-            if [ "${{ env.pre_release }}" = "true" ]; then
-              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
-              docker push ghcr.io/${{ env.repo_name }}:latest-dev
-            else
-              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
-              docker push ghcr.io/${{ env.repo_name }}:latest
+            
+            if [ "${{ env.pre_release_type }}" == "alpha" ]; then
+              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-alpha
+              docker push ghcr.io/${{ env.repo_name }}:latest-alpha
+            elif [ "${{ env.pre_release_type }}" == "beta" ]; then
+              docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-beta
+              docker push ghcr.io/${{ env.repo_name }}:latest-beta
             fi
           fi
+          
+          # If on the release branch and not a pre-release, apply the latest tag
+          if [ "${{ github.ref }}" == "refs/heads/release" ] && [ "${{ env.pre_release }}" = "false" ]; then
+            docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
+            docker push ghcr.io/${{ env.repo_name }}:latest
+          fi
+
           # Push the version-specific tag
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
