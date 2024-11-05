@@ -27,17 +27,19 @@ jobs:
       - name: Extract version from version.json
         id: get_version
         run: |
-          # Get version from version.json, remove 'v' prefix, replace + with -
-          VERSION=$(jq -r '.version' version.json | sed 's/^v//' | sed 's/+/-/g')
-          # Make repository name and tag lowercase
+          # Extract the original version and prepare a Docker-compatible tag
+          VERSION=$(jq -r '.version' version.json)
+          DOCKER_TAG=$(echo "$VERSION" | sed 's/^v//' | sed 's/+/-/g')
+          # Convert repository name to lowercase for Docker compatibility
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "version=$VERSION" >> $GITHUB_ENV
+          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
           echo "repo_name=$REPO_NAME" >> $GITHUB_ENV
 
       - name: Determine if Pre-release
         id: prerelease_check
         run: |
-          if [[ "${{ env.version }}" == *"-alpha"* || "${{ env.version }}" == *"-beta"* || "${{ env.version }}" =~ ^0\..* ]]; then
+          if [[ "${{ env.version }}" == *"-alpha"* || "${{ env.version }}" == *"-beta"* || "${{ env.version }}" =~ ^v0\..* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
           else
             echo "pre_release=false" >> $GITHUB_ENV
@@ -69,5 +71,5 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ghcr.io/${{ env.repo_name }}:${{ env.version }} .
-          docker push ghcr.io/${{ env.repo_name }}:${{ env.version }}
+          docker build -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} .
+          docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
