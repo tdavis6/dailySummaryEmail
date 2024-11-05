@@ -71,5 +71,10 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
+          # Build the Docker image with the version-specific tag
           docker build -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} .
+          # Tag the image with "latest"
+          docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
+          # Push both tags
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
+          docker push ghcr.io/${{ env.repo_name }}:latest
