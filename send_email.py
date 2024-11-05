@@ -70,8 +70,6 @@ def send_email(
         message.attach(part_1)
         message.attach(part_2)
 
-        logging.info(text)
-
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
             server.login(smtp_username, smtp_password)

@@ -58,7 +58,6 @@ def get_forecast(weather_api_key, latitude, longitude, unit_system, time_system)
             sunset_str = sunset.strftime("%H:%M")
 
         # Format the weather string with additional data
-        logging.debug(forecast_data)
         weather_string = f"""\n\n# Weather\n
 Today's Weather Forecast for {city}, {state}:\n
 Condition: {forecast['condition']['text']}\n

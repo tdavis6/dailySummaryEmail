@@ -79,7 +79,7 @@ if not TIME_SYSTEM:
     TIME_SYSTEM = "24HR" # Defaults to 24hr time
 
 TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
-logging.info(f"Timezone set to {TIMEZONE} based on the coordinate pair {LATITUDE},{LONGITUDE}.")
+logging.info(f"Timezone set to {TIMEZONE}.")
 
 if not HOUR:
     HOUR = int(datetime.datetime.now(pytz.timezone(TIMEZONE)).hour) # Defaults to current time

@@ -11,7 +11,7 @@ def get_coordinates(address):
             geolocator = Nominatim(user_agent="dailySummaryEmail")
             location = geolocator.geocode(address)
             latitude, longitude = location.latitude, location.longitude
-            logging.debug(f"Latitude and longitude found: {latitude},{longitude}")
+            logging.debug(f"Latitude and longitude found.")
             return latitude, longitude
         except GeocoderUnavailable:
             logging.warning("Geocoder unavailable. Trying again in 30 seconds.")
