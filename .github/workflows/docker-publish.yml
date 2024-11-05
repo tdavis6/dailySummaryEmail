@@ -60,7 +60,7 @@ jobs:
         with:
           tag_name: ${{ env.version }}
           release_name: ${{ env.version }}
-          prerelease: ${{ env.pre_release }}
+          prerelease: ${{ github.ref == 'refs/heads/dev' }}  # Set prerelease to true for dev branch
           body: |
             Automated release of version ${{ env.version }}
 
