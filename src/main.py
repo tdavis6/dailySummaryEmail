@@ -17,8 +17,8 @@ from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
 
-with open("version.json", "r"):
-    VERSION = json.load(open("version.json"))["version"]
+with open("./version.json", "r"):
+    VERSION = json.load(open("./version.json"))["version"]
 
 # Load the environment variables from the .env file
 load_dotenv()
