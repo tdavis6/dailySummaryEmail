@@ -46,3 +46,6 @@ NOTE: You MUST provide either a coordinate pair or an address.
 - Geocoding provided by [Nominatim](https://nominatim.org/).
 
 - Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
+
+## Other Notes
+- Versioning follows [semver](https://semver.org)
