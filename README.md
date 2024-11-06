@@ -1,6 +1,6 @@
 # Daily Summary Email
 ![GitHub last commit](https://img.shields.io/github/last-commit/tdavis6/dailySummaryEmail)
-![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/release)
+![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/main)
 
 ## Summary
 A simple program that emails the user the weather and any tasks on their to-do list at a designated time daily
