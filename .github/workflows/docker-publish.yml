@@ -15,16 +15,15 @@ jobs:
         with:
           fetch-depth: 0  # Ensure full history is fetched
 
-      # Set up specific versions of languages or tools, if needed
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # Specify the required Python version
+          python-version: '3.10'
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Specify the required Node.js version
+          node-version: '18'
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
@@ -39,10 +38,8 @@ jobs:
       - name: Extract version from version.json
         id: get_version
         run: |
-          # Ensure jq is installed if not already available
           sudo apt-get update && sudo apt-get install -y jq
           
-          # Extract the original version and prepare a Docker-compatible tag
           VERSION=$(jq -r '.version' version.json)
           DOCKER_TAG=$(echo "$VERSION" | sed 's/^v//' | sed 's/+/-/g')
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
@@ -53,14 +50,23 @@ jobs:
       - name: Set release information
         id: release_info
         run: |
-          # Identify if it’s a pre-release
           if [[ "$VERSION" == *"-alpha"* || "$VERSION" == *"-beta"* || "$VERSION" == *"-rc"* || "$VERSION" == v0* ]]; then
             IS_PRERELEASE=true
+            TAG_LATEST="latest-dev"
+            if [[ "$VERSION" == *"-alpha"* ]]; then
+              TAG_LATEST="latest-alpha"
+            elif [[ "$VERSION" == *"-beta"* ]]; then
+              TAG_LATEST="latest-beta"
+            elif [[ "$VERSION" == *"-rc"* ]]; then
+              TAG_LATEST="latest-rc"
+            fi
           else
             IS_PRERELEASE=false
+            TAG_LATEST="latest"
           fi
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_ENV
           echo "RELEASE_NAME=$VERSION" >> $GITHUB_ENV
+          echo "tag_latest=$TAG_LATEST" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -71,7 +77,7 @@ jobs:
           release_name: "${{ env.RELEASE_NAME }}"
           body: |
             ## Changes in this release:
-            - $(git log --pretty=format:"* %s" $(git describe --tags --abbrev=0)...HEAD)
+            $(git log --pretty=format:"* %s" $(git describe --tags --abbrev=0)...HEAD)
           draft: false
           prerelease: ${{ env.is_prerelease }}
 
@@ -82,5 +88,5 @@ jobs:
           push: true
           tags: |
             ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
+            ghcr.io/${{ env.repo_name }}:${{ env.tag_latest }}
             ghcr.io/${{ env.repo_name }}:latest-dev
-            ${{ env.is_prerelease == 'true' && echo "ghcr.io/${{ env.repo_name }}:latest-${{ env.docker_tag##*- }}" || echo "ghcr.io/${{ env.repo_name }}:latest" }}
