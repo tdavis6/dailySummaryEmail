@@ -37,6 +37,10 @@ def parse_recent_feed(feed_url):
 
 
 def get_rss(url_string):
+    if not url_string:
+        logging.error("The provided URL string is null or empty.")
+        return ""
+
     url_list = [url.strip() for url in url_string.split(",")]
     all_entries = []
     for url in url_list:
