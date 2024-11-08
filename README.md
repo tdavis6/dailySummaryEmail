@@ -45,7 +45,7 @@ NOTE: You MUST provide either a coordinate pair or an address.
 ## Attribution
 - Geocoding provided by [Nominatim](https://nominatim.org/).
 
-- Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
+- Inspirational quotes provided by [ZenQuotes API](https://zenquotes.io/).
 
 ## Other Notes
-- Versioning follows [semver](https://semver.org)
+- Versioning follows [semver](https://semver.org).
