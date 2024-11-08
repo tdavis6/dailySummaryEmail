@@ -79,6 +79,8 @@ if not UNIT_SYSTEM:
 
 if not TIME_SYSTEM:
     TIME_SYSTEM = "24HR" # Defaults to 24hr time
+else:
+    TIME_SYSTEM = TIME_SYSTEM.upper()
 
 TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
 logging.info(f"Timezone set to {TIMEZONE}.")
@@ -103,7 +105,7 @@ if __name__ == "__main__":
                 weather_string = get_forecast(WEATHER_API_KEY, LATITUDE, LONGITUDE, UNIT_SYSTEM, TIME_SYSTEM)
                 todo_string = get_todo_tasks(TIMEZONE, TIME_SYSTEM, TODOIST_API_KEY)
                 cal_string = get_cal_data(WEBCAL_LINKS, TIMEZONE, TIME_SYSTEM)
-                rss_string = get_rss(RSS_LINKS)
+                rss_string = get_rss(RSS_LINKS, timezone, TIME_SYSTEM)
                 puzzles_string, puzzles_ans_string = get_puzzles() if PUZZLES in ["True", "true", True] else ("", "")
                 wotd_string = get_wotd() if WOTD in ["True", "true", True] else ""
                 quote_string = get_quote() if QOTD in ["True", "true", True] else ""

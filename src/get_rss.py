@@ -36,7 +36,7 @@ def parse_recent_feed(feed_url):
     return recent_entries
 
 
-def get_rss(url_string):
+def get_rss(url_string, tz, TIME_SYSTEM):
     if not url_string:
         logging.error("The provided URL string is null or empty.")
         return ""
@@ -56,12 +56,19 @@ def get_rss(url_string):
     logging.debug(f"Current time (UTC): {now.isoformat()}")
     logging.debug(f"Filtering entries published after: {time_24_hours_ago.isoformat()}")
     output = []
+    date_time_format = (
+        "%I:%M %p on %A, %B %d, %Y"
+        if TIME_SYSTEM == "12HR"
+        else "%H:%M on %A, %B %d, %Y"
+    )
+
     if all_entries:
         output.append("# Feed Entries\n\n")
         for entry in all_entries:
+            published_str = entry["published"].astimezone(tz).strftime(date_time_format)
             output.append(f"\n\n### {entry['title']}")
             output.append(f"\n\nLink: {entry['link']}")
-            output.append(f"\n\nPublished: {entry['published'].isoformat()}")
+            output.append(f"\n\nPublished: {published_str}")
         return "\n".join(output)
     else:
         return ""
