@@ -71,12 +71,13 @@ jobs:
           # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           # Get commits from the last stable tag up to the current release, formatted with commit hash and message
-          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[^[:print:]]//g')
+          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
+          # Sanitize commit messages to escape special characters
+          COMMITS=$(echo "$COMMITS" | sed -E 's/[&]/\\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g; s/"/\\"/g; s/\$/\\\$/g; s/\(/\\(/g; s/\)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/\|/\\|/g; s/\{\\\}/g')
           # Remove duplicate commit messages while keeping their commit hashes
           COMMITS=$(echo "$COMMITS" | sort | uniq)
-          # Sanitize commit messages to escape special characters (single sed command)
-          COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g; s/"/\\"/g; s/\$/\\\$/g; s/(/\\(/g; s/)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/\|/\\|/g; s/\{/\\{/g; s/\}/\\}/g')
           echo "commits=${COMMITS}" >> $GITHUB_ENV
+      
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
