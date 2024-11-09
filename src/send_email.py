@@ -72,45 +72,62 @@ def send_email(
         <head>
             <style>
                 body {{
-                    background-color: #f0f8ff;
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    line-height: 1.6;
+                    background-color: #f4f7fc;
+                    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    line-height: 1.8;
                     margin: 0;
                     padding: 0;
+                    color: #000;
                 }}
                 .container {{
                     width: 90%;
-                    max-width: 800px;
-                    margin: 30px auto;
+                    max-width: 750px;
+                    margin: 40px auto;
                     background: #ffffff;
-                    padding: 25px;
-                    border-radius: 15px;
-                    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
                 }}
                 h1 {{
-                    color: #333;
-                    font-size: 24px;
-                    border-bottom: 2px solid #eee;
+                    color: #000;
+                    font-size: 26px;
+                    margin-bottom: 20px;
+                    border-bottom: 3px solid #e1e8f0;
                     padding-bottom: 10px;
+                    text-align: left;
                 }}
                 p {{
-                    color: #666;
+                    color: #000;
                     font-size: 16px;
+                    margin: 15px 0;
+                    text-align: left;
                 }}
                 a {{
-                    color: #0066cc;
+                    color: #1a73e8;
                     text-decoration: none;
+                    font-weight: 500;
                 }}
                 a:hover {{
                     text-decoration: underline;
                 }}
+                .button {{
+                    display: inline-block;
+                    background: #1a73e8;
+                    color: #fff;
+                    padding: 12px 20px;
+                    margin: 20px 0;
+                    border-radius: 6px;
+                    text-align: center;
+                    font-weight: bold;
+                    text-decoration: none;
+                }}
                 @media only screen and (max-width: 600px) {{
                     .container {{
                         width: 100%;
-                        padding: 15px;
+                        padding: 20px;
                     }}
                     h1 {{
-                        font-size: 20px;
+                        font-size: 22px;
                     }}
                     p {{
                         font-size: 14px;
@@ -139,3 +156,4 @@ def send_email(
         logging.info("Email sent.")
     except Exception as e:
         logging.critical(f"Error occurred: {e}")
+
