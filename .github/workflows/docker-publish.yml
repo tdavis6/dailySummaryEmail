@@ -70,29 +70,70 @@ jobs:
         run: |
           # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
+          echo "Found last stable tag: $LAST_STABLE_TAG"
           
           # Get commits from the last stable tag up to the current release, formatted with commit hash and message
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[^[:print:]]//g')
+          echo "Original commits: $COMMITS"
           
           # Remove duplicate commit messages while keeping their commit hashes
           COMMITS=$(echo "$COMMITS" | sort | uniq)
-          
+          echo "Deduplicated commits: $COMMITS"
+
           # Sanitize commit messages to escape special characters in multiple steps
           SANITIZED_COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\\/\\\\/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/`/\\`/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\*/\\*/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/"/\\"/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\$/\\\$/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/(/\\(/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/)/\\)/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\[/\\[/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\]/\\]/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\|/\\|/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\{/\\{/g')
-          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\}/\\}/g')
+          SanitizeStep_1=$(echo "$SANITIZED_COMMITS")
+          echo "After step 1: $SanitizeStep_1"
           
-          echo "commits=${SANITIZED_COMMITS}" >> $GITHUB_ENV
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\\/\\\\/g')
+          SanitizeStep_2=$(echo "$SANITIZED_COMMITS")
+          echo "After step 2: $SanitizeStep_2"
+          
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/`/\\`/g')
+          SanitizeStep_3=$(echo "$SANITIZED_COMMITS")
+          echo "After step 3: $SanitizeStep_3"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\*/\\*/g')
+          SanitizeStep_4=$(echo "$SANITIZED_COMMITS")
+          echo "After step 4: $SanitizeStep_4"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/"/\\"/g')
+          SanitizeStep_5=$(echo "$SANITIZED_COMMITS")
+          echo "After step 5: $SanitizeStep_5"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\$/\\\$/g')
+          SanitizeStep_6=$(echo "$SANITIZED_COMMITS")
+          echo "After step 6: $SanitizeStep_6"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/(/\\(/g')
+          SanitizeStep_7=$(echo "$SANITIZED_COMMITS")
+          echo "After step 7: $SanitizeStep_7"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/)/\\)/g')
+          SanitizeStep_8=$(echo "$SANITIZED_COMMITS")
+          echo "After step 8: $SanitizeStep_8"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\[/\\[/g')
+          SanitizeStep_9=$(echo "$SANITIZED_COMMITS")
+          echo "After step 9: $SanitizeStep_9"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\]/\\]/g')
+          SanitizeStep_10=$(echo "$SANITIZED_COMMITS")
+          echo "After step 10: $SanitizeStep_10"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\|/\\|/g')
+          SanitizeStep_11=$(echo "$SANITIZED_COMMITS")
+          echo "After step 11: $SanitizeStep_11"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\{/\\{/g')
+          SanitizeStep_12=$(echo "$SANITIZED_COMMITS")
+          echo "After step 12: $SanitizeStep_12"
+
+          SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/\}/\\}/g')
+          SanitizeStep_13=$(echo "$SANITIZED_COMMITS")
+          echo "After step 13: $SanitizeStep_13"
+
+          echo "Sanitized commits: ${SANITIZED_COMMITS}" >> $GITHUB_ENV
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
