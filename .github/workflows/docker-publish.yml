@@ -63,21 +63,13 @@ jobs:
         run: |
           # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
-          # Get commits from the last stable tag up to the current release, formatting each on a new line
-          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %s")
-          # Join commit messages with a delimiter
-          DELIMITED_COMMITS=$(echo "$COMMITS" | tr '\n' '|' | sed 's/|$//')
-          # Store the delimited commit messages in the environment variable
-          echo "commits=$DELIMITED_COMMITS" >> $GITHUB_ENV
-
-      - name: Use Commit Messages
-        run: |
-          # Split the delimited commit messages into multiline format
-          DECODED_COMMITS=$(echo "$commits" | tr '|' '\n')
-          echo "Decoded commits:"
-          echo "$DECODED_COMMITS"
-        env:
-          commits: ${{ env.commits }}
+          # Get commits from the last stable tag up to the current release, formatting each with commit hash and message
+          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[^[:print:]]//g')
+          # Remove duplicate commit messages while keeping their commit hashes
+          COMMITS=$(echo "$COMMITS" | sort | uniq)
+          # Sanitize commit messages to escape special characters
+          COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g; s/"/\\"/g; s/\$/\\\$/g; s/(/\\(/g; s/)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/\|/\\|/g; s/\{/\\{/g; s/\}/\\}/g')
+          echo "commits=${COMMITS}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
