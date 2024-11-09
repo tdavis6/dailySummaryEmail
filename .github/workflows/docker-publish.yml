@@ -63,7 +63,7 @@ jobs:
         run: |
           # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
-          # Get commits from the last stable tag up to the current release, formatting each with commit hash and message
+          # Get commits from the last stable tag up to the current release, formatted with commit hash and message
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[^[:print:]]//g')
           # Remove duplicate commit messages while keeping their commit hashes
           COMMITS=$(echo "$COMMITS" | sort | uniq)
