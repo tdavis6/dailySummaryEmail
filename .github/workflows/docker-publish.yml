@@ -70,7 +70,7 @@ jobs:
         run: |
           # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
-          
+
           # Get all commit messages since the last stable tag
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
 
@@ -79,8 +79,8 @@ jobs:
 
           # Check if COMMITS is non-empty before running sed
           if [ -n "$COMMITS" ]; then
-            # Sanitize commit messages to escape special characters using printf
-            COMMITS=$(printf "%s" "$COMMITS" | sed -E \
+            # Sanitize commit messages to escape special characters using sed
+            COMMITS=$(echo "$COMMITS" | sed -E \
               's/[&]/\\&/g' \
               -e 's/\\/\\\\/g' \
               -e 's/`/\\`/g' \
@@ -104,6 +104,7 @@ jobs:
 
           # Output the final sanitized commit messages for the release notes
           echo "commits=${COMMITS}" >> $GITHUB_ENV
+      
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
