@@ -65,14 +65,18 @@ jobs:
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           # Get commits from the last stable tag up to the current release, formatting each on a new line
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %s")
-          # Escape and encode the commit messages to base64
-          ENCODED_COMMITS=$(echo "$COMMITS" | base64)
-          echo "commits=$ENCODED_COMMITS" >> $GITHUB_ENV
-      - name: Decode Commit Messages
+          # Escape special characters for environment variables
+          ESCAPED_COMMITS=$(printf '%s\n' "$COMMITS" | jq --raw-input --slurp 'split("\n") | map(select(length > 0))')
+          echo "$ESCAPED_COMMITS" > commit_messages.env
+
+      - name: Load Commit Messages as Environment Variable
         run: |
-          # Decode the base64 encoded commit messages
-          DECODED_COMMITS=$(echo "$commits" | base64 --decode)
-          echo "Decoded commits: $DECODED_COMMITS"
+          cat commit_messages.env
+          echo "commits=$(<commit_messages.env)" >> $GITHUB_ENV
+
+      - name: Use Commit Messages
+        run: |
+          echo "Decoded commits: $commits"
         env:
           commits: ${{ env.commits }}
 
