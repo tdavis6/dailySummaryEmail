@@ -66,7 +66,7 @@ jobs:
           # Get commits from the last stable tag up to the current release, formatting each on a new line
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %s" | sed 's/[^[:print:]]//g')
           # Sanitize commit messages to escape special characters
-          COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g')
+          COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g; s/"/\\"/g; s/\$/\\\$/g; s/\(/\\(/g; s/\)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/\|/\\|/g')
           echo "commits=${COMMITS}" >> $GITHUB_ENV
 
       - name: Create GitHub Release
