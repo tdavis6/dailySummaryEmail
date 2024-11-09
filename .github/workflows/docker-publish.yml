@@ -65,13 +65,10 @@ jobs:
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           # Get commits from the last stable tag up to the current release, formatting each on a new line
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %s")
-          # Loop through each line and escape special characters
-          ESCAPED_COMMITS=""
-          while IFS= read -r line; do
-            ESCAPED_LINE=$(printf "%s\n" "$line" | sed 's/[&/\]/\\&/g; s/"/\\"/g; s/(/\\(/g; s/)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/|/\\|/g; s/{/\\{/g; s/}/\\}/g; s/`/\\`/g; s/\$/\\\$/g')
-            ESCAPED_COMMITS="${ESCAPED_COMMITS}${ESCAPED_LINE}\n"
-          done <<< "$COMMITS"
-          printf "commits=%s\n" "$(echo -e "$ESCAPED_COMMITS")" >> $GITHUB_ENV
+          # Construct JSON array from commit messages
+          JSON_COMMITS=$(echo "$COMMITS" | jq --raw-input --slurp 'split("\n") | map(select(length > 0))')
+          # Save the JSON array into environment variable
+          echo "commits=$JSON_COMMITS" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
