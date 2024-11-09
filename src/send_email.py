@@ -83,6 +83,18 @@ def send_email(
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&display=swap');
                 
+                /* Animations */
+                @keyframes slideUp {{
+                    from {{
+                        transform: translateY(50%);
+                        opacity: 0;
+                    }}
+                    to {{
+                        transform: translateY(0);
+                        opacity: 1;
+                    }}
+                }}
+
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);  /* Soft light blue gradient */
                     font-family: 'Raleway', 'Segoe UI', Tahoma, Geneva, sans-serif;
@@ -99,6 +111,7 @@ def send_email(
                     border-radius: 12px;
                     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);  /* Slight drop shadow to bottom-left */
                     overflow: hidden;
+                    animation: slideUp 0.6s ease-out;  /* Slide-up effect for the container */
                 }}
                 .header {{
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
@@ -109,6 +122,7 @@ def send_email(
                     font-weight: 600;
                     border-radius: 12px 12px 0 0;
                     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+                    animation: slideUp 1s ease-out;  /* Slide-up effect for the header */
                 }}
                 .header .date {{
                     font-size: 16px;
@@ -160,6 +174,7 @@ def send_email(
                     text-align: center;
                     font-size: 14px;
                     margin-top: 20px;
+                    animation: slideUp 1s ease-out 0.5s;  /* Footer slide-up with delay */
                 }}
                 .footer a {{
                     color: #1e88e5;
@@ -169,14 +184,18 @@ def send_email(
                     text-decoration: underline;
                     color: #1565c0;
                 }}
+                
+                /* Disable animations on small screens */
                 @media only screen and (max-width: 600px) {{
                     .container {{
                         padding: 20px;
                         border-radius: 0; /* Remove rounded corners */
                         box-shadow: none; /* Remove drop shadow */
+                        animation: none; /* Disable animation */
                     }}
                     .header {{
                         font-size: 22px;
+                        animation: none; /* Disable slide-up animation */
                     }}
                     h1 {{
                         font-size: 20px;
@@ -186,6 +205,9 @@ def send_email(
                     }}
                     p {{
                         font-size: 16px;
+                    }}
+                    .footer {{
+                        animation: none; /* Disable slide-up animation */
                     }}
                 }}
             </style>
