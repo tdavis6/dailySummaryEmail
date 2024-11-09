@@ -11,6 +11,6 @@ def get_current_date_in_timezone(timezone) -> str:
         # Extract the date part
         local_date = local_datetime.date()
 
-        return str(f"# {local_date.strftime("%A, %B %d, %Y")}")
+        return str(f"{local_date.strftime("%A, %B %d, %Y")}")
     except pytz.UnknownTimeZoneError:
         return f"Unknown timezone: {timezone}"
