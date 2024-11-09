@@ -67,7 +67,7 @@ jobs:
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[^[:print:]]//g')
           # Remove duplicate commit messages while keeping their commit hashes
           COMMITS=$(echo "$COMMITS" | sort | uniq)
-          # Sanitize commit messages to escape special characters
+          # Sanitize commit messages to escape special characters (single sed command)
           COMMITS=$(echo "$COMMITS" | sed 's/[&]/\\&/g; s/\\/\\\\/g; s/`/\\`/g; s/\*/\\*/g; s/"/\\"/g; s/\$/\\\$/g; s/(/\\(/g; s/)/\\)/g; s/\[/\\[/g; s/\]/\\]/g; s/\|/\\|/g; s/\{/\\{/g; s/\}/\\}/g')
           echo "commits=${COMMITS}" >> $GITHUB_ENV
 
