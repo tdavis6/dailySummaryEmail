@@ -95,12 +95,16 @@ jobs:
           
             echo "Sanitized commit messages: $SANITIZED_COMMITS"
           
+            # Print sanitized commit messages to debug
+            echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\""
+
             # Safely output to GITHUB_ENV
             echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
             echo "No commits found since the last stable tag."
             echo "SANITIZED_COMMITS=\"No commits since the last stable tag.\"" >> $GITHUB_ENV
           fi
+
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
