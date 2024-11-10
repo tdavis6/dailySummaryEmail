@@ -93,7 +93,7 @@ jobs:
           body_path: ./release_body.txt
           draft: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Ensure token is properly set in the environment
+          GITHUB_TOKEN: ${{ secrets.GH_PAT }}  # Ensure token is properly set in the environment
 
       - name: Build and Push Docker Image
         run: |
