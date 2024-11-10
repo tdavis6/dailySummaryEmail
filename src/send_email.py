@@ -90,11 +90,10 @@ def send_email(
                     }}
                 }}
 
-                /* Default Light Mode Styles */
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                     font-family: 'Raleway', 'Segoe UI', Tahoma, Geneva, sans-serif;
-                    color: #000000;
+                    color: #000;
                     margin: 0;
                     padding: 0;
                 }}
@@ -109,34 +108,22 @@ def send_email(
                     animation: slideUp 0.6s ease-out;
                 }}
 
-                /* Add rounded corners on larger screens only */
-                @media (min-width: 768px) {{
-                    .container {{
-                        border-radius: 12px;
-                    }}
-                }}
-
                 .header {{
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
                     color: white;
                     padding: 20px;
                     text-align: center;
-                    font-size: 28px;
+                    font-size: 32px;
                     font-weight: 600;
-                    border-radius: 12px 12px 0 0;
-                    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+                    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
                     animation: slideUp 1s ease-out;
+                    border-radius: 12px 12px 0 0;
                 }}
 
                 .header .date {{
-                    font-size: 16px;
+                    font-size: 18px;
                     font-weight: 300;
-                    margin-top: 5px;
                     color: #e3f2fd;
-                }}
-
-                h1, h2, h3 {{
-                    color: #1e88e5;
                 }}
 
                 p {{
@@ -145,39 +132,45 @@ def send_email(
                 }}
 
                 a {{
-                    color: #1e88e5;
                     text-decoration: none;
                 }}
 
-                a:hover {{
-                    color: #1565c0;
+                .button {{
+                    display: inline-block;
+                    padding: 8px 16px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    color: white;
+                    background-color: #1e88e5;
+                    border-radius: 8px;
+                    text-align: center;
+                    margin-top: 20px;
+                    animation: slideUp 1s ease-out 0.5s;
+                }}
+
+                .button:hover {{
+                    background-color: #1565c0;
                 }}
 
                 .footer {{
                     text-align: center;
-                    font-size: 14px;
-                    margin-top: 20px;
-                    color: #606060;
-                    animation: slideUp 1s ease-out 0.5s;
                 }}
 
-                .footer a {{
-                    color: #1e88e5;
+                /* Remove rounded corners for small screens */
+                @media (min-width: 768px) {{
+                    .container {{
+                        border-radius: 12px;
+                    }}
                 }}
 
-                .footer a:hover {{
-                    color: #1565c0;
-                }}
-
-                /* Dark Mode Styles */
                 @media (prefers-color-scheme: dark) {{
                     body {{
-                        background: linear-gradient(135deg, #1b263b, #0d1b2a);  /* Inverted dark mode gradient */
+                        background: linear-gradient(135deg, #1b263b, #0d1b2a);
                         color: #e0e0e0;
                     }}
 
                     .container {{
-                        background: #000000;
+                        background: #000;
                         color: #e0e0e0;
                         box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
                     }}
@@ -190,28 +183,16 @@ def send_email(
                         color: #bbdefb;
                     }}
 
-                    h1, h2, h3 {{
-                        color: #1c7ed6;
+                    p {{
+                        color: #e0e0e0;
                     }}
 
-                    a {{
-                        color: #1c7ed6;
+                    .button {{
+                        background-color: #1c7ed6;
                     }}
 
-                    a:hover {{
-                        color: #82caff;
-                    }}
-
-                    .footer {{
-                        color: #b0b0b0;
-                    }}
-
-                    .footer a {{
-                        color: #82caff;
-                    }}
-
-                    .footer a:hover {{
-                        color: #1c7ed6;
+                    .button:hover {{
+                        background-color: #82caff;
                     }}
                 }}
             </style>
@@ -225,7 +206,7 @@ def send_email(
                 </div>
                 {html_content}
                 <div class="footer">
-                    <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank">
+                    <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" class="button">
                         View the project on GitHub
                     </a>
                 </div>
