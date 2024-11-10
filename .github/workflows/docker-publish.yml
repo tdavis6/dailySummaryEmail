@@ -92,7 +92,6 @@ jobs:
           prerelease: ${{ env.pre_release }}
           body_path: ./release_body.txt
           draft: false
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Docker Image
         run: |
