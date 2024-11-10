@@ -28,7 +28,7 @@ def send_email(
     try:
         message = MIMEMultipart("alternative")
         # Updated concise subject line
-        message["Subject"] = f"Daily Summary for {date_string}"
+        message["Subject"] = f"Daily Summary for {recipient_name}: {date_string}"
         message["From"] = f"Daily Summary <{smtp_username}>"
         message["To"] = recipient_email
 
