@@ -73,7 +73,7 @@ jobs:
           echo "Raw commit messages:"
           echo "$COMMITS"
 
-          # Escape special characters
+          # Escape special characters and handle newlines
           if [ -n "$COMMITS" ]; then
             SANITIZED_COMMITS=$(echo "$COMMITS" | sed -E \
               -e 's/\\/\\\\/g' \
@@ -91,31 +91,21 @@ jobs:
               -e 's/&/\\&/g' \
               -e 's/'\''/\\'\''/g')
 
-            # Replace newlines with placeholder
-            SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed ':a;N;$!ba;s/\n/#NEWLINE#/g')
-
-            echo "Sanitized commit messages:"
-            echo "$SANITIZED_COMMITS"
-
-            # Ensure the variable assignment format is correct
+            SANITIZED_COMMITS=${SANITIZED_COMMITS//$'\n'/#NEWLINE#}
             echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
-            echo "No commits found since the last stable tag."
             echo "SANITIZED_COMMITS=\"No commits since the last stable tag.\"" >> $GITHUB_ENV
           fi
 
       - name: Prepare Release Notes
         run: |
           set -e
-          # Replace placeholders with actual newlines and create release notes
           SANITIZED_COMMITS_WITH_NEWLINES=$(echo "${{ env.SANITIZED_COMMITS }}" | sed 's/#NEWLINE#/\'$'\n''/g')
 
-          {
-            echo "Automated release of version ${{ env.version }}"
-            echo ""
-            echo "### Commits in this release:"
-            echo "$SANITIZED_COMMITS_WITH_NEWLINES"
-          } > release_body.txt
+          echo "Automated release of version ${{ env.version }}" > release_body.txt
+          echo "" >> release_body.txt
+          echo "### Commits in this release:" >> release_body.txt
+          echo "$SANITIZED_COMMITS_WITH_NEWLINES" >> release_body.txt
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
