@@ -10,8 +10,8 @@ jobs:
   release:
     runs-on: ubuntu-latest
     env:
-      version: v1.3.0-beta.47
-      docker_tag: 1.3.0-beta.47
+      version: v1.3.0-beta.63
+      docker_tag: 1.3.0-beta.63
       repo_name: tdavis6/dailysummaryemail
       pre_release: true
       pre_release_type: beta
@@ -85,7 +85,7 @@ jobs:
           } > release_body.txt
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1.1.2
+        uses: actions/create-release@v1
         with:
           tag_name: ${{ env.version }}
           release_name: ${{ env.version }}
@@ -93,7 +93,7 @@ jobs:
           body_path: ./release_body.txt
           draft: false
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Ensure token is properly set in the environment
 
       - name: Build and Push Docker Image
         run: |
@@ -102,7 +102,7 @@ jobs:
           
           # Apply the latest-dev tag for all releases, regardless of stability
           docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
-      
+          
           # Push both tags to the GitHub Container Registry
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ env.repo_name }}:latest-dev
