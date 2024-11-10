@@ -67,13 +67,13 @@ jobs:
         run: |
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           echo "Last stable tag: $LAST_STABLE_TAG"
-
+      
           # Fetch commit messages
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
           echo "Raw commit messages:"
           echo "$COMMITS"
-
-          # Sanitize and handle commit messages
+          
+          # Escape special characters but keep newlines
           if [ -n "$COMMITS" ]; then
             SANITIZED_COMMITS=$(echo "$COMMITS" | sed -E \
               -e 's/\\/\\\\/g' \
@@ -89,12 +89,11 @@ jobs:
               -e 's/\{/\\\{/g' \
               -e 's/\}/\\\}/g' \
               -e 's/&/\\&/g' \
-              -e 's/'\''/\\'\''/g' \
-              -e ':a;N;$!ba;s/\n/\\n/g')
-          
+              -e 's/'\''/\\'\''/g')
+      
             echo "Sanitized commit messages:"
             echo "$SANITIZED_COMMITS"
-
+      
             # Ensure the variable assignment format is correct
             echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
