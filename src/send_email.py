@@ -81,17 +81,18 @@ def send_email(
                     }}
                 }}
 
+                /* Light mode adjustments */
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                     font-family: 'Georgia', 'Times', serif;
-                    color: #000;
+                    color: #003366;  /* Set body text color to dark blue */
                     margin: 0;
                     padding: 0;
                 }}
 
                 .container {{
                     background: #ffffff;
-                    color: #000000;
+                    color: #003366; /* Set container text color to dark blue */
                     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
                     max-width: 750px;
                     margin: 40px auto;
@@ -100,16 +101,30 @@ def send_email(
                     border-radius: 12px; /* Rounded corners */
                 }}
 
-                /* Media query for small screens (768px or smaller) */
-                @media (max-width: 768px) {{
-                    .container {{
-                        border-radius: 0; /* Remove rounded corners on small screens */
-                    }}
+                /* Section styles */
+                .section {{
+                    background-color: #f7f7f7; /* Light gray background for sections in light mode */
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                }}
+
+                .section h2 {{
+                    font-size: 30px;
+                    font-weight: 600;
+                    color: #003366 !important;  /* Dark blue color for section headers in light mode */
+                }}
+
+                .section p, .weather p {{
+                    font-size: 18px;
+                    color: #000; /* Change paragraph text color to black */
                 }}
 
                 .header {{
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
-                    color: white;
+                    color: white; /* Reverted back to white for the main header */
                     padding: 20px;
                     text-align: center;
                     font-size: 32px;
@@ -125,24 +140,11 @@ def send_email(
                     color: #e3f2fd;
                 }}
 
-                .section {{
-                    background-color: #f7f7f7; /* Light gray background for sections in light mode */
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    margin-top: 20px;
-                    margin-bottom: 20px;
-                }}
-
-                .section h2, .weather h2 {{
-                    font-size: 30px;
-                    font-weight: 600;
-                    color: #000; /* Text color changed back to black for light mode */
-                }}
-
-                .section p, .weather p {{
-                    font-size: 18px;
-                    color: #000; /* Text color changed back to black for light mode */
+                /* Media query for small screens (768px or smaller) */
+                @media (max-width: 768px) {{
+                    .container {{
+                        border-radius: 0; /* Remove rounded corners on small screens */
+                    }}
                 }}
 
                 /* Dark mode adjustments */
