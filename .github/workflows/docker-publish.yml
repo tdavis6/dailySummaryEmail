@@ -106,3 +106,12 @@ jobs:
           # Push both tags to the GitHub Container Registry
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ env.repo_name }}:latest-dev
+
+      - name: Tag and Push Latest for Stable Releases
+        if: ${{ env.pre_release == 'false' }}
+        run: |
+          # Tag the Docker image as latest for stable releases
+          docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
+
+          # Push the latest tag to the GitHub Container Registry
+          docker push ghcr.io/${{ env.repo_name }}:latest
