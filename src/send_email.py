@@ -81,10 +81,9 @@ def send_email(
                     }}
                 }}
 
-                /* Light mode adjustments */
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-                    font-family: 'Georgia', 'Times', serif;
+                    font-family: 'Georgia', 'Times', serif;  /* Original fonts */
                     color: #003366;  /* Set body text color to dark blue */
                     margin: 0;
                     padding: 0;
@@ -101,37 +100,17 @@ def send_email(
                     border-radius: 12px; /* Rounded corners */
                 }}
 
-                /* Section styles */
-                .section {{
-                    background-color: #f7f7f7; /* Light gray background for sections in light mode */
-                    padding: 20px;
-                    border-radius: 10px;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    margin-top: 20px;
-                    margin-bottom: 20px;
-                }}
-
-                .section h2 {{
-                    font-size: 30px;
-                    font-weight: 600;
-                    color: #003366 !important;  /* Dark blue color for section headers in light mode */
-                }}
-
-                .section p, .weather p {{
-                    font-size: 18px;
-                    color: #000; /* Change paragraph text color to black */
-                }}
-
                 .header {{
+                    font-family: 'Georgia', 'Times', serif;  /* Maintain the original fonts */
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
-                    color: white; /* Reverted back to white for the main header */
+                    color: white;
                     padding: 20px;
                     text-align: center;
                     font-size: 32px;
                     font-weight: 600;
                     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
                     animation: slideUp 1s ease-out;
-                    border-radius: 12px; /* Rounded all corners of the header */
+                    border-radius: 12px;
                 }}
 
                 .header .date {{
@@ -140,7 +119,30 @@ def send_email(
                     color: #e3f2fd;
                 }}
 
-                /* Media query for small screens (768px or smaller) */
+                .section h2 {{
+                    font-family: 'Georgia', 'Times', serif;  /* Keep the original fonts */
+                    font-size: 30px;
+                    font-weight: 600;
+                    color: #003366 !important;  /* Dark blue color for section headers */
+                }}
+
+                .section p, .weather p {{
+                    font-family: 'Arial', sans-serif;  /* Use Arial for paragraphs for legibility */
+                    font-size: 18px;
+                    color: #000;  /* Set paragraph text color to black */
+                }}
+
+                /* Custom class for puzzle content */
+                .puzzles pre, .puzzles p, .puzzles-ans pre, .puzzles-ans p {{
+                    color: #000 !important;  /* Force only text in puzzles and answers to black */
+                }}
+
+                .footer {{
+                    font-family: 'Arial', sans-serif;  /* Use Arial for footer text */
+                    text-align: center;
+                    margin-top: 20px;
+                }}
+
                 @media (max-width: 768px) {{
                     .container {{
                         border-radius: 0; /* Remove rounded corners on small screens */
@@ -193,11 +195,6 @@ def send_email(
                     .button:hover {{
                         background-color: #82caff;
                     }}
-                }}
-
-                .footer {{
-                    text-align: center;
-                    margin-top: 20px;
                 }}
             </style>
             <meta name="color-scheme" content="light dark">
