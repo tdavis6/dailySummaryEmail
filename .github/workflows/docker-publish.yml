@@ -69,8 +69,8 @@ jobs:
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           echo "Last stable tag: $LAST_STABLE_TAG"
 
-          # Fetch commit messages
-          git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed 's/[$&`"'\''\\\/]/\\&/g' | sed ':a;N;$!ba;s/\n/#NEWLINE#/g' > sanitized_commits.txt
+          # Fetch commit messages with author
+          git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s (by %an)" | sed 's/[$&`"'\''\\\/]/\\&/g' | sed ':a;N;$!ba;s/\n/#NEWLINE#/g' > sanitized_commits.txt
 
       - name: Prepare Release Notes
         run: |
