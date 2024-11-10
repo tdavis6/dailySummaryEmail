@@ -3,9 +3,7 @@ import smtplib
 import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-
 import markdown
-
 
 def send_email(
         recipient_email,
@@ -27,7 +25,6 @@ def send_email(
 ) -> None:
     try:
         message = MIMEMultipart("alternative")
-        # Updated concise subject line
         message["Subject"] = f"Daily Summary for {recipient_name}: {date_string}"
         message["From"] = f"Daily Summary <{smtp_username}>"
         message["To"] = recipient_email
@@ -35,6 +32,7 @@ def send_email(
         text = ""
         html_text = ""
 
+        # Append content dynamically
         if date_string is not None:
             text += "# " + date_string + "\n\n"
 
@@ -72,9 +70,7 @@ def send_email(
 
         html_content = markdown.markdown(
             html_text,
-            extensions=[
-                "markdown.extensions.fenced_code",
-            ],
+            extensions=["markdown.extensions.fenced_code"]
         )
 
         html = f"""
@@ -82,8 +78,7 @@ def send_email(
         <head>
             <style>
                 @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&display=swap');
-                
-                /* Animations */
+
                 @keyframes slideUp {{
                     from {{
                         transform: translateY(50%);
@@ -95,122 +90,126 @@ def send_email(
                     }}
                 }}
 
+                /* Default Light Mode Styles */
                 body {{
-                    background: linear-gradient(135deg, #e3f2fd, #bbdefb);  /* Soft light blue gradient */
+                    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                     font-family: 'Raleway', 'Segoe UI', Tahoma, Geneva, sans-serif;
                     color: #000000;
                     margin: 0;
                     padding: 0;
                 }}
+
                 .container {{
-                    width: 90%;
+                    background: #ffffff;
+                    color: #000000;
+                    border-radius: 12px;
+                    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
                     max-width: 750px;
                     margin: 40px auto;
-                    background: #ffffff;
                     padding: 30px;
-                    border-radius: 12px;
-                    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);  /* Slight drop shadow to bottom-left */
-                    overflow: hidden;
-                    animation: slideUp 0.6s ease-out;  /* Slide-up effect for the container */
+                    animation: slideUp 0.6s ease-out;
                 }}
+
                 .header {{
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
-                    color: #fff;
+                    color: white;
                     padding: 20px;
                     text-align: center;
                     font-size: 28px;
                     font-weight: 600;
                     border-radius: 12px 12px 0 0;
                     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-                    animation: slideUp 1s ease-out;  /* Slide-up effect for the header */
+                    animation: slideUp 1s ease-out;
                 }}
+
                 .header .date {{
                     font-size: 16px;
                     font-weight: 300;
                     margin-top: 5px;
                     color: #e3f2fd;
                 }}
-                h1 {{
+
+                h1, h2, h3 {{
                     color: #1e88e5;
-                    font-size: 24px;
-                    margin-bottom: 15px;
-                    border-bottom: 2px solid #e3e3e3;
-                    padding-bottom: 5px;
-                    text-align: left;
                 }}
-                h2, h3 {{
-                    color: #1e88e5;
-                    font-size: 20px;
-                    margin-top: 20px;
-                }}
+
                 p {{
                     font-size: 18px;
-                    color: #000000;
-                    margin: 15px 0;
-                    line-height: 1.8;
+                    line-height: 1.6;
                 }}
-                /* Fixing bold text in the events/tasks list */
-                strong {{
-                    font-weight: normal;
-                }}
+
                 a {{
                     color: #1e88e5;
                     text-decoration: none;
-                    font-weight: 600;
                 }}
+
                 a:hover {{
-                    text-decoration: underline;
                     color: #1565c0;
                 }}
-                .highlight {{
-                    background: #fff3cd;
-                    border-left: 5px solid #ffc107;
-                    padding: 10px 15px;
-                    font-style: italic;
-                    color: #856404;
-                    margin: 15px 0;
-                }}
+
                 .footer {{
                     text-align: center;
                     font-size: 14px;
                     margin-top: 20px;
-                    animation: slideUp 1s ease-out 0.5s;  /* Footer slide-up with delay */
+                    color: #606060;
+                    animation: slideUp 1s ease-out 0.5s;
                 }}
+
                 .footer a {{
                     color: #1e88e5;
-                    text-decoration: none;
                 }}
+
                 .footer a:hover {{
-                    text-decoration: underline;
                     color: #1565c0;
                 }}
-                
-                /* Disable animations on small screens */
-                @media only screen and (max-width: 600px) {{
+
+                /* Dark Mode Styles */
+                @media (prefers-color-scheme: dark) {{
+                    body {{
+                        background: linear-gradient(135deg, #1b263b, #0d1b2a);  /* Inverted dark mode gradient */
+                        color: #e0e0e0;
+                    }}
+
                     .container {{
-                        padding: 20px;
-                        border-radius: 0; /* Remove rounded corners */
-                        box-shadow: none; /* Remove drop shadow */
-                        animation: none; /* Disable animation */
+                        background: #000000;
+                        color: #e0e0e0;
+                        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
                     }}
+
                     .header {{
-                        font-size: 22px;
-                        animation: none; /* Disable slide-up animation */
+                        background: linear-gradient(135deg, #0a3d62, #1e5799);
                     }}
-                    h1 {{
-                        font-size: 20px;
+
+                    .header .date {{
+                        color: #bbdefb;
                     }}
-                    h2, h3 {{
-                        font-size: 18px;
+
+                    h1, h2, h3 {{
+                        color: #1c7ed6;
                     }}
-                    p {{
-                        font-size: 16px;
+
+                    a {{
+                        color: #1c7ed6;
                     }}
+
+                    a:hover {{
+                        color: #82caff;
+                    }}
+
                     .footer {{
-                        animation: none; /* Disable slide-up animation */
+                        color: #b0b0b0;
+                    }}
+
+                    .footer a {{
+                        color: #82caff;
+                    }}
+
+                    .footer a:hover {{
+                        color: #1c7ed6;
                     }}
                 }}
             </style>
+            <meta name="color-scheme" content="light dark">
         </head>
         <body>
             <div class="container">
@@ -229,16 +228,13 @@ def send_email(
         </html>
         """
 
-        part_1 = MIMEText(text, "plain")
-        part_2 = MIMEText(html, "html")
-
-        message.attach(part_1)
-        message.attach(part_2)
+        message.attach(MIMEText(text, "plain"))
+        message.attach(MIMEText(html, "html"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
-        logging.info("Email sent.")
+        logging.info("Email sent successfully.")
     except Exception as e:
-        logging.critical(f"Error occurred: {e}")
+        logging.critical(f"Error sending email: {e}")
