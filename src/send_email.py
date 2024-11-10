@@ -77,8 +77,6 @@ def send_email(
         <html>
         <head>
             <style>
-                @import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;600&display=swap');
-
                 @keyframes slideUp {{
                     from {{
                         transform: translateY(50%);
@@ -92,7 +90,7 @@ def send_email(
 
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-                    font-family: 'Raleway', 'Segoe UI', Tahoma, Geneva, sans-serif;
+                    font-family: 'Georgia', 'Times', serif; /* Changed to Georgia */
                     color: #000;
                     margin: 0;
                     padding: 0;
@@ -154,6 +152,19 @@ def send_email(
 
                 .footer {{
                     text-align: center;
+                    padding: 20px;
+                    font-size: 14px;
+                    color: inherit;
+                    margin-top: 20px;
+                }}
+
+                .footer a {{
+                    color: inherit;
+                    text-decoration: underline;
+                }}
+
+                .footer a:hover {{
+                    text-decoration: none;
                 }}
 
                 /* Remove rounded corners for small screens */
@@ -206,9 +217,10 @@ def send_email(
                 </div>
                 {html_content}
                 <div class="footer">
-                    <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" class="button">
-                        View the project on GitHub
-                    </a>
+                    <p style="font-size: 14px; color: inherit; margin-top: 20px;">
+                        View the project on 
+                        <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a>
+                    </p>
                 </div>
             </div>
         </body>
