@@ -113,7 +113,7 @@ jobs:
           echo "Automated release of version ${{ env.version }}" > release_body.txt
           echo "" >> release_body.txt
           echo "### Commits in this release:" >> release_body.txt
-          echo -e "$SANITIZED_COMMITS_WITH_NEWLINES" >> release_body.txt
+          echo "$SANITIZED_COMMITS_WITH_NEWLINES" >> release_body.txt
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
