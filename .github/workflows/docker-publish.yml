@@ -107,6 +107,7 @@ jobs:
 
           # Output the final sanitized commit messages for the release notes
           echo "commits=${COMMITS}" >> $GITHUB_ENV
+      
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
