@@ -74,8 +74,8 @@ jobs:
           # Get all commit messages since the last stable tag
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
 
-          # Debug: Check if the COMMITS variable has content
-          echo "$COMMITS"  # This will help you ensure that commit data is being fetched
+          # Debug: Output the raw commit messages
+          echo "Raw commit messages: $COMMITS"  # This will help you inspect commit messages before any processing
 
           # Check if COMMITS is non-empty before running sed
           if [ -n "$COMMITS" ]; then
@@ -98,6 +98,9 @@ jobs:
             echo "No commits found since the last stable tag."
             COMMITS="No commits since the last stable tag."
           fi
+
+          # Debug: Output the sanitized commit messages
+          echo "Sanitized commit messages: $COMMITS"  # This will help ensure the sanitization worked correctly
 
           # Remove duplicate commit messages while keeping their commit hashes
           COMMITS=$(echo "$COMMITS" | sort | uniq)
