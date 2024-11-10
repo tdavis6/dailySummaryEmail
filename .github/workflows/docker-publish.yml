@@ -66,32 +66,34 @@ jobs:
         id: commit_messages
         run: |
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
-          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
+          echo "Last stable tag: $LAST_STABLE_TAG"
 
+          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
           echo "Raw commit messages: $COMMITS"
 
           if [ -n "$COMMITS" ]; then
-            SANITIZED_COMMITS=$(printf "%s" "$COMMITS" | sed -E \
-              's/[&]/\\&/g' \
-              -e 's/\\/\\\\/g' \
-              -e 's/`/\\`/g' \
-              -e 's/\*/\\*/g' \
-              -e 's/"/\\"/g' \
-              -e 's/\$/\\\$/g' \
-              -e 's/\(/\\(/g' \
-              -e 's/\)/\\)/g' \
-              -e 's/\[/\\[/g' \
-              -e 's/\]/\\]/g' \
-              -e 's/\|/\\|/g' \
-              -e 's/\{/\\\{/g' \
-              -e 's/\}/\\\}/g')
-            echo "Sanitized commit messages: $SANITIZED_COMMITS"
+            echo "$COMMITS" | while read -r line; do
+              echo "Processing commit message: $line"
+              sanitized_commit=$(echo "$line" | sed -E \
+                's/[&]/\\&/g' \
+                -e 's/\\/\\\\/g' \
+                -e 's/`/\\`/g' \
+                -e 's/\*/\\*/g' \
+                -e 's/"/\\"/g' \
+                -e 's/\$/\\\$/g' \
+                -e 's/\(/\\(/g' \
+                -e 's/\)/\\)/g' \
+                -e 's/\[/\\[/g' \
+                -e 's/\]/\\]/g' \
+                -e 's/\|/\\|/g' \
+                -e 's/\{/\\\{/g' \
+                -e 's/\}/\\\}/g')
+              echo "Sanitized commit message: $sanitized_commit"
+            done
           else
             echo "No commits found since the last stable tag."
-            SANITIZED_COMMITS="No commits since the last stable tag."
+            COMMITS="No commits since the last stable tag."
           fi
-
-          echo "SANITIZED_COMMITS=$SANITIZED_COMMITS" >> $GITHUB_ENV
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
