@@ -85,14 +85,15 @@ jobs:
           } > release_body.txt
 
       - name: Create GitHub Release
-        uses: actions/create-release@v1
+        uses: actions/create-release@v1.1.2
         with:
           tag_name: ${{ env.version }}
           release_name: ${{ env.version }}
           prerelease: ${{ env.pre_release }}
           body_path: ./release_body.txt
           draft: false
-          token: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and Push Docker Image
         run: |
