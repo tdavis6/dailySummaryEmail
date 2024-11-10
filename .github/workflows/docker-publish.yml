@@ -70,19 +70,21 @@ jobs:
           echo "Last stable tag: $LAST_STABLE_TAG"
 
           # Fetch commit messages
-          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s" | sed ':a;N;$!ba;s/\n/#NEWLINE#/g')
+          COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
           
           if [ -n "$COMMITS" ]; then
-            # Escape/replace problematic characters
-            SANITIZED_COMMITS=$(echo "$COMMITS" | sed 's/[$&`"'"'\\\/]/\\&/g')
-            echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
+            # Escape/replace problematic characters and handle newlines
+            SANITIZED_COMMITS=$(echo "$COMMITS" | sed ':a;N;$!ba;s/\n/#NEWLINE#/g')
+            SANITIZED_COMMITS=$(echo "$SANITIZED_COMMITS" | sed 's/[$&`"'"'\\\/]/\\&/g')
+            echo "$SANITIZED_COMMITS" > sanitized_commits.txt
           else
-            echo "SANITIZED_COMMITS=\"No commits since the last stable tag.\"" >> $GITHUB_ENV
+            echo "No commits since the last stable tag." > sanitized_commits.txt
           fi
 
       - name: Prepare Release Notes
         run: |
-          SANITIZED_COMMITS_WITH_NEWLINES=$(echo "${{ env.SANITIZED_COMMITS }}" | sed 's/#NEWLINE#/\n/g')
+          SANITIZED_COMMITS=$(cat sanitized_commits.txt)
+          SANITIZED_COMMITS_WITH_NEWLINES=$(echo "$SANITIZED_COMMITS" | sed 's/#NEWLINE#/\n/g')
 
           {
             echo "Automated release of version ${{ env.version }}"
