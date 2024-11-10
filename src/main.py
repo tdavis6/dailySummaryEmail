@@ -111,6 +111,7 @@ if __name__ == "__main__":
                 quote_string = get_quote() if QOTD in ["True", "true", True] else ""
 
                 send_email(
+                    VERSION,
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
                     SENDER_EMAIL,

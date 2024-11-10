@@ -4,8 +4,10 @@ import ssl
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import markdown
+from datetime import datetime
 
 def send_email(
+        version,
         recipient_email,
         recipient_name,
         sender_email,
@@ -59,6 +61,8 @@ def send_email(
             extensions=["markdown.extensions.fenced_code"]
         )
 
+        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
         html = f"""
         <html>
         <head>
@@ -110,7 +114,7 @@ def send_email(
 
                 .section p, .section pre {{
                     font-size: 18px;
-                    color: #000; /* Text color set to black */
+                    color: #000;
                 }}
 
                 .header {{
@@ -190,6 +194,9 @@ def send_email(
                     <p style="font-size: 14px; color: inherit;">
                         View the project on 
                         <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a>
+                    </p>
+                    <p style="font-size: 12px; color: inherit;">
+                        Version: {version} | Generated on: {current_datetime}
                     </p>
                 </div>
             </div>
