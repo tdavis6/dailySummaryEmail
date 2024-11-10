@@ -32,26 +32,19 @@ def send_email(
         text = ""  # Initialize the plain text content
         html_text = ""  # Initialize the HTML content
 
-        # Convert the Markdown strings to HTML and append to text and html_text
+        # Convert and append sections
         def convert_and_append(markdown_string, section_class, text_format=True, is_date=False):
-            nonlocal text, html_text  # Ensure we modify the outer variables
+            nonlocal text, html_text
             if markdown_string is not None:
-                # Convert Markdown to HTML
                 html_converted = markdown.markdown(markdown_string, extensions=["markdown.extensions.fenced_code"])
-
-                # Prepare text format for plain text email (if required)
                 if text_format:
                     text += markdown_string + "\n\n"
-
-                # Append HTML formatted content with section, skip date in HTML
                 if not is_date:
                     html_text += f"<div class='section {section_class}'>{html_converted}</div>"
 
         if date_string is not None:
-            # Include the date in plain text but skip in HTML content (header will be handled separately)
             text += "# " + date_string + "\n\n"
 
-        # Convert the other sections to text and HTML
         convert_and_append(weather_string, "weather", text_format=True)
         convert_and_append(todo_string, "todo", text_format=True)
         convert_and_append(cal_string, "calendar", text_format=True)
@@ -83,25 +76,44 @@ def send_email(
 
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-                    font-family: 'Georgia', 'Times', serif;  /* Original fonts */
-                    color: #003366;  /* Set body text color to dark blue */
+                    font-family: 'Georgia', 'Times', serif;
+                    color: #003366;
                     margin: 0;
                     padding: 0;
                 }}
 
                 .container {{
                     background: #ffffff;
-                    color: #003366; /* Set container text color to dark blue */
+                    color: #003366;
                     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
                     max-width: 750px;
                     margin: 40px auto;
                     padding: 30px;
                     animation: slideUp 0.6s ease-out;
-                    border-radius: 12px; /* Rounded corners */
+                    border-radius: 12px;
+                }}
+
+                .section {{
+                    background-color: #f7f7f7;
+                    padding: 20px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                    margin-top: 20px;
+                    margin-bottom: 20px;
+                }}
+
+                .section h2 {{
+                    font-size: 30px;
+                    font-weight: 600;
+                    color: #003366;
+                }}
+
+                .section p, .section pre {{
+                    font-size: 18px;
+                    color: #000; /* Text color set to black */
                 }}
 
                 .header {{
-                    font-family: 'Georgia', 'Times', serif;  /* Maintain the original fonts */
                     background: linear-gradient(135deg, #1e88e5, #42a5f5);
                     color: white;
                     padding: 20px;
@@ -119,40 +131,15 @@ def send_email(
                     color: #e3f2fd;
                 }}
 
-                .section h2 {{
-                    font-family: 'Georgia', 'Times', serif;  /* Keep the original fonts */
-                    font-size: 30px;
-                    font-weight: 600;
-                    color: #003366 !important;  /* Dark blue color for section headers */
-                }}
-
-                .section p, .weather p {{
-                    font-family: 'Arial', sans-serif;  /* Use Arial for paragraphs for legibility */
-                    font-size: 18px;
-                    color: #000;  /* Set paragraph text color to black */
-                }}
-
-                /* Custom class for puzzle content */
-                .puzzles pre, .puzzles p, .puzzles-ans pre, .puzzles-ans p {{
-                    color: #000 !important;  /* Force only text in puzzles and answers to black */
-                }}
-
-                .footer {{
-                    font-family: 'Arial', sans-serif;  /* Use Arial for footer text */
-                    text-align: center;
-                    margin-top: 20px;
-                }}
-
                 @media (max-width: 768px) {{
                     .container {{
-                        border-radius: 0; /* Remove rounded corners on small screens */
+                        border-radius: 0;
                     }}
                 }}
 
-                /* Dark mode adjustments */
                 @media (prefers-color-scheme: dark) {{
                     body {{
-                        background: linear-gradient(135deg, #2a3c57, #1e2a3f); /* Blue gradient for dark mode */
+                        background: linear-gradient(135deg, #2a3c57, #1e2a3f);
                         color: #e0e0e0;
                     }}
 
@@ -171,30 +158,23 @@ def send_email(
                     }}
 
                     .section {{
-                        background-color: #2e3b4e; /* Darker blue background for sections in dark mode */
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); /* Darker shadow */
+                        background-color: #2e3b4e;
+                        color: #e0e0e0;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                     }}
 
-                    .weather {{
-                        background-color: #2e3b4e; /* Dark background for weather section */
-                        color: #bbdefb; /* Light blue text color */
+                    .section h2 {{
+                        color: #bbdefb;
                     }}
 
-                    .weather h2, .section h2 {{
-                        color: #bbdefb; /* Light blue for headers in dark mode */
+                    .section p, .section pre {{
+                        color: #e0e0e0;
                     }}
+                }}
 
-                    p, .section p {{
-                        color: #e0e0e0; /* Ensure paragraph text is light in dark mode */
-                    }}
-
-                    .button {{
-                        background-color: #1c7ed6;
-                    }}
-
-                    .button:hover {{
-                        background-color: #82caff;
-                    }}
+                .footer {{
+                    text-align: center;
+                    margin-top: 20px;
                 }}
             </style>
             <meta name="color-scheme" content="light dark">
@@ -217,7 +197,6 @@ def send_email(
         </html>
         """
 
-        # Send the email as usual
         message.attach(MIMEText(text, "plain"))
         message.attach(MIMEText(html, "html"))
 
