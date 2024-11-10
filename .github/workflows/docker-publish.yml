@@ -75,30 +75,32 @@ jobs:
           if [ -n "$COMMITS" ]; then
             echo "Commit messages are not empty"
 
-            # Handle commits for environment variable
-            SANITIZED_COMMITS=$(printf "%s" "$COMMITS" | sed -E \
+            # Escape problematic characters for use in environment variables
+            SANITIZED_COMMITS=$(printf "%s\n" "$COMMITS" | sed -E \
               -e 's/\\/\\\\/g' \
+              -e 's/"/\\"/g' \
               -e 's/`/\\`/g' \
               -e 's/\*/\\*/g' \
-              -e 's/"/\\"/g' \
               -e 's/\$/\\\$/g' \
               -e 's/\(/\\(/g' \
               -e 's/\)/\\)/g' \
               -e 's/\[/\\[/g' \
               -e 's/\]/\\]/g' \
-              -e "s/'/\\'/g" \
               -e 's/\|/\\|/g' \
               -e 's/\{/\\\{/g' \
               -e 's/\}/\\\}/g' \
-              -e 's/&/\\&/g')
+              -e 's/&/\\&/g' \
+              -e 's/'\''/\\'\''/g' \
+              -e ':a;N;$!ba;s/\n/\\n/g')
           
             echo "Sanitized commit messages: $SANITIZED_COMMITS"
-            echo "SANITIZED_COMMITS=$SANITIZED_COMMITS" >> $GITHUB_ENV
+          
+            # Safely output to GITHUB_ENV
+            echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
             echo "No commits found since the last stable tag."
-            echo "SANITIZED_COMMITS=No commits since the last stable tag." >> $GITHUB_ENV
+            echo "SANITIZED_COMMITS=\"No commits since the last stable tag.\"" >> $GITHUB_ENV
           fi
-
       - name: Create GitHub Release
         uses: actions/create-release@v1
         with:
