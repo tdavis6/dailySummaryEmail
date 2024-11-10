@@ -110,12 +110,12 @@ jobs:
           # Replace placeholders with actual newlines and create release notes
           SANITIZED_COMMITS_WITH_NEWLINES=$(echo "${{ env.SANITIZED_COMMITS }}" | sed 's/#NEWLINE#/\'$'\n''/g')
 
-          {
-            echo "Automated release of version ${{ env.version }}"
-            echo ""
-            echo "### Commits in this release:"
-            echo -e "$SANITIZED_COMMITS_WITH_NEWLINES"
-          } > release_body.txt
+          cat << EOF > release_body.txt
+          Automated release of version ${{ env.version }}
+        
+          ### Commits in this release:
+          $SANITIZED_COMMITS_WITH_NEWLINES
+          EOF
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
@@ -133,7 +133,7 @@ jobs:
           
           # Apply the latest-dev tag for all releases, regardless of stability
           docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest-dev
-
+      
           # Push both tags to the GitHub Container Registry
           docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ env.repo_name }}:latest-dev
