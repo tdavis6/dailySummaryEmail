@@ -102,12 +102,18 @@ def send_email(
                 .container {{
                     background: #ffffff;
                     color: #000000;
-                    border-radius: 12px;
                     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
                     max-width: 750px;
                     margin: 40px auto;
                     padding: 30px;
                     animation: slideUp 0.6s ease-out;
+                }}
+
+                /* Add rounded corners on larger screens only */
+                @media (min-width: 768px) {{
+                    .container {{
+                        border-radius: 12px;
+                    }}
                 }}
 
                 .header {{
