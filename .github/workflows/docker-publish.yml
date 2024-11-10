@@ -68,19 +68,18 @@ jobs:
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           echo "Last stable tag: $LAST_STABLE_TAG"
 
+          # Fetch commit messages
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
-          echo "Raw commit messages: $COMMITS"
+          echo "Raw commit messages:"
+          echo "$COMMITS"
 
-          # Check if COMMITS is non-empty
+          # Sanitize and handle commit messages
           if [ -n "$COMMITS" ]; then
-            echo "Commit messages are not empty"
-
-            # Escape problematic characters for use in environment variables
-            SANITIZED_COMMITS=$(printf "%s\n" "$COMMITS" | sed -E \
+            SANITIZED_COMMITS=$(echo "$COMMITS" | sed -E \
               -e 's/\\/\\\\/g' \
-              -e 's/"/\\"/g' \
               -e 's/`/\\`/g' \
               -e 's/\*/\\*/g' \
+              -e 's/"/\\"/g' \
               -e 's/\$/\\\$/g' \
               -e 's/\(/\\(/g' \
               -e 's/\)/\\)/g' \
@@ -93,12 +92,10 @@ jobs:
               -e 's/'\''/\\'\''/g' \
               -e ':a;N;$!ba;s/\n/\\n/g')
           
-            echo "Sanitized commit messages: $SANITIZED_COMMITS"
-          
-            # Print sanitized commit messages to debug
-            echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\""
+            echo "Sanitized commit messages:"
+            echo "$SANITIZED_COMMITS"
 
-            # Safely output to GITHUB_ENV
+            # Ensure the variable assignment format is correct
             echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
             echo "No commits found since the last stable tag."
@@ -115,7 +112,7 @@ jobs:
             Automated release of version ${{ env.version }}
 
             ### Commits in this release:
-            ${{ env.commits }}
+            ${{ env.SANITIZED_COMMITS }}
           draft: false
         env:
           GITHUB_TOKEN: ${{ secrets.GH_PAT }}
