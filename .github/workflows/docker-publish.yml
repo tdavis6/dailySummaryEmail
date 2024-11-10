@@ -74,30 +74,30 @@ jobs:
           # Check if COMMITS is non-empty
           if [ -n "$COMMITS" ]; then
             echo "Commit messages are not empty"
-          else
-            echo "Commit messages are empty"
-          fi
 
-          echo "$COMMITS" > raw_commits.txt
-          cat raw_commits.txt
-
-          SANITIZED_COMMITS=$(sed -E \
-            -e 's/[&]/\\\&/g' \
-            -e 's/\\/\\\\/g' \
-            -e 's/`/\\`/g' \
-            -e 's/\*/\\*/g' \
-            -e 's/"/\\"/g' \
-            -e 's/\$/\\\$/g' \
-            -e 's/\(/\\(/g' \
-            -e 's/\)/\\)/g' \
-            -e 's/\[/\\[/g' \
-            -e 's/\]/\\]/g' \
-            -e 's/\|/\\|/g' \
-            -e 's/\{/\\\{/g' \
-            -e 's/\}/\\\}/g' < raw_commits.txt)
+            # Handle commits for environment variable
+            SANITIZED_COMMITS=$(printf "%s" "$COMMITS" | sed -E \
+              -e 's/\\/\\\\/g' \
+              -e 's/`/\\`/g' \
+              -e 's/\*/\\*/g' \
+              -e 's/"/\\"/g' \
+              -e 's/\$/\\\$/g' \
+              -e 's/\(/\\(/g' \
+              -e 's/\)/\\)/g' \
+              -e 's/\[/\\[/g' \
+              -e 's/\]/\\]/g' \
+              -e "s/'/\\'/g" \
+              -e 's/\|/\\|/g' \
+              -e 's/\{/\\\{/g' \
+              -e 's/\}/\\\}/g' \
+              -e 's/&/\\&/g')
           
-          echo "Sanitized commit messages: $SANITIZED_COMMITS"
-          echo "SANITIZED_COMMITS=$SANITIZED_COMMITS" >> $GITHUB_ENV
+            echo "Sanitized commit messages: $SANITIZED_COMMITS"
+            echo "SANITIZED_COMMITS=$SANITIZED_COMMITS" >> $GITHUB_ENV
+          else
+            echo "No commits found since the last stable tag."
+            echo "SANITIZED_COMMITS=No commits since the last stable tag." >> $GITHUB_ENV
+          fi
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
