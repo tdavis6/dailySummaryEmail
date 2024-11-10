@@ -36,7 +36,8 @@ jobs:
         id: get_version
         run: |
           VERSION=$(jq -r '.version' version.json)
-          DOCKER_TAG=$(echo "$VERSION" | sed 's/^v//' | sed 's/+/-/g')
+          DOCKER_TAG="${VERSION/v/}"
+          DOCKER_TAG="${DOCKER_TAG/+/-}"
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "version=$VERSION" >> $GITHUB_ENV
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
@@ -70,28 +71,9 @@ jobs:
 
           # Fetch commit messages
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
-          echo "Raw commit messages:"
-          echo "$COMMITS"
-
-          # Escape special characters and handle newlines
+          
           if [ -n "$COMMITS" ]; then
-            SANITIZED_COMMITS=$(echo "$COMMITS" | sed -E \
-              -e 's/\\/\\\\/g' \
-              -e 's/`/\\`/g' \
-              -e 's/\*/\\*/g' \
-              -e 's/"/\\"/g' \
-              -e 's/\$/\\\$/g' \
-              -e 's/\(/\\(/g' \
-              -e 's/\)/\\)/g' \
-              -e 's/\[/\\[/g' \
-              -e 's/\]/\\]/g' \
-              -e 's/\|/\\|/g' \
-              -e 's/\{/\\\{/g' \
-              -e 's/\}/\\\}/g' \
-              -e 's/&/\\&/g' \
-              -e 's/'\''/\\'\''/g')
-
-            SANITIZED_COMMITS=${SANITIZED_COMMITS//$'\n'/#NEWLINE#}
+            SANITIZED_COMMITS=$(echo "$COMMITS" | sed 's/[$&`]/\\&/g' | sed ':a;N;$!ba;s/\n/#NEWLINE#/g')
             echo "SANITIZED_COMMITS=\"$SANITIZED_COMMITS\"" >> $GITHUB_ENV
           else
             echo "SANITIZED_COMMITS=\"No commits since the last stable tag.\"" >> $GITHUB_ENV
@@ -100,12 +82,12 @@ jobs:
       - name: Prepare Release Notes
         run: |
           set -e
-          SANITIZED_COMMITS_WITH_NEWLINES=$(echo "${{ env.SANITIZED_COMMITS }}" | sed 's/#NEWLINE#/\'$'\n''/g')
+          SANITIZED_COMMITS_WITH_NEWLINES="${{ env.SANITIZED_COMMITS//#NEWLINE#/\\n}}"
 
           echo "Automated release of version ${{ env.version }}" > release_body.txt
           echo "" >> release_body.txt
           echo "### Commits in this release:" >> release_body.txt
-          echo "$SANITIZED_COMMITS_WITH_NEWLINES" >> release_body.txt
+          echo -e "$SANITIZED_COMMITS_WITH_NEWLINES" >> release_body.txt
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
