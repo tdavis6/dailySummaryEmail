@@ -35,10 +35,8 @@ jobs:
       - name: Extract version from version.json
         id: get_version
         run: |
-          # Extract the original version and prepare a Docker-compatible tag
           VERSION=$(jq -r '.version' version.json)
           DOCKER_TAG=$(echo "$VERSION" | sed 's/^v//' | sed 's/+/-/g')
-          # Convert repository name to lowercase for Docker compatibility
           REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "version=$VERSION" >> $GITHUB_ENV
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
@@ -47,7 +45,6 @@ jobs:
       - name: Determine if Pre-release and Type
         id: prerelease_check
         run: |
-          # Check if the version is a pre-release and determine type
           if [[ "${{ env.version }}" == *"-alpha"* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
             echo "pre_release_type=alpha" >> $GITHUB_ENV
@@ -68,18 +65,10 @@ jobs:
       - name: Get All Relevant Commit Messages for Release Notes
         id: commit_messages
         run: |
-          # Find the last stable (non-pre-release) tag
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
-
-          # Get all commit messages since the last stable tag
           COMMITS=$(git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s")
 
-          # Debug: Output the raw commit messages
-          echo "Raw commit messages: $COMMITS"  # This will help you inspect commit messages before any processing
-
-          # Check if COMMITS is non-empty before running sed
           if [ -n "$COMMITS" ]; then
-            # Sanitize commit messages to escape special characters using printf for better handling
             COMMITS=$(printf "%s" "$COMMITS" | sed -E \
               's/[&]/\\&/g' \
               -e 's/\\/\\\\/g' \
@@ -99,14 +88,7 @@ jobs:
             COMMITS="No commits since the last stable tag."
           fi
 
-          # Debug: Output the sanitized commit messages
-          echo "Sanitized commit messages: $COMMITS"  # This will help ensure the sanitization worked correctly
-
-          # Remove duplicate commit messages while keeping their commit hashes
-          COMMITS=$(echo "$COMMITS" | sort | uniq)
-
-          # Output the final sanitized commit messages for the release notes
-          echo "commits=${COMMITS}" >> $GITHUB_ENV
+          echo "Sanitized commit messages: $COMMITS"
 
       - name: Create GitHub Release
         uses: actions/create-release@v1
