@@ -48,27 +48,29 @@ assert SMTP_HOST, "SMTP_HOST environment variable is not set."
 SMTP_PORT = os.getenv("SMTP_PORT")
 assert SMTP_PORT, "SMTP_PORT environment variable is not set."
 
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
-assert WEATHER_API_KEY, "WEATHER_API_KEY environment variable is not set."
 
 UNIT_SYSTEM = os.getenv("UNIT_SYSTEM", "METRIC")
 TIME_SYSTEM = os.getenv("TIME_SYSTEM", "24HR")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 RSS_LINKS = os.getenv("RSS_LINKS")
 PUZZLES = os.getenv("PUZZLES")
 WOTD = os.getenv("WOTD")
 QOTD = os.getenv("QOTD")
-TIMEZONE = os.getenv("TIMEZONE")  # Default if get_timezone doesn't work
+TIMEZONE = os.getenv("TIMEZONE", "UTC")
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
-LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO")
+LOGGING_LEVEL = os.getenv("LOGGING_LEVEL", "INFO").upper()
 
 # Initialize logging
-logging.basicConfig(level=logging.getLevelName(LOGGING_LEVEL))
+if LOGGING_LEVEL not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
+    raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
+logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
+logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
 
 # Initialize coordinates
 if not LATITUDE and not LONGITUDE:
