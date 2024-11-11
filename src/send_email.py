@@ -226,6 +226,6 @@ def send_email(
             server.sendmail(sender_email, recipient_email, message.as_string())
         logging.debug(f"Type of timezone in send_email: {type(timezone)}")
         logging.debug(f"Timezone in send_email: {timezone}")
-        logging.info("Email sent successfully.")
+        logging.info(f"Email sent successfully on {current_datetime}.")
     except Exception as e:
         logging.critical(f"Error sending email: {e}")

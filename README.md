@@ -10,6 +10,9 @@ but I am working on more. Feel free to request any todo app with an issue)
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
+When the program starts up, an email will be sent so the user may see what it will look like. The next email will be 
+sent at the specified time.
+
 ## Environment Variables
 See .env.example for an example .env file.
 - RECIPIENT_EMAIL: The recipient's email (required)
