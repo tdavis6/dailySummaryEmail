@@ -112,6 +112,7 @@ if __name__ == "__main__":
 
                 send_email(
                     VERSION,
+                    timezone,
                     RECIPIENT_EMAIL,
                     RECIPIENT_NAME,
                     SENDER_EMAIL,

@@ -8,6 +8,7 @@ from datetime import datetime
 
 def send_email(
         version,
+        timezone,
         recipient_email,
         recipient_name,
         sender_email,
@@ -61,7 +62,7 @@ def send_email(
             extensions=["markdown.extensions.fenced_code"]
         )
 
-        current_datetime = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        current_datetime = datetime.now(tz=timezone).strftime("%Y-%m-%d %H:%M:%S")
 
         html = f"""
         <html>
