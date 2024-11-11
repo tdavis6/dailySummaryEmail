@@ -1,7 +1,6 @@
 import time
 import logging
 from geopy.exc import GeocoderUnavailable
-from geopy.geocoders import Photon
 from geopy.geocoders import Nominatim
 
 

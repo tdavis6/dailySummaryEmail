@@ -12,7 +12,7 @@ def format_time(datetime_obj, time_system):
         return datetime_obj.strftime("%H:%M")
 
 
-def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
+def get_todoist_tasks(TODOIST_API_KEY, timezone, TIME_SYSTEM) -> str:
     api = TodoistAPI(TODOIST_API_KEY)
     text = ""
     try:
@@ -23,13 +23,13 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
                 # Parse and localize naive datetime to the provided TIMEZONE
                 due_dt = datetime.datetime.fromisoformat(task.due.datetime)
                 if due_dt.tzinfo is None:
-                    due_dt = pytz.timezone(TIMEZONE).localize(due_dt)
+                    due_dt = timezone.localize(due_dt)
                 due_dt = due_dt.astimezone(pytz.utc)
             else:
                 # Parse and localize naive date to the provided TIMEZONE, end of the day
                 due_dt = datetime.datetime.fromisoformat(f"{task.due.date}T23:59:59")
                 if due_dt.tzinfo is None:
-                    due_dt = pytz.timezone(TIMEZONE).localize(due_dt)
+                    due_dt = timezone.localize(due_dt)
                 due_dt = due_dt.astimezone(pytz.utc)
             return (due_dt, (5 - task.priority))
 
@@ -38,7 +38,7 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
         logging.debug(sorted_todoist_data)
 
         # Current time in the specified timezone for comparison
-        now = datetime.datetime.now(tz=pytz.timezone(TIMEZONE)).date()
+        now = datetime.datetime.now(tz=timezone).date()
 
         if todoist_data:
             for task in sorted_todoist_data:
@@ -52,7 +52,7 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
                             task.due.datetime
                         )
                         if due_datetime.tzinfo is None:
-                            due_datetime = pytz.timezone(TIMEZONE).localize(
+                            due_datetime = timezone.localize(
                                 due_datetime
                             )
                         due_datetime = due_datetime.astimezone(pytz.utc)
@@ -62,15 +62,13 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
                             f"{task.due.date}T23:59:59"
                         )
                         if due_datetime.tzinfo is None:
-                            due_datetime = pytz.timezone(TIMEZONE).localize(
+                            due_datetime = timezone.localize(
                                 due_datetime
                             )
                         due_datetime = due_datetime.astimezone(pytz.utc)
 
                     # Due date in the specified timezone
-                    due_date_local = due_datetime.astimezone(
-                        pytz.timezone(TIMEZONE)
-                    ).date()
+                    due_date_local = due_datetime.astimezone(timezone).date()
 
                     # Check if the task is overdue
                     is_overdue = due_date_local < now
@@ -78,16 +76,16 @@ def get_todoist_tasks(TODOIST_API_KEY, TIMEZONE, TIME_SYSTEM) -> str:
                     if is_overdue:
                         if task.due.datetime is not None:
                             due_time_formatted = format_time(
-                                due_datetime.astimezone(pytz.timezone(TIMEZONE)),
+                                due_datetime.astimezone(timezone),
                                 TIME_SYSTEM,
                             )
-                            text += f", due {due_time_formatted} on {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('%A, %B %d, %Y')}"
+                            text += f", due {due_time_formatted} on {due_datetime.astimezone(timezone).strftime('%A, %B %d, %Y')}"
                         else:
-                            text += f", due on {due_datetime.astimezone(pytz.timezone(TIMEZONE)).strftime('%A, %B %d, %Y')}"
+                            text += f", due on {due_datetime.astimezone(timezone).strftime('%A, %B %d, %Y')}"
                     else:
                         if task.due.datetime is not None:
                             due_time_formatted = format_time(
-                                due_datetime.astimezone(pytz.timezone(TIMEZONE)),
+                                due_datetime.astimezone(timezone),
                                 TIME_SYSTEM,
                             )
                             text += f", due {due_time_formatted}"

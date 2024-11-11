@@ -5,6 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import markdown
 from datetime import datetime
+import pytz
 
 def send_email(
         version,
@@ -27,6 +28,11 @@ def send_email(
         puzzles_ans_string,
 ) -> None:
     try:
+        # Ensure that timezone is a valid pytz timezone object
+        if isinstance(timezone, str):
+            timezone = pytz.timezone(timezone)
+            logging.debug(f"Converted timezone string to pytz timezone object: {timezone}")
+
         message = MIMEMultipart("alternative")
         message["Subject"] = f"Daily Summary for {recipient_name}: {date_string}"
         message["From"] = f"Daily Summary <{smtp_username}>"
@@ -38,15 +44,20 @@ def send_email(
         # Convert and append sections
         def convert_and_append(markdown_string, section_class, text_format=True, is_date=False):
             nonlocal text, html_text
-            if markdown_string is not None:
+            if markdown_string:
                 html_converted = markdown.markdown(markdown_string, extensions=["markdown.extensions.fenced_code"])
                 if text_format:
                     text += markdown_string + "\n\n"
                 if not is_date:
                     html_text += f"<div class='section {section_class}'>{html_converted}</div>"
+            else:
+                logging.warning(f"{section_class} content is None or empty.")
 
-        if date_string is not None:
+        if date_string:
             text += "# " + date_string + "\n\n"
+        else:
+            logging.warning("date_string is None or empty.")
+            text += "# Date Not Available\n\n"
 
         convert_and_append(weather_string, "weather", text_format=True)
         convert_and_append(todo_string, "todo", text_format=True)
@@ -62,7 +73,8 @@ def send_email(
             extensions=["markdown.extensions.fenced_code"]
         )
 
-        current_datetime = datetime.now(tz=timezone).strftime("%Y-%m-%d %H:%M:%S")
+        current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+        logging.debug(f"Current datetime: {current_datetime}")
 
         html = f"""
         <html>
@@ -212,6 +224,8 @@ def send_email(
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
+        logging.debug(f"Type of timezone in send_email: {type(timezone)}")
+        logging.debug(f"Timezone in send_email: {timezone}")
         logging.info("Email sent successfully.")
     except Exception as e:
         logging.critical(f"Error sending email: {e}")
