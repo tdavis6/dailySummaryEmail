@@ -34,7 +34,7 @@ See .env.example for an example .env file.
 - QOTD: True or False. Enables the Quote of the Day. (optional, defaults to false)
 - HOUR: The hour to send the email. (optional, defaults to the time when the container started)
 - MINUTE: The minute to send the email. (optional, defaults to the time when the container started)
-- LOGGING_LEVEL: Level for logging (optional, defaults to INFO). Options: INFO, CRITICAL, DEBUG, WARNING.
+- LOGGING_LEVEL: Level for logging (optional, defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
