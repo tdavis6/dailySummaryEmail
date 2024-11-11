@@ -1,7 +1,6 @@
 import requests
 from icalendar import Calendar
 from datetime import datetime, date
-import pytz
 from dateutil.rrule import rrulestr
 import logging
 
@@ -113,20 +112,18 @@ def parse_icalendar(ical_string):
 
 
 def make_aware(dt, timezone="UTC"):
-    tz = pytz.timezone(timezone)
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
-            return tz.localize(dt)
+            return timezone.localize(dt)
         return dt
     elif isinstance(dt, date):
         dt = datetime.combine(dt, datetime.min.time())
-        return tz.localize(dt)
+        return timezone.localize(dt)
     raise ValueError("Unsupported date type")
 
 
 def is_event_today(event_start, event_end, timezone="UTC"):
-    tz = pytz.timezone(timezone)
-    today = datetime.now(tz).date()
+    today = datetime.now(timezone).date()
     event_start = make_aware(event_start, timezone).date()
     event_end = make_aware(event_end, timezone).date()
     return event_start <= today <= event_end
