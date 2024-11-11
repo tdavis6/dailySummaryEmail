@@ -183,7 +183,7 @@ def send_scheduled_email(timezone):
         weather_string = get_weather()
         logging.debug(f"Weather string obtained: {weather_string}")
 
-        # Get todo tasks
+        # Get task items
         logging.debug("Getting todo tasks...")
         todo_string = get_todo()
         logging.debug(f"Todo string obtained: {todo_string}")
