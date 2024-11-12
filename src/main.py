@@ -121,7 +121,7 @@ def get_weather():
             TIME_SYSTEM,
             timezone
         )
-        logging.debug(f"Weather data: {weather}")
+        logging.debug(f"Weather data obtained")
         return weather
     return ""
 
@@ -133,33 +133,33 @@ def get_todo():
         TIME_SYSTEM,
         TODOIST_API_KEY
     )
-    logging.debug(f"Todo data: {todo}")
+    logging.debug(f"Todo data obtained")
     return todo
 
 def get_rss_feed():
     rss = get_cached_data("rss", get_rss, RSS_LINKS, timezone, TIME_SYSTEM)
-    logging.debug(f"RSS data: {rss}")
+    logging.debug(f"RSS data obtained")
     return rss
 
 def get_quote_of_the_day():
     if QOTD in ["True", "true", True]:
         quote = get_cached_data("quote", get_quote)
-        logging.debug(f"Quote of the day: {quote}")
+        logging.debug(f"Quote of the day obtained")
         return quote
     return ""
 
 def get_word_of_the_day():
     if WOTD in ["True", "true", True]:
         wotd = get_cached_data("wotd", get_wotd)
-        logging.debug(f"Word of the day: {wotd}")
+        logging.debug(f"Word of the day obtained")
         return wotd
     return ""
 
 def get_puzzles_of_the_day():
     if PUZZLES in ["True", "true", True]:
         puzzles, puzzles_ans = get_cached_data("puzzles", get_puzzles)
-        logging.debug(f"Puzzles: {puzzles}")
-        logging.debug(f"Puzzles answers: {puzzles_ans}")
+        logging.debug(f"Puzzles obtained")
+        logging.debug(f"Puzzles answers obtained")
         return puzzles, puzzles_ans
     return "", ""
 
