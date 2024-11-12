@@ -1,6 +1,6 @@
 import requests
 from icalendar import Calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dateutil.rrule import rrulestr
 import logging
 
@@ -10,7 +10,6 @@ TIMEOUT = 5  # seconds
 MAX_FUTURE_YEARS = 5
 
 logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed log
-
 
 def fetch_icalendar(url):
     for attempt in range(MAX_RETRIES):
@@ -29,7 +28,6 @@ def fetch_icalendar(url):
             else:
                 logging.critical("Max retries reached. Failing.")
                 return None
-
 
 def parse_icalendar(ical_string):
     if not ical_string:
@@ -110,24 +108,21 @@ def parse_icalendar(ical_string):
 
     return events
 
-
-def make_aware(dt, timezone="UTC"):
+def make_aware(dt, timezone):
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             return timezone.localize(dt)
-        return dt
+        return dt.astimezone(timezone)
     elif isinstance(dt, date):
         dt = datetime.combine(dt, datetime.min.time())
         return timezone.localize(dt)
     raise ValueError("Unsupported date type")
 
-
-def is_event_today(event_start, event_end, timezone="UTC"):
+def is_event_today(event_start, event_end, timezone):
     today = datetime.now(timezone).date()
     event_start = make_aware(event_start, timezone).date()
     event_end = make_aware(event_end, timezone).date()
     return event_start <= today <= event_end
-
 
 def is_all_day_event(event):
     start = event["start"]
@@ -139,17 +134,24 @@ def is_all_day_event(event):
             and not isinstance(end, datetime)
     )
 
-
 def get_ics_events(url, timezone):
     try:
         ical_string = fetch_icalendar(url)
         events = parse_icalendar(ical_string)
-        events = [
-            event
-            for event in events
-            if is_event_today(event["start"], event["end"], timezone)
-        ]
-        return events
+        today = datetime.now(timezone).date()
+        formatted_events = []
+
+        for event in events:
+            event_start = make_aware(event["start"], timezone).date()
+            if event_start == today:
+                # Omit the date for today's events
+                formatted_summary = f"{event['summary']}"
+            else:
+                # Include the date for future events
+                formatted_summary = f"{event['summary']} on {event_start.strftime('%Y-%m-%d')}"
+            formatted_events.append(formatted_summary)
+
+        return formatted_events
     except Exception as e:
         logging.critical(f"Failed to get events: {e}")
         return []
