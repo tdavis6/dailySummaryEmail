@@ -79,10 +79,10 @@ if not LATITUDE and not LONGITUDE:
         exit(1)
     else:
         LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-        logging.debug(f"Coordinates obtained from address: LATITUDE={LATITUDE}, LONGITUDE={LONGITUDE}")
+        logging.debug(f"Coordinates obtained from address")
 else:
     # Use provided LATITUDE and LONGITUDE without re-fetching
-    logging.info(f"Using provided LATITUDE: {LATITUDE}, LONGITUDE: {LONGITUDE}")
+    logging.info(f"Using provided LATITUDE and LONGITUDE")
 
 try:
     if not TIMEZONE:
@@ -171,43 +171,43 @@ def send_scheduled_email(timezone):
         # Ensure timezone is a pytz timezone object
         if isinstance(timezone, str):
             timezone = pytz.timezone(timezone)
-            logging.debug(f"Converted timezone string to pytz timezone object: {timezone}")
+            logging.debug(f"Converted timezone string to pytz timezone object")
 
         # Start data collection
         logging.debug("Starting data collection for email content...")
 
         # Get current date string
         date_string = get_current_date_in_timezone(timezone)
-        logging.debug(f"Date string obtained: {date_string}")
+        logging.debug(f"Date string obtained")
 
         # Get weather information
         weather_string = get_weather()
-        logging.debug(f"Weather string obtained: {weather_string}")
+        logging.debug(f"Weather string obtained")
 
         # Get task items
         todo_string = get_todo()
-        logging.debug(f"Todo string obtained: {todo_string}")
+        logging.debug(f"Todo string obtained")
 
         # Get RSS feed updates
         rss_string = get_rss_feed()
-        logging.debug(f"RSS string obtained: {rss_string}")
+        logging.debug(f"RSS string obtained")
 
         # Get Word of the Day
         wotd_string = get_word_of_the_day()
-        logging.debug(f"Word of the Day string obtained: {wotd_string}")
+        logging.debug(f"Word of the Day string obtained")
 
         # Get Quote of the Day
         quote_string = get_quote_of_the_day()
-        logging.debug(f"Quote of the Day string obtained: {quote_string}")
+        logging.debug(f"Quote of the Day string obtained")
 
         # Get puzzles
         puzzles_string, puzzles_ans_string = get_puzzles_of_the_day()
-        logging.debug(f"Puzzles string obtained: {puzzles_string}")
-        logging.debug(f"Puzzles answers string obtained: {puzzles_ans_string}")
+        logging.debug(f"Puzzles string obtained")
+        logging.debug(f"Puzzles answers string obtained")
 
         # Get calendar events as a list of dictionaries
         calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
-        logging.debug(f"Calendar events obtained: {calendar_events}")
+        logging.debug(f"Calendar events obtained")
 
         # Pass all gathered data to the send_email function
         send_email(
