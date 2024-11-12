@@ -37,7 +37,7 @@ See .env.example for an example .env file.
 - QOTD: True or False. Enables the Quote of the Day. (optional, defaults to false)
 - HOUR: The hour to send the email. (optional, defaults to the time when the container started)
 - MINUTE: The minute to send the email. (optional, defaults to the time when the container started)
-- TIMEZONE: Timezone as a string. (Optionl, not required if a latitude and longitude or an address are given, but will override that timezone. Ensure that it is spelt correctly.)
+- TIMEZONE: Timezone as a string. (Optional, not required if a latitude and longitude or an address are given, but will override that timezone. Ensure that it is spelt correctly.)
 - LOGGING_LEVEL: Level for logging (optional, defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
 
 NOTE: You MUST provide either a coordinate pair or an address.
