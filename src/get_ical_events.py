@@ -1,6 +1,6 @@
 import requests
 from icalendar import Calendar
-from datetime import datetime, date, timedelta
+from datetime import datetime, date
 from dateutil.rrule import rrulestr
 import logging
 
@@ -10,6 +10,7 @@ TIMEOUT = 5  # seconds
 MAX_FUTURE_YEARS = 5
 
 logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed log
+
 
 def fetch_icalendar(url):
     for attempt in range(MAX_RETRIES):
@@ -28,6 +29,7 @@ def fetch_icalendar(url):
             else:
                 logging.critical("Max retries reached. Failing.")
                 return None
+
 
 def parse_icalendar(ical_string):
     if not ical_string:
@@ -108,21 +110,30 @@ def parse_icalendar(ical_string):
 
     return events
 
+
 def make_aware(dt, timezone):
     if isinstance(dt, datetime):
         if dt.tzinfo is None:
             return timezone.localize(dt)
-        return dt.astimezone(timezone)
+        return dt
     elif isinstance(dt, date):
         dt = datetime.combine(dt, datetime.min.time())
         return timezone.localize(dt)
     raise ValueError("Unsupported date type")
 
-def is_event_today(event_start, event_end, timezone):
+
+def is_event_today(event_start, event_end, timezone="UTC"):
     today = datetime.now(timezone).date()
-    event_start = make_aware(event_start, timezone).date()
-    event_end = make_aware(event_end, timezone).date()
-    return event_start <= today <= event_end
+    event_start = make_aware(event_start, timezone)
+    event_end = make_aware(event_end, timezone)
+
+    # Exclude events that end exactly at 00:00 today and started on a previous day
+    if event_end.date() == today and event_end.time() == datetime.min.time() and event_start.date() < today:
+        return False
+
+    # Check if today falls within the event start and end datetime range
+    return event_start.date() <= today <= event_end.date()
+
 
 def is_all_day_event(event):
     start = event["start"]
@@ -134,29 +145,17 @@ def is_all_day_event(event):
             and not isinstance(end, datetime)
     )
 
+
 def get_ics_events(url, timezone):
     try:
         ical_string = fetch_icalendar(url)
         events = parse_icalendar(ical_string)
-        today = datetime.now(timezone).date()  # Get today’s date in specified timezone
-        filtered_events = []
-
-        # Ensure each event’s dates are timezone-aware and filter by today's date
-        for event in events:
-            event_start = make_aware(event["start"], timezone)
-            event_end = make_aware(event["end"], timezone)
-
-            # Check if the event is an all-day event
-            is_all_day = isinstance(event_start, date) and not isinstance(event_start, datetime)
-
-            # Include the event if it starts or ends on today's date
-            if (is_all_day and event_start <= today <= event_end) or (not is_all_day and event_start.date() <= today <= event_end.date()):
-                event["start"] = event_start
-                event["end"] = event_end
-                event["is_all_day"] = is_all_day
-                filtered_events.append(event)
-
-        return filtered_events
+        events = [
+            event
+            for event in events
+            if is_event_today(event["start"], event["end"], timezone)
+        ]
+        return events
     except Exception as e:
         logging.critical(f"Failed to get events: {e}")
         return []

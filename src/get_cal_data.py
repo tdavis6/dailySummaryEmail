@@ -1,6 +1,11 @@
 from datetime import datetime, date
 from get_ical_events import get_ics_events, make_aware, is_all_day_event
 
+def ensure_datetime(dt):
+    if isinstance(dt, date) and not isinstance(dt, datetime):
+        return datetime.combine(dt, datetime.min.time())
+    return dt
+
 def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
     events = []
 
@@ -8,6 +13,11 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
         for link in WEBCAL_LINKS.split(","):
             ics_events = get_ics_events(url=link, timezone=timezone)
             events.extend(ics_events)
+
+        # Ensure all 'start' and 'end' times are timezone-aware datetime objects
+        for event in events:
+            event["start"] = make_aware(ensure_datetime(event["start"]), timezone)
+            event["end"] = make_aware(ensure_datetime(event["end"]), timezone)
 
         # Sort events based on the start datetime
         events.sort(key=lambda event: event["start"])
