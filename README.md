@@ -42,14 +42,10 @@ See .env.example for an example .env file.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
-## Weather API Key Setup
-- Register for an account at [WeatherAPI.com](https://www.weatherapi.com/), using the free plan.
-- Paste API key into the WEATHER_API_KEY environment variable. Do not use quotes.
-
 ## Attribution
 - Geocoding provided by [Nominatim](https://nominatim.org/).
-
-- Inspirational quotes provided by [ZenQuotes API](https://zenquotes.io/).
+- Weather data provided by [Open-Meteo](https://open-meteo.com/)
+- Quotes provided by [ZenQuotes API](https://zenquotes.io/).
 
 ## Other Notes
 - Versioning follows [semver](https://semver.org).
