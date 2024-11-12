@@ -54,7 +54,7 @@ TIME_SYSTEM = os.getenv("TIME_SYSTEM", "24HR")
 LATITUDE = os.getenv("LATITUDE")
 LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
-WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+WEATHER = os.getenv("WEATHER", False)
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 RSS_LINKS = os.getenv("RSS_LINKS")
@@ -111,17 +111,19 @@ def get_cached_data(key, fetch_function, *args, **kwargs):
     return data
 
 def get_weather():
-    weather = get_cached_data(
-        "weather",
-        get_forecast,
-        WEATHER_API_KEY,
-        LATITUDE,
-        LONGITUDE,
-        UNIT_SYSTEM,
-        TIME_SYSTEM
-    )
-    logging.debug(f"Weather data: {weather}")
-    return weather
+    if WEATHER in ["True", "true", True]:
+        weather = get_cached_data(
+            "weather",
+            get_forecast,
+            LATITUDE,
+            LONGITUDE,
+            UNIT_SYSTEM,
+            TIME_SYSTEM,
+            timezone
+        )
+        logging.debug(f"Weather data: {weather}")
+        return weather
+    return ""
 
 def get_todo():
     todo = get_cached_data(
