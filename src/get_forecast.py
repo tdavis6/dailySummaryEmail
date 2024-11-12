@@ -1,6 +1,7 @@
 import logging
 import requests
 from datetime import datetime, date
+from get_city_state import get_city_state
 
 def get_forecast(latitude, longitude, unit_system, time_system, timezone):
     weather_string = ""
@@ -176,9 +177,11 @@ def get_forecast(latitude, longitude, unit_system, time_system, timezone):
                     f"{alert_description}\n"
                 )
 
+        city_state_str = get_city_state(latitude, longitude)
+
         # Format the weather string with additional data
         weather_string = f"""\n\n# Weather\n
-Today's Weather Forecast at {float(latitude):.2f}, {float(longitude):.2f}:\n
+Today's Weather Forecast For {city_state_str if city_state_str is not "" else f"{latitude}, {longitude}"}:\n
 Condition: {condition}\n
 Temperature: {min_temp}{temp_unit} to {max_temp}{temp_unit}\n
 Humidity: {avg_humidity}%\n
