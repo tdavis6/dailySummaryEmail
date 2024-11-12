@@ -6,6 +6,7 @@ import json
 import pytz
 from dotenv import load_dotenv
 from cachetools import TTLCache
+import traceback
 
 from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
@@ -47,7 +48,6 @@ assert SMTP_HOST, "SMTP_HOST environment variable is not set."
 
 SMTP_PORT = os.getenv("SMTP_PORT")
 assert SMTP_PORT, "SMTP_PORT environment variable is not set."
-
 
 UNIT_SYSTEM = os.getenv("UNIT_SYSTEM", "METRIC")
 TIME_SYSTEM = os.getenv("TIME_SYSTEM", "24HR")
@@ -166,61 +166,50 @@ def get_puzzles_of_the_day():
 def send_scheduled_email(timezone):
     """Function to send an email with all the gathered information."""
     try:
-        # Debug the timezone parameter
-        logging.debug(f"send_scheduled_email called with timezone: {timezone} (type: {type(timezone)})")
+        logging.debug("send_scheduled_email called with timezone")
 
         # Ensure timezone is a pytz timezone object
         if isinstance(timezone, str):
             timezone = pytz.timezone(timezone)
-            logging.debug(f"Converted timezone string to pytz timezone object: {timezone} (type: {type(timezone)})")
+            logging.debug(f"Converted timezone string to pytz timezone object: {timezone}")
 
         # Start data collection
         logging.debug("Starting data collection for email content...")
 
         # Get current date string
-        logging.debug("Getting current date string...")
         date_string = get_current_date_in_timezone(timezone)
         logging.debug(f"Date string obtained: {date_string}")
 
         # Get weather information
-        logging.debug("Getting weather information...")
         weather_string = get_weather()
         logging.debug(f"Weather string obtained: {weather_string}")
 
         # Get task items
-        logging.debug("Getting todo tasks...")
         todo_string = get_todo()
         logging.debug(f"Todo string obtained: {todo_string}")
 
         # Get RSS feed updates
-        logging.debug("Getting RSS feed updates...")
         rss_string = get_rss_feed()
         logging.debug(f"RSS string obtained: {rss_string}")
 
         # Get Word of the Day
-        logging.debug("Getting Word of the Day...")
         wotd_string = get_word_of_the_day()
         logging.debug(f"Word of the Day string obtained: {wotd_string}")
 
         # Get Quote of the Day
-        logging.debug("Getting Quote of the Day...")
         quote_string = get_quote_of_the_day()
         logging.debug(f"Quote of the Day string obtained: {quote_string}")
 
         # Get puzzles
-        logging.debug("Getting puzzles...")
         puzzles_string, puzzles_ans_string = get_puzzles_of_the_day()
         logging.debug(f"Puzzles string obtained: {puzzles_string}")
         logging.debug(f"Puzzles answers string obtained: {puzzles_ans_string}")
 
-        # Get calendar events
-        logging.debug("Getting calendar events...")
-        calendar_string = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
-        logging.debug(f"Calendar string obtained: {calendar_string}")
+        # Get calendar events as a list of dictionaries
+        calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
+        logging.debug(f"Calendar events obtained: {calendar_events}")
 
-        logging.debug("All data collected. Preparing to send email...")
-
-        # Call send_email with collected data
+        # Pass all gathered data to the send_email function
         send_email(
             VERSION,
             timezone,
@@ -234,7 +223,7 @@ def send_scheduled_email(timezone):
             date_string,
             weather_string,
             todo_string,
-            calendar_string,
+            calendar_events,
             rss_string,
             puzzles_string,
             wotd_string,
@@ -242,11 +231,10 @@ def send_scheduled_email(timezone):
             puzzles_ans_string
         )
 
-        logging.debug(f"Type of timezone after send_email call: {type(timezone)}")
-        logging.debug(f"Timezone after send_email call: {timezone}")
-
     except Exception as e:
         logging.critical(f"Error during email send: {e}")
+        traceback_str = traceback.format_exc()
+        logging.critical(f"Traceback: {traceback_str}")
 
 def format_wait_time(seconds):
     """Convert seconds into hours, minutes, and seconds for display."""
@@ -269,8 +257,6 @@ def get_seconds_until_next_schedule(hour, minute, timezone):
 
     logging.debug(f"Current time: {now}")
     logging.debug(f"Next scheduled time: {next_schedule}")
-    logging.debug(f"Type of timezone in get_seconds_until_next_schedule: {type(timezone)}")
-    logging.debug(f"Timezone in get_seconds_until_next_schedule: {timezone}")
 
     return (next_schedule - now).seconds
 

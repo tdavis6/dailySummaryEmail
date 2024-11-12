@@ -1,7 +1,6 @@
 from datetime import datetime, date
 from get_ical_events import get_ics_events, make_aware, is_all_day_event
 
-
 def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
     events = []
 
@@ -11,8 +10,9 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
             events.extend(ics_events)
 
         # Sort events based on the start datetime
-        events.sort(key=lambda event: make_aware(event["start"], timezone))
+        events.sort(key=lambda event: event["start"])
 
+    today = datetime.now(timezone).date()
     text = "\n\n# Events" if events else ""
     for event in events:
         text += f"\n\n### {event.get('summary')}"
@@ -20,8 +20,13 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
         if description:
             text += f"\n\n{description}"
 
-        if is_all_day_event(event):
-            text += "\n\n(All day event)"
+        # Check if the event is an all-day event based on `is_all_day` or `00:00` time check
+        is_all_day = event.get("is_all_day") or (
+                event["start"].time() == datetime.min.time() and event["end"].time() == datetime.min.time()
+        )
+
+        if is_all_day:
+            text += "\n\nAll day event"
         else:
             time_format = "%I:%M %p" if TIME_SYSTEM.upper() == "12HR" else "%H:%M"
             date_time_format = (
@@ -30,17 +35,15 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
                 else "%H:%M on %A, %B %d, %Y"
             )
 
-            if event["start"]:
-                start = make_aware(event["start"], timezone)
-                if start.date() == date.today():
-                    text += f"\n\nStarts at {start.strftime(time_format)}"
-                else:
-                    text += f"\n\nStarts at {start.strftime(date_time_format)}"
-            if event["end"]:
-                end = make_aware(event["end"], timezone)
-                if end.date() == date.today():
-                    text += f"\n\nEnds at {end.strftime(time_format)}"
-                else:
-                    text += f"\n\nEnds at {end.strftime(date_time_format)}"
+            # Only append the date if it's different from today
+            if event["start"].date() == today:
+                text += f"\n\nStarts at {event['start'].strftime(time_format)}"
+            else:
+                text += f"\n\nStarts at {event['start'].strftime(date_time_format)}"
+
+            if event["end"].date() == today:
+                text += f"\n\nEnds at {event['end'].strftime(time_format)}"
+            else:
+                text += f"\n\nEnds at {event['end'].strftime(date_time_format)}"
 
     return text

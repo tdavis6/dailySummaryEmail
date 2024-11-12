@@ -138,20 +138,25 @@ def get_ics_events(url, timezone):
     try:
         ical_string = fetch_icalendar(url)
         events = parse_icalendar(ical_string)
-        today = datetime.now(timezone).date()
-        formatted_events = []
+        today = datetime.now(timezone).date()  # Get today’s date in specified timezone
+        filtered_events = []
 
+        # Ensure each event’s dates are timezone-aware and filter by today's date
         for event in events:
-            event_start = make_aware(event["start"], timezone).date()
-            if event_start == today:
-                # Omit the date for today's events
-                formatted_summary = f"{event['summary']}"
-            else:
-                # Include the date for future events
-                formatted_summary = f"{event['summary']} on {event_start.strftime('%Y-%m-%d')}"
-            formatted_events.append(formatted_summary)
+            event_start = make_aware(event["start"], timezone)
+            event_end = make_aware(event["end"], timezone)
 
-        return formatted_events
+            # Check if the event is an all-day event
+            is_all_day = isinstance(event_start, date) and not isinstance(event_start, datetime)
+
+            # Include the event if it starts or ends on today's date
+            if (is_all_day and event_start <= today <= event_end) or (not is_all_day and event_start.date() <= today <= event_end.date()):
+                event["start"] = event_start
+                event["end"] = event_end
+                event["is_all_day"] = is_all_day
+                filtered_events.append(event)
+
+        return filtered_events
     except Exception as e:
         logging.critical(f"Failed to get events: {e}")
         return []
