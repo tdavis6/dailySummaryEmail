@@ -90,7 +90,7 @@ def send_email(
 
         html_content = markdown.markdown(html_text, extensions=["markdown.extensions.fenced_code"])
 
-        current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+        current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %z")
         logging.debug(f"Current datetime: {current_datetime}")
 
         html = f"""
