@@ -85,12 +85,12 @@ def send_email(
         text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
-        summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
-        logging.debug("Summary obtained")
+        #summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+        #logging.debug("Summary obtained")
 
-        text = summary + text
-        summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
-        html_text = summary_html + html_text
+        #text = summary + text
+        #summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+        #html_text = summary_html + html_text
 
         # Append date section
         if date_string:
