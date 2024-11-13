@@ -16,7 +16,7 @@ sent at the specified time.
 ## Setup
 Run the following command in the same directory of your .env file:
 ```
-docker run --env-file .env ghcr.io/tdavis6/dailysummaryemail:latest
+docker run --name dailySummaryEmail --env-file .env ghcr.io/tdavis6/dailysummaryemail:latest
 ```
 
 To update the container, re-run the above command. To change settings, edit your .env
@@ -32,8 +32,7 @@ See .env.example for an example .env file.
 - SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email with gpt-4o-mini
-model. (optional, summary will not appear without it.)
+- OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email. (optional, summary will not appear without it.)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24HR)
 - LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
