@@ -7,6 +7,27 @@ import markdown
 from datetime import datetime
 import pytz
 
+from generate_summary import generate_summary
+
+def convert_section(markdown_string):
+    """Convert markdown string to HTML."""
+    if markdown_string:
+        return markdown.markdown(markdown_string, extensions=["markdown.extensions.fenced_code"])
+    else:
+        return None
+
+def append_section(text, html_text, markdown_string, section_class, text_format=True, is_date=False):
+    """Append markdown and HTML content for a section."""
+    if markdown_string:
+        converted_html = convert_section(markdown_string)
+        if text_format:
+            text += markdown_string + "\n\n"
+        if not is_date and converted_html:
+            html_text += f"<div class='section {section_class}'>{converted_html}</div>"
+    else:
+        logging.warning(f"{section_class} content is None or empty.")
+    return text, html_text
+
 def send_email(
         version,
         timezone,
@@ -17,6 +38,7 @@ def send_email(
         smtp_password,
         smtp_host,
         smtp_port,
+        openai_api_key,
         date_string,
         weather_string,
         todo_string,
@@ -28,7 +50,7 @@ def send_email(
         puzzles_ans_string,
 ) -> None:
     try:
-        # Ensure that timezone is a valid pytz timezone object
+        # Ensure timezone is a valid pytz timezone object
         if isinstance(timezone, str):
             timezone = pytz.timezone(timezone)
             logging.debug(f"Converted timezone string to pytz timezone object: {timezone}")
@@ -41,37 +63,32 @@ def send_email(
         text = ""  # Initialize the plain text content
         html_text = ""  # Initialize the HTML content
 
-        # Convert and append sections
-        def convert_and_append(markdown_string, section_class, text_format=True, is_date=False):
-            nonlocal text, html_text
-            if markdown_string:
-                html_converted = markdown.markdown(markdown_string, extensions=["markdown.extensions.fenced_code"])
-                if text_format:
-                    text += markdown_string + "\n\n"
-                if not is_date:
-                    html_text += f"<div class='section {section_class}'>{html_converted}</div>"
-            else:
-                logging.warning(f"{section_class} content is None or empty.")
+        # Append other sections
+        text, html_text = append_section(text, html_text, weather_string, "weather")
+        text, html_text = append_section(text, html_text, todo_string, "todo")
+        text, html_text = append_section(text, html_text, cal_string, "calendar")
+        text, html_text = append_section(text, html_text, rss_string, "rss")
+        text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
+        text, html_text = append_section(text, html_text, wotd_string, "wotd")
+        text, html_text = append_section(text, html_text, quote_string, "quote")
+        text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
+        # Get summary
+        summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+        logging.debug("Summary obtained")
+
+        text = summary + text
+        summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+        html_text = summary_html + html_text
+
+        # Append date section
         if date_string:
-            text += "# " + date_string + "\n\n"
+            text = "# " + date_string + "\n\n" + text
         else:
             logging.warning("date_string is None or empty.")
-            text += "# Date Not Available\n\n"
+            text = "# Date Not Available\n\n" + text
 
-        convert_and_append(weather_string, "weather", text_format=True)
-        convert_and_append(todo_string, "todo", text_format=True)
-        convert_and_append(cal_string, "calendar", text_format=True)
-        convert_and_append(rss_string, "rss", text_format=True)
-        convert_and_append(puzzles_string, "puzzles", text_format=True)
-        convert_and_append(wotd_string, "wotd", text_format=True)
-        convert_and_append(quote_string, "quote", text_format=True)
-        convert_and_append(puzzles_ans_string, "puzzles-ans", text_format=True)
-
-        html_content = markdown.markdown(
-            html_text,
-            extensions=["markdown.extensions.fenced_code"]
-        )
+        html_content = markdown.markdown(html_text, extensions=["markdown.extensions.fenced_code"])
 
         current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
         logging.debug(f"Current datetime: {current_datetime}")
@@ -224,8 +241,6 @@ def send_email(
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
             server.login(smtp_username, smtp_password)
             server.sendmail(sender_email, recipient_email, message.as_string())
-        logging.debug(f"Type of timezone in send_email: {type(timezone)}")
-        logging.debug(f"Timezone in send_email: {timezone}")
         logging.info(f"Email sent successfully on {current_datetime}.")
     except Exception as e:
         logging.critical(f"Error sending email: {e}")

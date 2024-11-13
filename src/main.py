@@ -49,6 +49,7 @@ assert SMTP_HOST, "SMTP_HOST environment variable is not set."
 SMTP_PORT = os.getenv("SMTP_PORT")
 assert SMTP_PORT, "SMTP_PORT environment variable is not set."
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 UNIT_SYSTEM = os.getenv("UNIT_SYSTEM", "METRIC")
 TIME_SYSTEM = os.getenv("TIME_SYSTEM", "24HR")
 LATITUDE = os.getenv("LATITUDE")
@@ -220,6 +221,7 @@ def send_scheduled_email(timezone):
             SMTP_PASSWORD,
             SMTP_HOST,
             SMTP_PORT,
+            OPENAI_API_KEY,
             date_string,
             weather_string,
             todo_string,
