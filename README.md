@@ -83,5 +83,6 @@ product that ChatGPT, ChatGPT Plus does not grant access to the OpenAI API.
 ## Other Notes
 - Versioning follows [semver](https://semver.org).
 
-## Buy me a cup of coffee!
-If you find value through this, and have all your personal financials taken care of, consider sponsoring me through [GitHub Sponsors](https://github.com/sponsors/tdavis6)!
+## Buy me a cup of coffee ☕️!
+If you find this program to be valuable, and have all your personal financials taken care of, 
+consider buying me a coffee me through [GitHub Sponsors](https://github.com/sponsors/tdavis6)!
