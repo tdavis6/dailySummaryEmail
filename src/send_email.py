@@ -8,6 +8,7 @@ from datetime import datetime
 import pytz
 
 from generate_summary import generate_summary
+from add_emojis import add_emojis  # Import the emoji function
 
 def convert_section(markdown_string):
     """Convert markdown string to HTML."""
@@ -63,6 +64,16 @@ def send_email(
         text = ""  # Initialize the plain text content
         html_text = ""  # Initialize the HTML content
 
+        # Apply emojis to each section with optional task lateness
+        weather_string = add_emojis(weather_string)
+        todo_string = add_emojis(todo_string)
+        cal_string = add_emojis(cal_string)
+        rss_string = add_emojis(rss_string)
+        puzzles_string = add_emojis(puzzles_string)
+        wotd_string = add_emojis(wotd_string)
+        quote_string = add_emojis(quote_string)
+        puzzles_ans_string = add_emojis(puzzles_ans_string)
+
         # Append other sections
         text, html_text = append_section(text, html_text, weather_string, "weather")
         text, html_text = append_section(text, html_text, todo_string, "todo")
@@ -74,12 +85,12 @@ def send_email(
         text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
-        summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
-        logging.debug("Summary obtained")
+        #summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+        #logging.debug("Summary obtained")
 
-        text = summary + text
-        summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
-        html_text = summary_html + html_text
+        #text = summary + text
+        #summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+        #html_text = summary_html + html_text
 
         # Append date section
         if date_string:
@@ -165,47 +176,6 @@ def send_email(
                     color: #e3f2fd;
                 }}
 
-                @media (max-width: 768px) {{
-                    .container {{
-                        border-radius: 0;
-                    }}
-                }}
-
-                @media (prefers-color-scheme: dark) {{
-                    body {{
-                        background: linear-gradient(135deg, #2a3c57, #1e2a3f);
-                        color: #e0e0e0;
-                    }}
-
-                    .container {{
-                        background: #1b263b;
-                        color: #e0e0e0;
-                        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
-                    }}
-
-                    .header {{
-                        background: linear-gradient(135deg, #0a3d62, #1e5799);
-                    }}
-
-                    .header .date {{
-                        color: #bbdefb;
-                    }}
-
-                    .section {{
-                        background-color: #2e3b4e;
-                        color: #e0e0e0;
-                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-                    }}
-
-                    .section h1 {{
-                        color: #bbdefb;
-                    }}
-
-                    .section p, .section pre {{
-                        color: #e0e0e0;
-                    }}
-                }}
-
                 .footer {{
                     text-align: center;
                     margin-top: 20px;
@@ -226,7 +196,7 @@ def send_email(
                         <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a>
                     </p>
                     <p style="font-size: 12px; color: inherit;">
-                        Version: {version} | Generated on: {current_datetime}
+                        📋 Version: {version} | Generated on: {current_datetime}
                     </p>
                 </div>
             </div>
