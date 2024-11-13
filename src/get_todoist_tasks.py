@@ -79,7 +79,7 @@ def get_todoist_tasks(TODOIST_API_KEY, timezone, TIME_SYSTEM) -> str:
                                 due_datetime.astimezone(timezone),
                                 TIME_SYSTEM,
                             )
-                            text += f", due {due_time_formatted} on {due_datetime.astimezone(timezone).strftime('%A, %B %d, %Y')}"
+                            text += f", due at {due_time_formatted} on {due_datetime.astimezone(timezone).strftime('%A, %B %d, %Y')}"
                         else:
                             text += f", due on {due_datetime.astimezone(timezone).strftime('%A, %B %d, %Y')}"
                     else:
@@ -88,7 +88,7 @@ def get_todoist_tasks(TODOIST_API_KEY, timezone, TIME_SYSTEM) -> str:
                                 due_datetime.astimezone(timezone),
                                 TIME_SYSTEM,
                             )
-                            text += f", due {due_time_formatted}"
+                            text += f", due at {due_time_formatted}"
 
                 if task.priority != 1:
                     text += f", priority {(5 - task.priority)}"

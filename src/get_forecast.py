@@ -177,11 +177,9 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
                 )
 
 
-
-        # Format the weather string with additional data
         weather_string = f"""\n\n# Weather\n
-{emoji} Today's Weather Forecast For {city_state_str if city_state_str else f"{latitude}, {longitude}"}:\n
-Condition: {condition}\n
+Today's Weather Forecast For {city_state_str if city_state_str else f"{latitude}, {longitude}"}:\n
+Condition: {condition} {emoji}\n
 Temperature: {min_temp}{temp_unit} to {max_temp}{temp_unit}\n
 Humidity: {avg_humidity}%\n
 Precipitation: {precipitation} {precip_unit}\n
@@ -195,3 +193,4 @@ Sunset: {sunset_str}\n"""
             weather_string += f"\n## Severe Weather Alerts:\n{alerts_info}"
 
     return weather_string
+
