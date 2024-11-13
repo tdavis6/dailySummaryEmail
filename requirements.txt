@@ -9,5 +9,5 @@ timezonefinder~=6.5.3
 geopy~=2.4.1
 icalendar~=6.0.0
 python-dateutil~=2.9.0.post0
+openai~=1.54.4
 todoist_api_python~=2.1.7
-py-sudoku~=2.0.0
