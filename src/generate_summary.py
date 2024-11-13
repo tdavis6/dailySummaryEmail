@@ -21,7 +21,8 @@ def generate_summary(text, api_key):
                 "role": "user",
                 "content": text
             }
-        ]
+        ],
+        max_tokens=120,
     )
 
     return completion.choices[0].message.content
