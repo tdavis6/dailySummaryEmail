@@ -179,7 +179,7 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
 
         # Format the weather string with additional data
         weather_string = f"""\n\n# Weather\n
-Today's Weather Forecast For {city_state_str if city_state_str is not "" else f"{latitude}, {longitude}"}:\n
+Today's Weather Forecast For {city_state_str if city_state_str != "" else f"{latitude}, {longitude}"}:\n
 Condition: {condition}\n
 Temperature: {min_temp}{temp_unit} to {max_temp}{temp_unit}\n
 Humidity: {avg_humidity}%\n
