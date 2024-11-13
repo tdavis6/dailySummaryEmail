@@ -65,7 +65,7 @@ def send_email(
         html_text = ""  # Initialize the HTML content
 
         # Apply emojis to each section with optional task lateness
-        weather_string = add_emojis(weather_string)
+        #weather_string = add_emojis(weather_string) # Do not apply emoji's to the weather string.
         todo_string = add_emojis(todo_string)
         cal_string = add_emojis(cal_string)
         rss_string = add_emojis(rss_string)
@@ -85,12 +85,12 @@ def send_email(
         text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
-        #summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
-        #logging.debug("Summary obtained")
+        summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+        logging.debug("Summary obtained")
 
-        #text = summary + text
-        #summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
-        #html_text = summary_html + html_text
+        text = summary + text
+        summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+        html_text = summary_html + html_text
 
         # Append date section
         if date_string:

@@ -148,6 +148,27 @@ def add_emojis(text):
         "incomplete": "❌",
         "check": "✔️",
         "location": "📍",
+
+        # Weather Conditions
+        "sunny": "☀️",
+        "clear": "🌞",
+        "cloudy": "☁️",
+        "overcast": "🌥️",
+        "rain": "🌧️",
+        "showers": "🌦️",
+        "storm": "🌩️",
+        "thunderstorm": "⛈️",
+        "snow": "❄️",
+        "hail": "🌨️",
+        "windy": "💨",
+        "fog": "🌫️",
+        "mist": "🌫️",
+        "drizzle": "🌦️",
+        "frost": "❄️",
+        "hot": "🔥",
+        "cold": "🥶",
+        "tornado": "🌪️",
+        "hurricane": "🌀",
     }
 
     logging.debug("Starting add_emojis function.")
@@ -175,6 +196,11 @@ def add_emojis(text):
     )
 
     for task in tasks:
+        # Skip lines that contain "Conditions:"
+        if "conditions:" in task.lower():
+            logging.info("Skipping line with 'Conditions:'.")
+            continue
+
         match = re.search(date_pattern, task)
 
         # Parse due date if found; default to today otherwise
