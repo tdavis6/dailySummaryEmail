@@ -176,6 +176,47 @@ def send_email(
                     color: #e3f2fd;
                 }}
 
+                @media (max-width: 768px) {{
+                    .container {{
+                        border-radius: 0;
+                    }}
+                }}
+
+                @media (prefers-color-scheme: dark) {{
+                    body {{
+                        background: linear-gradient(135deg, #2a3c57, #1e2a3f);
+                        color: #e0e0e0;
+                    }}
+
+                    .container {{
+                        background: #1b263b;
+                        color: #e0e0e0;
+                        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
+                    }}
+
+                    .header {{
+                        background: linear-gradient(135deg, #0a3d62, #1e5799);
+                    }}
+
+                    .header .date {{
+                        color: #bbdefb;
+                    }}
+
+                    .section {{
+                        background-color: #2e3b4e;
+                        color: #e0e0e0;
+                        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                    }}
+
+                    .section h1 {{
+                        color: #bbdefb;
+                    }}
+
+                    .section p, .section pre {{
+                        color: #e0e0e0;
+                    }}
+                }}
+
                 .footer {{
                     text-align: center;
                     margin-top: 20px;

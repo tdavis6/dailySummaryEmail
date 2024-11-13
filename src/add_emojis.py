@@ -215,10 +215,10 @@ def add_emojis(text):
                 logging.debug(f"Parsed due date with date only for task: {due_date}")
             else:
                 due_date = datetime.now()
-                logging.info("No specific due date found. Defaulting to today's date.")
+                logging.debug("No specific due date found. Defaulting to today's date.")
         else:
             due_date = datetime.now()
-            logging.info("No date match found in task. Defaulting to today's date.")
+            logging.debug("No date match found in task. Defaulting to today's date.")
 
         # Calculate days late
         days_late = (datetime.now() - due_date).days
