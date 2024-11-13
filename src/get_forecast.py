@@ -1,9 +1,7 @@
 import logging
 import requests
 from datetime import datetime, date
-from get_city_state import get_city_state
-
-def get_forecast(latitude, longitude, unit_system, time_system, timezone):
+def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, timezone):
     weather_string = ""
     forecast_data = {}
 
@@ -177,7 +175,7 @@ def get_forecast(latitude, longitude, unit_system, time_system, timezone):
                     f"{alert_description}\n"
                 )
 
-        city_state_str = get_city_state(latitude, longitude)
+
 
         # Format the weather string with additional data
         weather_string = f"""\n\n# Weather\n

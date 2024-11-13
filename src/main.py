@@ -11,6 +11,7 @@ import traceback
 from get_cal_data import get_cal_data
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
+from get_city_state import get_city_state
 from get_forecast import get_forecast
 from get_rss import get_rss
 from get_puzzles import get_puzzles
@@ -22,6 +23,9 @@ from send_email import send_email
 
 # Load .env variables
 load_dotenv()
+
+# Cache file path
+CACHE_FILE_PATH = "./cache/location_cache.json"
 
 # Load version from version.json
 with open("./version.json", "r") as f:
@@ -73,21 +77,42 @@ if LOGGING_LEVEL not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
 logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
 logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
 
+# Initialize Cache
+cache = TTLCache(maxsize=100, ttl=3600)  # 1-hour TTL for cached data
+
+# Check for or load cached location data
+def load_location_cache():
+    if os.path.exists(CACHE_FILE_PATH):
+        with open(CACHE_FILE_PATH, 'r') as f:
+            try:
+                data = json.load(f)
+                return data.get("LATITUDE"), data.get("LONGITUDE"), data.get("city_state_str")
+            except json.JSONDecodeError:
+                logging.error("Error decoding JSON from location cache.")
+    return None, None, None
+
+def save_location_cache(lat, long, city_state_str):
+    with open(CACHE_FILE_PATH, 'w') as f:
+        json.dump({"LATITUDE": lat, "LONGITUDE": long, "city_state_str": city_state_str}, f)
+        logging.info("Location data saved to cache.")
+
 # Initialize coordinates
-if not LATITUDE and not LONGITUDE:
+LATITUDE, LONGITUDE, city_state_str = load_location_cache()
+
+if not LATITUDE or not LONGITUDE:
     if not ADDRESS:
         logging.critical("No address provided. Please set ADDRESS or LATITUDE and LONGITUDE.")
         exit(1)
     else:
         LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-        logging.debug(f"Coordinates obtained from address")
+        logging.debug("Coordinates obtained from address.")
+        city_state_str = get_city_state(LATITUDE, LONGITUDE)
+        save_location_cache(LATITUDE, LONGITUDE, city_state_str)
 else:
-    # Use provided LATITUDE and LONGITUDE without re-fetching
-    logging.info(f"Using provided LATITUDE and LONGITUDE")
+    logging.info("Using cached LATITUDE, LONGITUDE, and city_state_str.")
 
 try:
     if not TIMEZONE:
-        # Fetch timezone based on the coordinates
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
         timezone = pytz.timezone(timezone_str)
     else:
@@ -96,6 +121,17 @@ try:
 except Exception as e:
     logging.critical(f"Error creating timezone: {e}")
     exit(1)
+
+def get_cached_data(key, fetch_function, *args, **kwargs):
+    """Fetch data from cache or call the function if not cached."""
+    if key in cache:
+        logging.info(f"Using cached data for {key}.")
+        return cache[key]
+
+    logging.info(f"Fetching fresh data for {key}.")
+    data = fetch_function(*args, **kwargs)
+    cache[key] = data
+    return data
 
 # Initialize Cache
 cache = TTLCache(maxsize=100, ttl=3600)  # 1-hour TTL for cached data
@@ -118,6 +154,7 @@ def get_weather():
             get_forecast,
             LATITUDE,
             LONGITUDE,
+            city_state_str,
             UNIT_SYSTEM,
             TIME_SYSTEM,
             timezone
