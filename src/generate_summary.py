@@ -14,7 +14,8 @@ def generate_summary(text, api_key):
                            "Only include weather information if it is abnormal for the location, or if there is a "
                            "severe weather warning. Focus on important tasks and events."
                            "Generate this summary in a way that the user can get a good grasp of their "
-                           "day by only reading these 2-3 sentences."
+                           "day by only reading these 2-3 sentences. Ensure to use the same timing system as the content,"
+                           "12hr or 24hr. ALso make sure to use imperial or metric, as seen in the content."
             },
             {
                 "role": "user",
