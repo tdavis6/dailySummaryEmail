@@ -63,6 +63,7 @@ is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
 
 ### Cost Breakdown
 Total Input Tokens per Year: 1,420 tokens/day × 365 days = 518,300 tokens
+
 Total Output Tokens per Year: 120 tokens/day × 365 days = 43,800 tokens
 
 Total Input Cost $= \frac{518,300}{1,000,000}\times0.150 = 0.077745$ USD per year
