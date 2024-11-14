@@ -62,15 +62,15 @@ tokens per day. The model used is GPT-4o mini, which allows for it to cost much 
 is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
 
 ### Cost Breakdown
-Total Input Tokens per Year: 1,420 tokens/day × 365 days = 518,300 tokens
+$\text{Total Input Tokens per Year: } 1,420 \text{tokens/day} \times 365 \text{ days} = 518,300 \text{ tokens}$
 
-Total Output Tokens per Year: 120 tokens/day × 365 days = 43,800 tokens
+$\text{Total Output Tokens per Year: } 120 \text{ tokens/day} \times 365 \text{ days} = 43,800 \text{ tokens}$
 
-Total Input Cost $= \frac{518,300}{1,000,000}\times0.150 = 0.077745$ USD per year
+$\text{Total Input Cost} = \frac{518,300}{1,000,000}\times0.150 = 0.077745 \text{ USD per year}$
 
-Total Output Cost $= \frac{43,800}{1,000,000}\times0.600 = 0.02628$ USD per year
+$\text{Total Output Cost} = \frac{43,800}{1,000,000}\times0.600 = 0.02628 \text{ USD per year}$
 
-$0.077745+0.02628=0.104025$ USD per year
+$0.077745+0.02628=0.104025 \text{ USD per year}$
 
 ### Setup Instructions
 To set this up, make an account with OpenAI, or log in with one, and get your API key. Note: The OpenAI API is a different
