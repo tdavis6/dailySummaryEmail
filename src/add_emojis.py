@@ -199,7 +199,7 @@ def add_emojis(text):
         r"|due at (\d{1,2}:\d{2} (?:AM|PM))"
     )
 
-    if text is not "":
+    if text != "":
         for task in tasks:
             if task.startswith("# ") or task.startswith("## "):  # Skip lines that start with headers ('# 'or '## ')
                 logging.info("Skipping header line.")
