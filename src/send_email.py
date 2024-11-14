@@ -77,7 +77,7 @@ def send_email(
 
         # Append other sections
         text, html_text = append_section(text, html_text, weather_string, "weather")
-        text, html_text = append_section(text, html_text, formatted_tasks, "todo")
+        text, html_text = append_section(text, html_text, todo_string, "todo")
         text, html_text = append_section(text, html_text, cal_string, "calendar")
         text, html_text = append_section(text, html_text, rss_string, "rss")
         text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
