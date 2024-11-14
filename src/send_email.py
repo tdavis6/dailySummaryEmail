@@ -69,10 +69,10 @@ def send_email(
         todo_string = add_emojis(todo_string)
         cal_string = add_emojis(cal_string)
         rss_string = add_emojis(rss_string)
-        puzzles_string = add_emojis(puzzles_string)
+        #puzzles_string = add_emojis(puzzles_string) # Do not apple emoji's to the puzzle string.
         wotd_string = add_emojis(wotd_string)
         quote_string = add_emojis(quote_string)
-        puzzles_ans_string = add_emojis(puzzles_ans_string)
+        #puzzles_ans_string = add_emojis(puzzles_ans_string) # Do not apple emoji's to the puzzle string.
 
         # Append other sections
         text, html_text = append_section(text, html_text, weather_string, "weather")
