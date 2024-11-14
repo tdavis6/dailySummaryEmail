@@ -121,6 +121,10 @@ def send_email(
                     }}
                 }}
 
+                html {{
+                    font-size: 18px;
+                }}
+
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                     font-family: 'Georgia', 'Times', serif;
@@ -149,15 +153,23 @@ def send_email(
                     margin-bottom: 20px;
                 }}
 
-                .section h2 {{
-                    font-size: 30px;
+                .section h1 {{
+                    font-size: 1.5rem;
                     font-weight: 600;
+                    color: #003366;
+                }}
+                
+                .section h2 {{
+                    font-size: 1.25rem;
+                    font-weight: 500;
                     color: #003366;
                 }}
 
                 .section p, .section pre {{
-                    font-size: 18px;
+                    font-size: 1rem;
+                    line-height: 1.6;
                     color: #000;
+                    margin-bottom: 16px;
                 }}
 
                 .header {{
@@ -165,7 +177,7 @@ def send_email(
                     color: white;
                     padding: 20px;
                     text-align: center;
-                    font-size: 32px;
+                    font-size: 2rem;
                     font-weight: 600;
                     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
                     animation: slideUp 1s ease-out;
@@ -173,7 +185,7 @@ def send_email(
                 }}
 
                 .header .date {{
-                    font-size: 18px;
+                    font-size: 1.125rem;
                     font-weight: 300;
                     color: #e3f2fd;
                 }}
@@ -210,7 +222,7 @@ def send_email(
                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                     }}
 
-                    .section h1 {{
+                    .section h1, .section h2 {{
                         color: #bbdefb;
                     }}
 

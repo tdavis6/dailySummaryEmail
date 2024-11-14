@@ -190,10 +190,6 @@ def add_emojis(text):
         logging.debug(f"Replacing '{word}' with '{emoji}' emoji.")
         return f"{word} {emoji}"
 
-    # Apply emoji replacements for keywords
-    for keyword in list(emoji_map.keys()) + [k + 's' for k in emoji_map.keys()]:
-        tasks = [re.sub(rf"\b{keyword}\b", replace_with_emoji, task, flags=re.IGNORECASE) for task in tasks]
-
     updated_tasks = []
 
     # Define the regex to capture due date information in each task
@@ -203,21 +199,29 @@ def add_emojis(text):
         r"|due at (\d{1,2}:\d{2} (?:AM|PM))"
     )
 
-    for task in tasks:
-        if task.isupper() or "conditions:" in task.lower():
-            logging.info("Skipping header or line with 'Conditions:'.")
-            continue
+    if text is not "":
+        for task in tasks:
+            if task.startswith("# ") or task.startswith("## "):  # Skip lines that start with headers ('# 'or '## ')
+                logging.info("Skipping header line.")
+                updated_tasks.append(task)
+                continue
 
-        match = re.search(date_pattern, task)
-        due_date = datetime.now() if not match else datetime.strptime(match.group(2) or match.group(3), "%A, %B %d, %Y")
+            match = re.search(date_pattern, task)
+            due_date = datetime.now() if not match else datetime.strptime(match.group(2) or match.group(3), "%A, %B %d, %Y")
 
-        days_late = (datetime.now() - due_date).days
-        if days_late > 0:
-            task += " ⚠️" if days_late <= 7 else " 🔥"
+            days_late = (datetime.now() - due_date).days
+            if days_late > 0:
+                task += " ⚠️" if days_late <= 7 else " 🔥"
 
-        updated_tasks.append(task)
+            # Apply emoji replacements for keywords
+            for keyword in list(emoji_map.keys()) + [k + 's' for k in emoji_map.keys()]:
+                task = re.sub(rf"\b{keyword}\b", replace_with_emoji, task, flags=re.IGNORECASE)
 
-    # Combine header and updated tasks into final output
-    final_text = "\n".join([header] + updated_tasks) if header else "\n".join(updated_tasks)
-    logging.debug("Completed add_emojis function.")
-    return final_text
+            updated_tasks.append(task)
+
+        # Combine header and updated tasks into final output
+        final_text = "\n".join([header] + updated_tasks) if header else "\n".join(updated_tasks)
+        logging.debug("Completed add_emojis function.")
+        return final_text
+    else:
+        return text
