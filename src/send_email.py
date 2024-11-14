@@ -6,9 +6,10 @@ from email.mime.text import MIMEText
 import markdown
 from datetime import datetime
 import pytz
+import traceback
 
 from generate_summary import generate_summary
-from add_emojis import add_emojis  # Import the emoji function
+from add_emojis import add_emojis
 
 def convert_section(markdown_string):
     """Convert markdown string to HTML."""
@@ -76,7 +77,7 @@ def send_email(
 
         # Append other sections
         text, html_text = append_section(text, html_text, weather_string, "weather")
-        text, html_text = append_section(text, html_text, todo_string, "todo")
+        text, html_text = append_section(text, html_text, formatted_tasks, "todo")
         text, html_text = append_section(text, html_text, cal_string, "calendar")
         text, html_text = append_section(text, html_text, rss_string, "rss")
         text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
@@ -85,12 +86,13 @@ def send_email(
         text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
-        summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
-        logging.debug("Summary obtained")
+        if openai_api_key is not None:
+            summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+            logging.debug("Summary obtained")
 
-        text = summary + text
-        summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
-        html_text = summary_html + html_text
+            text = summary + text
+            summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+            html_text = summary_html + html_text
 
         # Append date section
         if date_string:
@@ -255,3 +257,4 @@ def send_email(
         logging.info(f"Email sent successfully on {current_datetime}.")
     except Exception as e:
         logging.critical(f"Error sending email: {e}")
+        logging.critical(traceback.format_exc())
