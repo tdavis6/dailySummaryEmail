@@ -26,7 +26,7 @@ def add_emojis(text):
         "deadline": "⏰",
         "work": "💼",
         "task": "✅",
-        "priority": "⭐",
+        "priority": "❗",
         "schedule": "🗓️",
         "appointment": "📅",
         "research": "🔍",
@@ -117,7 +117,7 @@ def add_emojis(text):
         "dance": "💃",
 
         # Emotions & Well-being
-        "important": "❗",
+        "important": "⭐",
         "urgent": "⚠️",
         "focus": "🔍",
         "celebrate": "🎉",
