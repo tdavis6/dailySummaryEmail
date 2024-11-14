@@ -2,9 +2,6 @@ import re
 import logging
 from datetime import datetime, timedelta
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
-
 def add_emojis(text):
     """Adds emojis to individual tasks in the text based on lateness, with a default due date of today if not specified."""
     emoji_map = {
@@ -176,12 +173,13 @@ def add_emojis(text):
     # Helper function to replace keywords with corresponding emojis
     def replace_with_emoji(match):
         word = match.group()
-        emoji = emoji_map[match.group().lower()]  # Get the emoji based on lowercase key
+        key = match.group().lower()
+        emoji = emoji_map.get(key, emoji_map.get(key.rstrip('s'), ''))  # Handle plurals
         logging.debug(f"Replacing '{word}' with '{emoji}' emoji.")
         return f"{word} {emoji}"
 
     # Apply emoji replacements for keywords
-    for keyword in emoji_map.keys():
+    for keyword in list(emoji_map.keys()) + [k + 's' for k in emoji_map.keys()]:
         text = re.sub(rf"\b{keyword}\b", replace_with_emoji, text, flags=re.IGNORECASE)
 
     # Split the text into individual tasks (assuming tasks are separated by newlines)
@@ -196,9 +194,9 @@ def add_emojis(text):
     )
 
     for task in tasks:
-        # Skip lines that contain "Conditions:"
-        if "conditions:" in task.lower():
-            logging.info("Skipping line with 'Conditions:'.")
+        # Skip lines that are headers or contain "Conditions:"
+        if task.isupper() or task.endswith(':') or "conditions:" in task.lower():
+            logging.info("Skipping header or line with 'Conditions:'.")
             continue
 
         match = re.search(date_pattern, task)
