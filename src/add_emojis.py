@@ -45,6 +45,7 @@ def add_emojis(text):
         "walk": "🚶",
         "doctor": "👨‍⚕️",
         "medicine": "💊",
+        "medication": "💊",
         "pill": "💊",
         "vitamins": "💊",
         "dentist": "🦷",

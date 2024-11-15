@@ -62,10 +62,10 @@ ADDRESS = os.getenv("ADDRESS")
 WEATHER = os.getenv("WEATHER", False)
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
-RSS_LINKS = os.getenv("RSS_LINKS")
-PUZZLES = os.getenv("PUZZLES")
-WOTD = os.getenv("WOTD")
-QOTD = os.getenv("QOTD")
+RSS_LINKS = os.getenv("RSS_LINKS", False)
+PUZZLES = os.getenv("PUZZLES", False)
+WOTD = os.getenv("WOTD", False)
+QOTD = os.getenv("QOTD", False)
 TIMEZONE = os.getenv("TIMEZONE")
 HOUR = os.getenv("HOUR")
 MINUTE = os.getenv("MINUTE")
@@ -150,41 +150,59 @@ def get_weather():
     return ""
 
 def get_todo():
-    todo = get_cached_data(
+    if TODOIST_API_KEY:
+        todo = get_cached_data(
         "todo",
         get_todo_tasks,
         timezone,
         TIME_SYSTEM,
         TODOIST_API_KEY
     )
-    logging.debug(f"Todo data obtained")
-    return todo
+        logging.debug(f"Todo data obtained")
+        return todo
+    logging.warning("todo content is None or empty")
+    return ""
 
 def get_rss_feed():
-    rss = get_cached_data("rss", get_rss, RSS_LINKS, timezone, TIME_SYSTEM)
-    logging.debug(f"RSS data obtained")
-    return rss
+    if RSS_LINKS:
+        rss = get_cached_data("rss", get_rss, RSS_LINKS, timezone, TIME_SYSTEM)
+        logging.debug(f"RSS data obtained")
+        logging.debug(f"RSS data obtained")
+        return rss
+    logging.warning("rss content is None or empty")
+    return ""
 
 def get_quote_of_the_day():
-    if QOTD in ["True", "true", True]:
+    if QOTD and QOTD in ["True", "true", True]:
         quote = get_cached_data("quote", get_quote)
         logging.debug(f"Quote of the day obtained")
-        return quote
+        if quote:
+            logging.debug(f"Quote of the day obtained")
+            return quote
+        logging.warning("quote content is None or empty")
     return ""
 
 def get_word_of_the_day():
-    if WOTD in ["True", "true", True]:
+    if WOTD and WOTD in ["True", "true", True]:
         wotd = get_cached_data("wotd", get_wotd)
         logging.debug(f"Word of the day obtained")
-        return wotd
+        if wotd:
+            logging.debug(f"Word of the day obtained")
+            return wotd
+        logging.warning("wotd content is None or empty")
     return ""
 
 def get_puzzles_of_the_day():
-    if PUZZLES in ["True", "true", True]:
+    if PUZZLES and PUZZLES in ["True", "true", True]:
         puzzles, puzzles_ans = get_cached_data("puzzles", get_puzzles)
         logging.debug(f"Puzzles obtained")
         logging.debug(f"Puzzles answers obtained")
-        return puzzles, puzzles_ans
+        if puzzles and puzzles_ans:
+            logging.debug(f"Puzzles obtained")
+            logging.debug(f"Puzzles answers obtained")
+            return puzzles, puzzles_ans
+        logging.warning("puzzles content is None or empty")
+        logging.warning("puzzles-ans content is None or empty")
     return "", ""
 
 def send_scheduled_email(timezone):
@@ -205,29 +223,30 @@ def send_scheduled_email(timezone):
         logging.debug(f"Date string obtained")
 
         # Get weather information
-        weather_string = get_weather()
-        logging.debug(f"Weather string obtained")
+        weather_string = get_weather() or ""
+        logging.debug(f"Weather string obtained: {weather_string}")
 
-        # Get task items
-        todo_string = get_todo()
+        todo_string = get_todo() or ""
+        logging.debug(f"Todo string obtained: {todo_string}")
         logging.debug(f"Todo string obtained")
-
-        # Get RSS feed updates
+        rss_string = get_rss_feed() or ""
+        logging.debug(f"RSS string obtained: {rss_string}")
         rss_string = get_rss_feed()
         logging.debug(f"RSS string obtained")
 
         # Get Word of the Day
-        wotd_string = get_word_of_the_day()
-        logging.debug(f"Word of the Day string obtained")
+        wotd_string = get_word_of_the_day() or ""
+        logging.debug(f"Word of the Day string obtained: {wotd_string}")
 
         # Get Quote of the Day
-        quote_string = get_quote_of_the_day()
-        logging.debug(f"Quote of the Day string obtained")
+        quote_string = get_quote_of_the_day() or ""
+        logging.debug(f"Quote of the Day string obtained: {quote_string}")
 
         # Get puzzles
-        puzzles_string, puzzles_ans_string = get_puzzles_of_the_day()
-        logging.debug(f"Puzzles string obtained")
-        logging.debug(f"Puzzles answers string obtained")
+        puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
+        logging.debug(f"Puzzles string obtained: {puzzles_string}")
+
+        logging.debug(f"Puzzles answers string obtained: {puzzles_ans_string}")
 
         # Get calendar events as a list of dictionaries
         calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)

@@ -20,14 +20,14 @@ def convert_section(markdown_string):
 
 def append_section(text, html_text, markdown_string, section_class, text_format=True, is_date=False):
     """Append markdown and HTML content for a section."""
-    if markdown_string:
+    if markdown_string and markdown_string.strip():
         converted_html = convert_section(markdown_string)
         if text_format:
             text += markdown_string + "\n\n"
         if not is_date and converted_html:
             html_text += f"<div class='section {section_class}'>{converted_html}</div>"
     else:
-        logging.warning(f"{section_class} content is None or empty.")
+        logging.warning(f"{section_class} content is None, empty, or whitespace.")
     return text, html_text
 
 def send_email(
@@ -41,15 +41,15 @@ def send_email(
         smtp_host,
         smtp_port,
         openai_api_key,
-        date_string,
-        weather_string,
-        todo_string,
-        cal_string,
-        rss_string,
-        puzzles_string,
-        wotd_string,
-        quote_string,
-        puzzles_ans_string,
+        date_string="",
+        weather_string="",
+        todo_string="",
+        cal_string="",
+        rss_string="",
+        puzzles_string="",
+        wotd_string="",
+        quote_string="",
+        puzzles_ans_string="",
 ) -> None:
     try:
         # Ensure timezone is a valid pytz timezone object
@@ -72,18 +72,18 @@ def send_email(
         rss_string = add_emojis(rss_string)
         #puzzles_string = add_emojis(puzzles_string) # Do not apple emoji's to the puzzle string.
         #wotd_string = add_emojis(wotd_string) # Do not apple emoji's to the wotd string.
-        #quote_string = add_emojis(quote_string) # Do not apple emoji's to the qotd string.
-        #puzzles_ans_string = add_emojis(puzzles_ans_string) # Do not apple emoji's to the puzzle string.
+        #quote_string = add_emojis(quote_string) # Do not apply emoji's to the qotd string.
+        #puzzles_ans_string = add_emojis(puzzles_ans_string) # Do not apply emoji's to the puzzle string.
 
         # Append other sections
-        text, html_text = append_section(text, html_text, weather_string, "weather")
-        text, html_text = append_section(text, html_text, todo_string, "todo")
-        text, html_text = append_section(text, html_text, cal_string, "calendar")
-        text, html_text = append_section(text, html_text, rss_string, "rss")
-        text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
-        text, html_text = append_section(text, html_text, wotd_string, "wotd")
-        text, html_text = append_section(text, html_text, quote_string, "quote")
-        text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
+        if weather_string: text, html_text = append_section(text, html_text, weather_string, "weather")
+        if todo_string: text, html_text = append_section(text, html_text, todo_string, "todo")
+        if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
+        if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
+        if puzzles_string: text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
+        if wotd_string: text, html_text = append_section(text, html_text, wotd_string, "wotd")
+        if quote_string: text, html_text = append_section(text, html_text, quote_string, "quote")
+        if puzzles_ans_string: text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
         if openai_api_key is not None:
@@ -98,11 +98,11 @@ def send_email(
         if date_string:
             text = "# " + date_string + "\n\n" + text
         else:
-            logging.warning("date_string is None or empty.")
+            logging.warning("date_string is None, empty, or whitespace.")
             text = "# Date Not Available\n\n" + text
 
         html_content = markdown.markdown(html_text, extensions=["markdown.extensions.fenced_code"])
-
+        html_content = html_text if html_text else "<div class='section'>No additional content available</div>"
         current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %z")
         logging.debug(f"Current datetime: {current_datetime}")
 
@@ -260,7 +260,7 @@ def send_email(
         """
 
         message.attach(MIMEText(text, "plain"))
-        message.attach(MIMEText(html, "html"))
+        #message.attach(MIMEText(html, "html"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
