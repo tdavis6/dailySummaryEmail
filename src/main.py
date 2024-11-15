@@ -224,29 +224,27 @@ def send_scheduled_email(timezone):
 
         # Get weather information
         weather_string = get_weather() or ""
-        logging.debug(f"Weather string obtained: {weather_string}")
+        logging.debug(f"Weather string obtained")
 
         todo_string = get_todo() or ""
-        logging.debug(f"Todo string obtained: {todo_string}")
         logging.debug(f"Todo string obtained")
+
         rss_string = get_rss_feed() or ""
-        logging.debug(f"RSS string obtained: {rss_string}")
-        rss_string = get_rss_feed()
         logging.debug(f"RSS string obtained")
 
         # Get Word of the Day
         wotd_string = get_word_of_the_day() or ""
-        logging.debug(f"Word of the Day string obtained: {wotd_string}")
+        logging.debug(f"Word of the Day string obtained")
 
         # Get Quote of the Day
         quote_string = get_quote_of_the_day() or ""
-        logging.debug(f"Quote of the Day string obtained: {quote_string}")
+        logging.debug(f"Quote of the Day string obtained")
 
         # Get puzzles
         puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
-        logging.debug(f"Puzzles string obtained: {puzzles_string}")
+        logging.debug(f"Puzzles string obtained")
 
-        logging.debug(f"Puzzles answers string obtained: {puzzles_ans_string}")
+        logging.debug(f"Puzzles answers string obtained")
 
         # Get calendar events as a list of dictionaries
         calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
