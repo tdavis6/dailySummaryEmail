@@ -260,7 +260,7 @@ def send_email(
         """
 
         message.attach(MIMEText(text, "plain"))
-        #message.attach(MIMEText(html, "html"))
+        message.attach(MIMEText(html, "html"))
 
         context = ssl.create_default_context()
         with smtplib.SMTP_SSL(smtp_host, smtp_port, context=context) as server:
