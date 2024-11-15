@@ -3,6 +3,7 @@ import logging
 from datetime import datetime, timedelta
 
 def add_emojis(text):
+    url_pattern = re.compile(r'http[s]?://\S+|www\.\S+')
     """Adds emojis to individual tasks in the text based on lateness, with a default due date of today if not specified."""
     emoji_map = {
         # Meals
@@ -191,6 +192,19 @@ def add_emojis(text):
         logging.debug(f"Replacing '{word}' with '{emoji}' emoji.")
         return f"{word} {emoji}"
 
+    def preserve_urls(text):
+        urls = []
+        def store_urls(match):
+            urls.append(match.group())
+            return f'URL_PLACEHOLDER_{len(urls)}'
+        text = url_pattern.sub(store_urls, text)
+        return text, urls
+
+    def restore_urls(text, urls):
+        for i, url in enumerate(urls, 1):
+            text = text.replace(f'URL_PLACEHOLDER_{i}', url)
+        return text
+
     updated_tasks = []
 
     # Define the regex to capture due date information in each task
@@ -215,9 +229,11 @@ def add_emojis(text):
                 task += " ⚠️" if days_late <= 7 else " 🔥"
 
             # Apply emoji replacements for keywords
+            task, urls = preserve_urls(task)
             for keyword in list(emoji_map.keys()) + [k + 's' for k in emoji_map.keys()]:
                 task = re.sub(rf"\b{keyword}\b", replace_with_emoji, task, flags=re.IGNORECASE)
 
+            task = restore_urls(task, urls)
             updated_tasks.append(task)
 
         # Combine header and updated tasks into final output
