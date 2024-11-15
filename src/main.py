@@ -99,7 +99,7 @@ def save_location_cache(lat, long, city_state_str):
 # Initialize coordinates
 LATITUDE, LONGITUDE, city_state_str = load_location_cache()
 
-if not LATITUDE or not LONGITUDE:
+if not LATITUDE or not LONGITUDE or not city_state_str:
     if not ADDRESS:
         logging.critical("No address provided. Please set ADDRESS or LATITUDE and LONGITUDE.")
         exit(1)
@@ -121,20 +121,6 @@ try:
 except Exception as e:
     logging.critical(f"Error creating timezone: {e}")
     exit(1)
-
-def get_cached_data(key, fetch_function, *args, **kwargs):
-    """Fetch data from cache or call the function if not cached."""
-    if key in cache:
-        logging.info(f"Using cached data for {key}.")
-        return cache[key]
-
-    logging.info(f"Fetching fresh data for {key}.")
-    data = fetch_function(*args, **kwargs)
-    cache[key] = data
-    return data
-
-# Initialize Cache
-cache = TTLCache(maxsize=100, ttl=3600)  # 1-hour TTL for cached data
 
 def get_cached_data(key, fetch_function, *args, **kwargs):
     """Fetch data from cache or call the function if not cached."""
