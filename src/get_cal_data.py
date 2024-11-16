@@ -16,8 +16,9 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
 
         # Ensure all 'start' and 'end' times are timezone-aware datetime objects
         for event in events:
-            event["start"] = make_aware(ensure_datetime(event["start"]), timezone)
-            event["end"] = make_aware(ensure_datetime(event["end"]), timezone)
+            event["start"] = ensure_datetime(event["start"]).astimezone(timezone)
+
+            event["end"] = ensure_datetime(event["end"]).astimezone(timezone)
 
         # Sort events based on the start datetime
         events.sort(key=lambda event: event["start"])
