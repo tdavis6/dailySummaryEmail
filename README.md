@@ -3,7 +3,8 @@
 ![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/main)
 
 ## Summary
-A simple program that emails the user the weather and any tasks on their to-do list at a designated time daily
+A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
+quote of the day, and more at a designated time daily.
 (Only Todoist is currently supported, 
 but I am working on more. Feel free to request any todo app with an issue)
 
