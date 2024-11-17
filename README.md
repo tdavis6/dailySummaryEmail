@@ -42,6 +42,8 @@ See .env.example for an example .env file.
   are not given. Use quotes.)
 - WEATHER: True or False. Enables weather. (optional, defaults to false)
 - TODOIST_API_KEY: Your Todoist API key (optional)
+- VIKUNJA_API_KEY: Your Vikunja API key (optional)
+  VIKUNJA_BASE_URL: Your Vikunja base url (optional)
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
 - RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
 - PUZZLES: True or False. Enables puzzles. (optional, defaults to false)

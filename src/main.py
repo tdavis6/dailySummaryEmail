@@ -61,6 +61,8 @@ LONGITUDE = os.getenv("LONGITUDE")
 ADDRESS = os.getenv("ADDRESS")
 WEATHER = os.getenv("WEATHER", False)
 TODOIST_API_KEY = os.getenv("TODOIST_API_KEY")
+VIKUNJA_API_KEY = os.getenv("VIKUNJA_API_KEY")
+VIKUNJA_BASE_URL = os.getenv("VIKUNJA_BASE_URL")
 WEBCAL_LINKS = os.getenv("WEBCAL_LINKS")
 RSS_LINKS = os.getenv("RSS_LINKS", False)
 PUZZLES = os.getenv("PUZZLES", False)
@@ -156,7 +158,9 @@ def get_todo():
         get_todo_tasks,
         timezone,
         TIME_SYSTEM,
-        TODOIST_API_KEY
+        TODOIST_API_KEY,
+        VIKUNJA_API_KEY,
+        VIKUNJA_BASE_URL
     )
         logging.debug(f"Todo data obtained")
         return todo
