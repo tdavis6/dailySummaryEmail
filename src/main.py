@@ -99,19 +99,12 @@ def save_location_cache(lat, long, city_state_str):
         logging.info("Location data saved to cache.")
 
 # Initialize coordinates
-LATITUDE, LONGITUDE, city_state_str = load_location_cache()
+LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+logging.debug("Coordinates obtained from address.")
+city_state_str = get_city_state(LATITUDE, LONGITUDE)
+save_location_cache(LATITUDE, LONGITUDE, city_state_str)
+logging.debug("City and state obtained from coordinates.")
 
-if not LATITUDE or not LONGITUDE or not city_state_str:
-    if not ADDRESS:
-        logging.critical("No address provided. Please set ADDRESS or LATITUDE and LONGITUDE.")
-        exit(1)
-    else:
-        LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-        logging.debug("Coordinates obtained from address.")
-        city_state_str = get_city_state(LATITUDE, LONGITUDE)
-        save_location_cache(LATITUDE, LONGITUDE, city_state_str)
-else:
-    logging.info("Using cached LATITUDE, LONGITUDE, and city_state_str.")
 
 try:
     if not TIMEZONE:
@@ -307,8 +300,9 @@ def get_seconds_until_next_schedule(hour, minute, timezone):
     return (next_schedule - now).seconds
 
 if __name__ == "__main__":
-    logging.info(f"Running version {VERSION}")
+    LATITUDE, LONGITUDE, city_state_str = load_location_cache()
 
+    logging.info(f"Running version {VERSION}")
     # Send email immediately upon start
     send_scheduled_email(timezone)
 
