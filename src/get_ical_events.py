@@ -122,7 +122,7 @@ def make_aware(dt, timezone):
     raise ValueError("Unsupported date type")
 
 
-def is_event_today(event_start, event_end, timezone="UTC"):
+def is_event_today(event_start, event_end, timezone):
     today = datetime.now(timezone).date()
     event_start = make_aware(event_start, timezone)
     event_end = make_aware(event_end, timezone)
