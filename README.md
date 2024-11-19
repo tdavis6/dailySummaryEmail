@@ -15,7 +15,7 @@ When the program starts up, an email will be sent so the user may see what it wi
 sent at the specified time.
 
 ## Setup
-Run the following command in the same directory of your .env file:
+Run the following command in the same directory as your .env file:
 ```
 docker run --name dailySummaryEmail --env-file .env ghcr.io/tdavis6/dailysummaryemail:latest
 ```
