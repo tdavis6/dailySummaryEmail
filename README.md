@@ -65,7 +65,7 @@ tokens per day. The model used is GPT-4o mini, which allows for it to cost much 
 is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
 
 ### Cost Breakdown
-$\text{Total Input Tokens per Year: } 1,420 \text{tokens/day} \times 365 \text{ days} = 518,300 \text{ tokens}$
+$\text{Total Input Tokens per Year: } 1,420 \text{ tokens/day} \times 365 \text{ days} = 518,300 \text{ tokens}$
 
 $\text{Total Output Tokens per Year: } 120 \text{ tokens/day} \times 365 \text{ days} = 43,800 \text{ tokens}$
 
