@@ -217,7 +217,7 @@ def add_emojis(text):
     if text != "":
         for task in tasks:
             if task.startswith("# ") or task.startswith("## "):  # Skip lines that start with headers ('# 'or '## ')
-                logging.info("Skipping header line.")
+                logging.debug("Skipping header line.")
                 updated_tasks.append(task)
                 continue
 
