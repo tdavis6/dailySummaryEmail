@@ -55,7 +55,7 @@ def gen_sudoku(n=3, difficulty=0.5, max_retries=100):
             puzzle = Sudoku(n, board=puzzle_board)
 
             # Return the puzzle and solution as strings
-            logging.info(f"Puzzle generated successfully after {retries} attempts.")
+            logging.debug(f"Puzzle generated successfully after {retries} attempts.")
             return str(puzzle).strip(), str(solution).strip()
 
         except UnsolvableSudoku:
