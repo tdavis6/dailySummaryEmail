@@ -11,6 +11,8 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
         daily_parameters = [
             "temperature_2m_max",
             "temperature_2m_min",
+            "apparent_temperature_max",
+            "apparent_temperature_min",
             "precipitation_sum",
             "windspeed_10m_max",
             "uv_index_max",
@@ -76,6 +78,8 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
         sunrise = daily_data['sunrise'][index]
         sunset = daily_data['sunset'][index]
         weathercode = daily_data['weathercode'][index]
+        feels_like_min = daily_data['apparent_temperature_min'][index]
+        feels_like_max = daily_data['apparent_temperature_max'][index]
 
         # Map weathercode to description and emoji
         weathercode_descriptions = {
@@ -181,12 +185,14 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
 Today's Weather Forecast For {city_state_str if city_state_str else f"{latitude}, {longitude}"}:\n
 Condition: {condition} {emoji}\n
 Temperature: {min_temp}{temp_unit} to {max_temp}{temp_unit}\n
+Feels Like Temperature: {feels_like_min}{temp_unit} to {feels_like_max}{temp_unit}\n
 Humidity: {avg_humidity}%\n
 Precipitation: {precipitation} {precip_unit}\n
 Wind Speed: {wind_speed} {wind_unit}\n
 UV Index: {uv_index}\n
 Sunrise: {sunrise_str}\n
-Sunset: {sunset_str}\n"""
+Sunset: {sunset_str}\n
+"""
 
         # Add alerts to the weather string if any
         if alerts_info:
