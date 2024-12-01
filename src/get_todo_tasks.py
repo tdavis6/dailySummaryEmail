@@ -112,11 +112,15 @@ def process_tasks(
                 if due_dt.time() != datetime.time(23, 59, 59):
                     due_time = format_time(due_dt, TIME_SYSTEM)
                     task_text += (
-                        f", due at {due_time} on {due_dt.strftime('%A, %B %d, %Y')}"
+                        f", overdue, due at {due_time} on {due_dt.strftime('%A, %B %d, %Y')}"
                     )
                 else:
-                    task_text += f", due on {due_dt.strftime('%A, %B %d, %Y')}"
+                    task_text += f", overdue, due on {due_dt.strftime('%A, %B %d, %Y')}"
             else:
+                if due_dt.time() != datetime.time(23, 59, 59):
+                    due_time = format_time(due_dt, TIME_SYSTEM)
+                    task_text += f", due at {due_time}"
+        else:
                 if due_dt.time() != datetime.time(23, 59, 59):
                     due_time = format_time(due_dt, TIME_SYSTEM)
                     task_text += f", due at {due_time}"
