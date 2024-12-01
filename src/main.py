@@ -5,7 +5,6 @@ import time
 import json
 import pytz
 from dotenv import load_dotenv
-from cachetools import TTLCache
 import traceback
 
 from get_cal_data import get_cal_data
@@ -79,9 +78,6 @@ if LOGGING_LEVEL not in ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL']:
 logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
 logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
 
-# Initialize Cache
-cache = TTLCache(maxsize=100, ttl=3600)  # 1-hour TTL for cached data
-
 # Check for or load cached location data
 def load_location_cache():
     if os.path.exists(CACHE_FILE_PATH):
@@ -105,7 +101,6 @@ city_state_str = get_city_state(LATITUDE, LONGITUDE)
 save_location_cache(LATITUDE, LONGITUDE, city_state_str)
 logging.debug("City and state obtained from coordinates.")
 
-
 try:
     if not TIMEZONE:
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
@@ -117,44 +112,16 @@ except Exception as e:
     logging.critical(f"Error creating timezone: {e}")
     exit(1)
 
-def get_cached_data(key, fetch_function, *args, **kwargs):
-    """Fetch data from cache or call the function if not cached."""
-    if key in cache:
-        logging.info(f"Using cached data for {key}.")
-        return cache[key]
-
-    logging.info(f"Fetching fresh data for {key}.")
-    data = fetch_function(*args, **kwargs)
-    cache[key] = data
-    return data
-
 def get_weather():
     if WEATHER in ["True", "true", True]:
-        weather = get_cached_data(
-            "weather",
-            get_forecast,
-            LATITUDE,
-            LONGITUDE,
-            city_state_str,
-            UNIT_SYSTEM,
-            TIME_SYSTEM,
-            timezone
-        )
+        weather = get_forecast(LATITUDE, LONGITUDE, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone)
         logging.debug(f"Weather data obtained")
         return weather
     return ""
 
 def get_todo():
     if TODOIST_API_KEY:
-        todo = get_cached_data(
-        "todo",
-        get_todo_tasks,
-        timezone,
-        TIME_SYSTEM,
-        TODOIST_API_KEY,
-        VIKUNJA_API_KEY,
-        VIKUNJA_BASE_URL
-    )
+        todo = get_todo_tasks(timezone, TIME_SYSTEM, TODOIST_API_KEY, VIKUNJA_API_KEY, VIKUNJA_BASE_URL)
         logging.debug(f"Todo data obtained")
         return todo
     logging.warning("todo content is None or empty")
@@ -162,8 +129,7 @@ def get_todo():
 
 def get_rss_feed():
     if RSS_LINKS:
-        rss = get_cached_data("rss", get_rss, RSS_LINKS, timezone, TIME_SYSTEM)
-        logging.debug(f"RSS data obtained")
+        rss = get_rss(RSS_LINKS, timezone, TIME_SYSTEM)
         logging.debug(f"RSS data obtained")
         return rss
     logging.warning("rss content is None or empty")
@@ -171,35 +137,23 @@ def get_rss_feed():
 
 def get_quote_of_the_day():
     if QOTD and QOTD in ["True", "true", True]:
-        quote = get_cached_data("quote", get_quote)
+        quote = get_quote()
         logging.debug(f"Quote of the day obtained")
-        if quote:
-            logging.debug(f"Quote of the day obtained")
-            return quote
-        logging.warning("quote content is None or empty")
+        return quote
     return ""
 
 def get_word_of_the_day():
     if WOTD and WOTD in ["True", "true", True]:
-        wotd = get_cached_data("wotd", get_wotd)
+        wotd = get_wotd()
         logging.debug(f"Word of the day obtained")
-        if wotd:
-            logging.debug(f"Word of the day obtained")
-            return wotd
-        logging.warning("wotd content is None or empty")
+        return wotd
     return ""
 
 def get_puzzles_of_the_day():
     if PUZZLES and PUZZLES in ["True", "true", True]:
-        puzzles, puzzles_ans = get_cached_data("puzzles", get_puzzles)
+        puzzles, puzzles_ans = get_puzzles()
         logging.debug(f"Puzzles obtained")
-        logging.debug(f"Puzzles answers obtained")
-        if puzzles and puzzles_ans:
-            logging.debug(f"Puzzles obtained")
-            logging.debug(f"Puzzles answers obtained")
-            return puzzles, puzzles_ans
-        logging.warning("puzzles content is None or empty")
-        logging.warning("puzzles-ans content is None or empty")
+        return puzzles, puzzles_ans
     return "", ""
 
 def send_scheduled_email(timezone):
