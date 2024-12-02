@@ -180,7 +180,31 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
                     f"{alert_description}\n"
                 )
 
-
+        outfit_suggestions = ""
+        if unit_system.upper() == "IMPERIAL":
+            if max_temp > 86:
+                outfit_suggestions += "It's hot outside! Wear light clothing and stay hydrated. "
+            elif max_temp > 68:
+                outfit_suggestions += "The weather is warm. A t-shirt and shorts should be comfortable. "
+            elif max_temp > 50:
+                outfit_suggestions += "It's a bit chilly. Consider wearing a light jacket. "
+            else:
+                outfit_suggestions += "It's cold outside! Wear warm clothing such as a coat and scarf. "
+            if wind_speed > 20:
+                outfit_suggestions += "It's quite windy. Wearing a windbreaker might be a good idea. "
+        else:
+            if max_temp > 30:
+                outfit_suggestions += "It's hot outside! Wear light clothing and stay hydrated. "
+            elif max_temp > 20:
+                outfit_suggestions += "The weather is warm. A t-shirt and shorts should be comfortable. "
+            elif max_temp > 10:
+                outfit_suggestions += "It's a bit chilly. Consider wearing a light jacket. "
+            else:
+                outfit_suggestions += "It's cold outside! Wear warm clothing such as a coat and scarf. "
+            if wind_speed > 32:
+                outfit_suggestions += "It's quite windy. Wearing a windbreaker might be a good idea. "
+        if precipitation > 0:
+            outfit_suggestions += "Remember to carry an umbrella or a raincoat. "
         weather_string = f"""\n\n# Weather\n
 Today's Weather Forecast For {city_state_str if city_state_str else f"{latitude}, {longitude}"}:\n
 Condition: {condition} {emoji}\n
@@ -192,6 +216,7 @@ Wind Speed: {wind_speed} {wind_unit}\n
 UV Index: {uv_index}\n
 Sunrise: {sunrise_str}\n
 Sunset: {sunset_str}\n
+{outfit_suggestions}\n
 """
 
         # Add alerts to the weather string if any
@@ -199,4 +224,3 @@ Sunset: {sunset_str}\n
             weather_string += f"\n## Severe Weather Alerts:\n{alerts_info}"
 
     return weather_string
-
