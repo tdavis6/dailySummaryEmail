@@ -44,6 +44,7 @@ def parse_icalendar(ical_string):
             start = component.get("dtstart")
             end = component.get("dtend")
             summary = component.get("summary")
+            location = component.get("location")
             uid = component.get("uid")
             recurrence_id = component.get("recurrence-id")
 
@@ -53,6 +54,7 @@ def parse_icalendar(ical_string):
                 continue
 
             if start and end:
+                description = component.get("description")
                 rrule = component.get("rrule")
                 start = start.dt
                 end = end.dt
@@ -82,7 +84,10 @@ def parse_icalendar(ical_string):
                                 "start": dt,
                                 "end": dt + event_duration,
                                 "summary": str(summary) if summary else "No Title",
+                                "location": location,
                                 "uid": uid,
+                                "description": str(description) if description else None,
+                                "description": str(description) if description else None,
                             }
                             events.append(event)
                         except Exception as e:
@@ -92,7 +97,9 @@ def parse_icalendar(ical_string):
                         "start": start,
                         "end": end,
                         "summary": str(summary) if summary else "No Title",
+                        "location": location,
                         "uid": uid,
+                        "description": str(description) if description else None,
                     }
                     events.append(event)
 
@@ -107,7 +114,11 @@ def parse_icalendar(ical_string):
                     if ex_component.get("summary")
                     else "No Title"
                 )
+            if location:
+                apple_maps_link = f"https://maps.apple.com/?q={location}"
+                event["apple_maps_link"] = apple_maps_link
 
+    return events
     return events
 
 

@@ -57,4 +57,10 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
             else:
                 text += f"\n\nEnds at {event['end'].strftime(date_time_format)}"
 
+            location = event.get("location")
+            if location:
+                maps_link = f"https://maps.apple.com/?q={location.replace(' ', '+')}"
+                text += f"\n\n[Directions]({maps_link})"
+
+
     return text
