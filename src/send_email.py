@@ -80,10 +80,6 @@ def send_email(
         if todo_string: text, html_text = append_section(text, html_text, todo_string, "todo")
         if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
         if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
-        if puzzles_string: text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
-        if wotd_string: text, html_text = append_section(text, html_text, wotd_string, "wotd")
-        if quote_string: text, html_text = append_section(text, html_text, quote_string, "quote")
-        if puzzles_ans_string: text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Get summary
         if openai_api_key is not None:
@@ -93,6 +89,11 @@ def send_email(
             text = summary + text
             summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
             html_text = summary_html + html_text
+
+        if puzzles_string: text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
+        if wotd_string: text, html_text = append_section(text, html_text, wotd_string, "wotd")
+        if quote_string: text, html_text = append_section(text, html_text, quote_string, "quote")
+        if puzzles_ans_string: text, html_text = append_section(text, html_text, puzzles_ans_string, "puzzles-ans")
 
         # Append date section
         if date_string:
