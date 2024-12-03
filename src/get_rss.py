@@ -36,6 +36,7 @@ def parse_recent_feed(feed_url):
         if published_time > time_24_hours_ago:
             entry_info = {
                 "title": entry.get("title", "No Title"),
+                "description": entry.get("description", "No Description"),
                 "link": entry.get("link", "No Link"),
                 "published": published_time,
             }
@@ -75,6 +76,8 @@ def get_rss(url_string, tz, TIME_SYSTEM):
             logging.debug(f"Formatting entry: {entry['title']}")
             published_str = entry["published"].astimezone(tz).strftime(date_time_format)
             output.append(f"\n\n### {entry['title']}")
+            if entry.get("description"):
+                output.append(f"\n\n{entry['description']}")
             output.append(f"\n\nLink: {entry['link']}")
             output.append(f"\n\nPublished: {published_str}")
         return "\n".join(output)

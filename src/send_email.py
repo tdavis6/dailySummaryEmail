@@ -65,21 +65,20 @@ def send_email(
         text = ""  # Initialize the plain text content
         html_text = ""  # Initialize the HTML content
 
-        # Apply emojis to each section with optional task lateness
-        #weather_string = add_emojis(weather_string) # Do not apply emoji's to the weather string.
-        todo_string = add_emojis(todo_string)
-        cal_string = add_emojis(cal_string)
-        rss_string = add_emojis(rss_string)
-        #puzzles_string = add_emojis(puzzles_string) # Do not apple emoji's to the puzzle string.
-        #wotd_string = add_emojis(wotd_string) # Do not apple emoji's to the wotd string.
-        #quote_string = add_emojis(quote_string) # Do not apply emoji's to the qotd string.
-        #puzzles_ans_string = add_emojis(puzzles_ans_string) # Do not apply emoji's to the puzzle string.
+        # Apply emojis to each section
+        #weather_string = add_emojis(weather_string)
+        #todo_string = add_emojis(todo_string)
+        #cal_string = add_emojis(cal_string)
+        #rss_string = add_emojis(rss_string)
+        #puzzles_string = add_emojis(puzzles_string)
+        #wotd_string = add_emojis(wotd_string)
+        #quote_string = add_emojis(quote_string)
+        #puzzles_ans_string = add_emojis(puzzles_ans_string)
 
-        # Append other sections
+        # Append sections
         if weather_string: text, html_text = append_section(text, html_text, weather_string, "weather")
         if todo_string: text, html_text = append_section(text, html_text, todo_string, "todo")
         if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
-        if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
 
         # Get summary
         if openai_api_key is not None:
@@ -90,6 +89,7 @@ def send_email(
             summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
             html_text = summary_html + html_text
 
+        if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
         if puzzles_string: text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
         if wotd_string: text, html_text = append_section(text, html_text, wotd_string, "wotd")
         if quote_string: text, html_text = append_section(text, html_text, quote_string, "quote")
