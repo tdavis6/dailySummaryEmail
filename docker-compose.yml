@@ -2,12 +2,14 @@ version: '3.8'
 
 services:
   web:
-    image: ghcr.io/tdavis6/dailysummaryemail:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: dailySummaryEmail
-    env_file:
-      - .env
     ports:
       - "8080:8080"
+    env_file:
+      - .env
     volumes:
-      - ./data:/app/data
+      - ./config.json:/app/data/config.json
     restart: unless-stopped
