@@ -37,12 +37,6 @@ CACHE_FILE_PATH = "./cache/location_cache.json"
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 CORS(app)
 
-# Configure the APScheduler executors to handle multiple jobs
-executors = {
-    'default': ThreadPoolExecutor(max_workers=5)
-}
-
-scheduler = BackgroundScheduler(executors=executors)
 
 def init_config():
     """Initialize configuration storage if not already present."""
@@ -275,6 +269,13 @@ try:
 except Exception as e:
     logging.critical(f"Error creating timezone: {e}")
     exit(1)
+
+# Configure the APScheduler executors to handle multiple jobs
+executors = {
+    'default': ThreadPoolExecutor(max_workers=5)
+}
+
+scheduler = BackgroundScheduler(executors=executors, timezone = timezone)
 
 def load_location_cache():
     if os.path.exists(CACHE_FILE_PATH):
