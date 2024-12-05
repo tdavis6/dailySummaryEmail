@@ -86,6 +86,10 @@ product that ChatGPT, ChatGPT Plus does not grant access to the OpenAI API.
 
 ## Other Notes
 - Versioning follows [semver](https://semver.org).
+- If you want news articles, add their RSS feed as a feed. For example, the Wall Street Journal supplies RSS feeds, and 
+other newspapers likely do too ([WSJ World News Feed](https://feeds.content.dowjones.io/public/rss/RSSWorldNews)).
+  - I do not claim responsibility for any content in this feed. I do not support any particular news paper, nor wish to make any
+political comments on any work. This feed was choosen because it was shown to be [close to the center of the political spectrum](https://www.allsides.com/news-source/wall-street-journal-media-bias).
 
 ## Buy me a cup of coffee ☕️!
 If you find this program to be valuable, and have all your personal financials taken care of, 

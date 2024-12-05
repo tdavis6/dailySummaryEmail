@@ -1,9 +1,9 @@
+Flask~=3.1.0
 pytz~=2024.2
 python-dotenv~=1.0.1
-cachetools~=5.5.0
 feedparser~=6.0.11
-beautifulsoup4~=4.12.3
 requests~=2.32.3
+beautifulsoup4~=4.12.3
 Markdown~=3.7
 timezonefinder~=6.5.3
 geopy~=2.4.1
@@ -11,4 +11,3 @@ icalendar~=6.0.0
 python-dateutil~=2.9.0.post0
 openai~=1.55.3
 todoist_api_python~=2.1.7
-py-sudoku~=2.0.0
