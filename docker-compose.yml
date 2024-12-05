@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    image: ghcr.io/tdavis6/dailysummaryemail:latest-dev
+    image: ghcr.io/tdavis6/dailysummaryemail:latest
     container_name: dailySummaryEmail
     env_file:
       - .env
