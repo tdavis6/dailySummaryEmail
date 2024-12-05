@@ -250,7 +250,7 @@ def refresh_configuration_variables():
         # Schedule the new job
         if scheduler.running:
             scheduler.add_job(
-                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job"
+                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job", timezone=TIMEZONE
             )
             logging.info("Email scheduling updated due to configuration change.")
         else:

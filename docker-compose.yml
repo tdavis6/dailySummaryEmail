@@ -4,10 +4,11 @@ services:
   dailySummaryEmail:
     image: ghcr.io/tdavis6/dailysummaryemail:latest-dev
     container_name: dailySummaryEmail
+    platform: "linux/amd64"
     ports:
       - "8080:8080"
     env_file:
       - .env
     volumes:
-      - ./config.json:/app/data/config.json
+      - /Users/tylerdavis/Documents/dockerDailySummaryEmail:/app/data
     restart: unless-stopped
