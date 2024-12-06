@@ -231,7 +231,8 @@ def refresh_configuration_variables():
     if latitude_old != LATITUDE or longitude_old != LONGITUDE or address_old != ADDRESS:
         refresh_location_cache()
 
-    if hour_old != HOUR or minute_old != MINUTE:
+    if (hour_old != HOUR or minute_old != MINUTE or address_old or latitude_old != LATITUDE or longitude_old != LONGITUDE
+            or address_old != ADDRESS):
         logging.debug(
             f"Hour changed from {hour_old} to {HOUR} or Minute changed from {minute_old} to {MINUTE}"
         )
