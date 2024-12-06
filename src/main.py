@@ -239,7 +239,8 @@ def refresh_configuration_variables():
 
         LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
         global timezone
-        timezone = get_timezone(LATITUDE, LONGITUDE)
+        timezone_str = get_timezone(LATITUDE, LONGITUDE)
+        timezone = pytz.timezone(timezone_str)
 
         # Check and remove the existing scheduled job
         if scheduler.get_job("daily_email_job"):
