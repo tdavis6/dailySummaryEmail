@@ -37,7 +37,6 @@ CACHE_FILE_PATH = "./cache/location_cache.json"
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 CORS(app)
 
-
 def init_config():
     """Initialize configuration storage if not already present."""
     if not os.path.exists(CONFIG_FILE_PATH):
@@ -182,13 +181,40 @@ HOUR = get_config_value("HOUR")
 MINUTE = get_config_value("MINUTE")
 LOGGING_LEVEL = get_config_value("LOGGING_LEVEL", "INFO").upper()
 
+# Initialize logging
+if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
+    raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
+logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
+logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
+
+# Ensure timezone is correctly loaded and utilized
+global timezone
+try:
+    if not TIMEZONE:
+        timezone_str = get_timezone(LATITUDE, LONGITUDE)
+        timezone = pytz.timezone(timezone_str)
+    else:
+        timezone = pytz.timezone(TIMEZONE)
+    logging.info(f"Timezone found: {timezone}.")
+except Exception as e:
+    logging.critical(f"Error creating timezone: {e}")
+    exit(1)
+
+# Configure the APScheduler executors to handle multiple jobs
+executors = {
+    'default': ThreadPoolExecutor(max_workers=5)
+}
+
+global scheduler
+scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
+
 def refresh_configuration_variables():
     """Reload configuration settings."""
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, \
         SMTP_PASSWORD, SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, UNIT_SYSTEM, \
         TIME_SYSTEM, LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, \
         VIKUNJA_API_KEY, VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, \
-        WOTD, QOTD, TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL
+        WOTD, QOTD, TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
 
     logging_level_old = LOGGING_LEVEL
     latitude_old, longitude_old, address_old = LATITUDE, LONGITUDE, ADDRESS
@@ -238,9 +264,13 @@ def refresh_configuration_variables():
         )
 
         LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-        global timezone
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
         timezone = pytz.timezone(timezone_str)
+
+        scheduler.shutdown(wait=False)
+
+        scheduler = BackgroundScheduler(timezone=timezone)
+        scheduler.start()
 
         # Check and remove the existing scheduled job
         if scheduler.get_job("daily_email_job"):
@@ -257,32 +287,6 @@ def refresh_configuration_variables():
             logging.warning("Scheduler is not running. Cannot add job.")
 
     logging.info("Configuration refreshed.")
-
-# Initialize logging
-if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-    raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
-logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
-logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
-
-# Ensure timezone is correctly loaded and utilized
-global timezone
-try:
-    if not TIMEZONE:
-        timezone_str = get_timezone(LATITUDE, LONGITUDE)
-        timezone = pytz.timezone(timezone_str)
-    else:
-        timezone = pytz.timezone(TIMEZONE)
-    logging.info(f"Timezone found: {timezone}.")
-except Exception as e:
-    logging.critical(f"Error creating timezone: {e}")
-    exit(1)
-
-# Configure the APScheduler executors to handle multiple jobs
-executors = {
-    'default': ThreadPoolExecutor(max_workers=5)
-}
-
-scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
 
 def load_location_cache():
     if os.path.exists(CACHE_FILE_PATH):
