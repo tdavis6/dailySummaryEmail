@@ -237,6 +237,9 @@ def refresh_configuration_variables():
             f"Hour changed from {hour_old} to {HOUR} or Minute changed from {minute_old} to {MINUTE}"
         )
 
+        LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+        timezone = get_timezone(LATITUDE, LONGITUDE)
+
         # Check and remove the existing scheduled job
         if scheduler.get_job("daily_email_job"):
             logging.info("Removing existing job 'daily_email_job'.")
