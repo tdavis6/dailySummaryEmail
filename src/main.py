@@ -244,7 +244,7 @@ def refresh_configuration_variables():
         # Schedule the new job
         if scheduler.running:
             scheduler.add_job(
-                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job", timezone=TIMEZONE
+                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job", timezone=timezone
             )
             logging.info("Email scheduling updated due to configuration change.")
         else:
@@ -275,7 +275,7 @@ executors = {
     'default': ThreadPoolExecutor(max_workers=5)
 }
 
-scheduler = BackgroundScheduler(executors=executors, timezone = timezone)
+scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
 
 def load_location_cache():
     if os.path.exists(CACHE_FILE_PATH):
@@ -528,7 +528,7 @@ def schedule_email():
             logging.info("Removing existing job 'daily_email_job'.")
             scheduler.remove_job("daily_email_job")
         scheduler.add_job(
-            scheduled_email_job, 'cron', hour=hour, minute=minute, id='daily_email_job'
+            scheduled_email_job, 'cron', hour=hour, minute=minute, id='daily_email_job', timezone=timezone
         )
         return jsonify({"message": "Email schedule set!"}), 200
     except Exception as e:
