@@ -10,5 +10,5 @@ services:
     env_file:
       - .env
     volumes:
-      - /Users/tylerdavis/Documents/dockerDailySummaryEmail:/app/data
+      - ./data:/app/data
     restart: unless-stopped
