@@ -1,0 +1,210 @@
+body {
+    font-size: 18px;
+    font-family: 'Georgia', 'Times', serif;
+    margin: 0;
+    padding: 0;
+    transition: background 0.5s ease, color 0.5s ease;
+    color: #003366;
+    background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+}
+
+/* Style to left-align form labels */
+label {
+    display: block; /* Ensures the label takes up the full line */
+    text-align: left; /* Aligns text to the left */
+    margin: 10px 0; /* Adds some vertical spacing for readability */
+}
+
+.container {
+    background: #ffffff;
+    color: #003366;
+    box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
+    width: 80%;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #ffffff;
+    background: linear-gradient(135deg, #1e88e5, #42a5f5);
+    animation: header-fade-in 1s ease-in-out;
+    text-align: center;
+    width: 80%;
+    margin: 0 auto;
+    padding: 25px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.sub-header {
+    font-size: 1.25rem;
+    font-weight: 300;
+    color: #e3f2fd;
+    text-align: center;
+}
+
+.button {
+    display: block;
+    background-color: #1e88e5;
+    color: white;
+    padding: 15px;
+    margin: 15px auto;
+    text-align: center;
+    border: none;
+    border-radius: 10px;
+    width: 80%;
+    animation: button-slide-up 0.5s ease;
+    cursor: pointer;
+    font-size: 1.125rem;
+    transition: background-color 0.3s ease;
+}
+
+.footer {
+    font-size: 0.875rem;
+    color: #777777;
+    margin-top: 20px;
+    text-align: center;
+}
+
+input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
+    width: 90%;
+    padding: 12px;
+    margin: 25px auto;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    display: block;
+    box-sizing: border-box;
+    background-color: #ffffff;
+    color: #000000;
+}
+
+textarea {
+    width: 90%; /* Matches the width of other input types */
+    padding: 12px; /* Consistent padding */
+    margin: 25px auto; /* Consistent margin */
+    border: 1px solid #cccccc; /* Consistent border */
+    border-radius: 5px; /* Consistent border-radius */
+    font-size: 1rem; /* Consistent font size */
+    transition: border-color 0.3s ease, box-shadow 0.3s ease; /* Consistent transition */
+    display: block;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    background-color: #ffffff;
+    color: #000000;
+    resize: vertical; /* Allows users to resize vertically */
+}
+
+textarea:focus {
+    border-color: #007bff; /* Consistent border color on focus */
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5); /* Consistent focus shadow */
+}
+
+.button:hover {
+    background-color: #1565c0;
+}
+
+#message {
+    transition: opacity 1s ease-in-out;
+    opacity: 0;
+}
+
+.message {
+    margin-top: 20px;
+    font-size: 1.125rem;
+    color: #00796b;
+    text-align: center;
+    animation: message-fade-in-out 1s ease-out;
+}
+
+.fade-in {
+    opacity: 1;
+}
+
+.fade-out {
+    opacity: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #2a3c57, #1e2a3f);
+        color: #e0e0e0;
+    }
+
+    input {
+        background-color: #333333;
+        color: #ffffff;
+    }
+
+    .container {
+        background: #1b263b;
+        color: #e0e0e0;
+        box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    .header {
+        background: linear-gradient(135deg, #0a3d62, #1e5799);
+    }
+
+    .sub-header, .message {
+        color: #bbbbbb;
+    }
+
+    .button {
+        background-color: #0a3d62;
+        color: #ffffff;
+    }
+}
+
+@media (max-width: 600px) {
+    .container {
+        width: 90%;
+        padding: 20px;
+    }
+
+    .header {
+        width: 90%;
+        font-size: 1.8rem;
+        padding: 20px;
+    }
+
+    .button {
+        width: 90%;
+        margin-top: 10px;
+    }
+}
+
+@keyframes header-fade-in {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes button-slide-up {
+    from {
+        transform: translateY(20px);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+@keyframes message-fade-in-out {
+    0%, 100% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+}

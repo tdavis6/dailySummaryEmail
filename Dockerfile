@@ -1,13 +1,18 @@
-FROM python:3.12.6-slim
+# Use a lightweight Python base image
+FROM python:3.12-slim
 
-# Set the working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy the current directory contents into the container
-COPY . /app
-
-# Install any needed dependencies specified in requirements.txt
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Run the command on container startup
-CMD python src/main.py
+# Copy the application code into the container
+COPY . .
+
+# Expose the port Flask or Waitress will use
+EXPOSE 8080
+
+# Command to start the app
+CMD ["python", "src/main.py"]

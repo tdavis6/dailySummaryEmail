@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Summary Control Panel</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    Control Panel
+    <div class="sub-header">Manage Your Daily Summary Settings</div>
+  </div>
+  <div class="content">
+    <form id="config-form">
+      <label>
+        Recipient Email:
+        <input type="email" name="RECIPIENT_EMAIL" required>
+      </label><br>
+      <label>
+        Recipient Name:
+        <input type="text" name="RECIPIENT_NAME" required>
+      </label><br>
+      <label>
+        Sender Email:
+        <input type="email" name="SENDER_EMAIL" required>
+      </label><br>
+      <label>
+        SMTP Username:
+        <input type="text" name="SMTP_USERNAME" required>
+      </label><br>
+      <label>
+        SMTP Password:
+        <input type="password" name="SMTP_PASSWORD" required>
+      </label><br>
+      <label>
+        SMTP Host:
+        <input type="text" name="SMTP_HOST" required>
+      </label><br>
+      <label>
+        SMTP Port:
+        <input type="number" name="SMTP_PORT" required>
+      </label><br>
+      <label>
+        OpenAI API Key:
+        <input type="password" name="OPENAI_API_KEY">
+      </label><br>
+      <label>
+        Unit System:
+<select name="UNIT_SYSTEM" style="font-size: large;">
+          <option value="IMPERIAL">Imperial</option>
+          <option value="METRIC">Metric</option>
+        </select>
+      </label><br>
+      <label>
+        Time System:
+<select name="TIME_SYSTEM" style="font-size: large;">
+          <option value="24HR">24 Hour</option>
+          <option value="12HR">12 Hour</option>
+        </select>
+      </label><br>
+      <label>
+        Latitude:
+        <input type="text" name="LATITUDE" required>
+      </label><br>
+      <label>
+        Longitude:
+        <input type="text" name="LONGITUDE" required>
+      </label><br>
+      <label>
+        Address:
+        <input type="text" name="ADDRESS">
+      </label><br>
+      <label>
+        Weather:
+<select name="WEATHER" style="font-size: large;">
+          <option value="True">True</option>
+          <option value="False">False</option>
+        </select>
+      </label><br>
+      <label>
+        Todoist API Key:
+        <input type="password" name="TODOIST_API_KEY">
+      </label><br>
+      <label>
+        Vikunja API Key:
+        <input type="password" name="VIKUNJA_API_KEY">
+      </label><br>
+      <label>
+        Vikunja Base URL:
+        <input type="text" name="VIKUNJA_BASE_URL">
+      </label><br>
+      <label>
+        Webcal Links:
+        <textarea name="WEBCAL_LINKS" class="multi-line-input"></textarea>
+      </label><br>
+      <label>
+        RSS Links:
+        <textarea name="RSS_LINKS" class="multi-line-input"></textarea>
+      </label><br>
+      <label>
+        Puzzles:
+<select name="PUZZLES" style="font-size: large;">
+          <option value="True">True</option>
+          <option value="False">False</option>
+        </select>
+      </label><br>
+      <label>
+        Word of the Day:
+<select name="WOTD" style="font-size: large;">
+          <option value="True">True</option>
+          <option value="False">False</option>
+        </select>
+      </label><br>
+      <label>
+        Quote of the Day:
+<select name="QOTD" style="font-size: large;">
+          <option value="True">True</option>
+          <option value="False">False</option>
+        </select>
+      </label><br>
+      <label>
+        Hour:
+        <input type="number" name="HOUR" min="0" max="23" required>
+      </label><br>
+      <label>
+        Minute:
+        <input type="number" name="MINUTE" min="0" max="59" required>
+      </label><br>
+      <label>
+        Logging Level:
+<select name="LOGGING_LEVEL" style="font-size: large;">
+          <option value="DEBUG">Debug</option>
+          <option value="INFO">Info</option>
+          <option value="WARNING">Warning</option>
+          <option value="ERROR">Error</option>
+          <option value="CRITICAL">Critical</option>
+        </select>
+      </label><br>
+      <button type="button" id="save-settings" class="button">Save Settings</button>
+    </form>
+    <button id="send-email" class="button">Send Email Now</button>
+    <div id="message" class="message"></div>
+      <footer class="footer">
+          Application Version: {{ app_version }}
+      </footer>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='scripts.js') }}"></script>
+</body>
+</html>
