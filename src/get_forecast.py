@@ -203,8 +203,29 @@ def get_forecast(latitude, longitude, city_state_str, unit_system, time_system, 
                 outfit_suggestions += "It's cold outside! Wear warm clothing such as a coat and scarf. "
             if wind_speed > 32:
                 outfit_suggestions += "It's quite windy. Wearing a windbreaker might be a good idea. "
-        if precipitation > 0:
-            outfit_suggestions += "Remember to carry an umbrella or a raincoat. "
+        # Define separate code lists for rain and snow
+        rain_codes = [
+            51, 53, 55, 56, 57,  # Drizzle variants
+            61, 63, 65,          # Rain variants
+            80, 81, 82,          # Rain showers
+            95, 96, 99           # Thunderstorms (commonly associated with rain/hail)
+        ]
+        snow_codes = [
+            66, 67,              # Freezing rain (treat as snow-like due to freezing conditions)
+            71, 73, 75, 77,      # Snowfall variants
+            85, 86               # Snow showers
+        ]
+
+        # Add precipitation-specific suggestions
+        if weathercode in rain_codes:
+            outfit_suggestions += (
+                "Rain is expected. Carry an umbrella or wear waterproof clothing. "
+            )
+        elif weathercode in snow_codes:
+            outfit_suggestions += (
+                "Snow is expected. Dress warmly in layers and consider waterproof boots and a winter coat. "
+            )
+
         weather_string = f"""\n\n# Weather\n
 Today's Weather Forecast For {city_state_str if city_state_str else f"{latitude}, {longitude}"}:\n
 Condition: {condition} {emoji}\n
