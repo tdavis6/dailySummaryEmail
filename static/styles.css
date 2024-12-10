@@ -167,11 +167,18 @@ textarea:focus {
 @media (max-width: 600px) {
     .container {
         width: 90%;
-        padding: 25px;
+        padding: 20px;
     }
 
-    .header, .button {
-        width: 95%;
+    .header {
+        width: 90%;
+        font-size: 1.8rem;
+        padding: 20px;
+    }
+
+    .button {
+        width: 90%;
+        margin-top: 10px;
     }
 }
 
