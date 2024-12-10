@@ -263,7 +263,17 @@ def refresh_configuration_variables():
             f"Hour changed from {hour_old} to {HOUR} or Minute changed from {minute_old} to {MINUTE}"
         )
 
-        LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+        if not LATITUDE or not LONGITUDE or LATITUDE == "" or LONGITUDE == "":
+            logging.warning("Coordinates missing, attempting to calculate from address.")
+            LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
+
+        try:
+            LATITUDE = float(LATITUDE)
+            LONGITUDE = float(LONGITUDE)
+        except (ValueError, TypeError):
+            logging.error("Unable to validate coordinates, setting as None.")
+            LATITUDE, LONGITUDE = None, None
+
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
         timezone = pytz.timezone(timezone_str)
 
