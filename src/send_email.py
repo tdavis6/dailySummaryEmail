@@ -271,3 +271,4 @@ def send_email(
     except Exception as e:
         logging.critical(f"Error sending email: {e}")
         logging.critical(traceback.format_exc())
+        raise
