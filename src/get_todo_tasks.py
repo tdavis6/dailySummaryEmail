@@ -146,8 +146,11 @@ def parse_task_sections(tasks_text):
         "General": [],
     }
 
-    output_text = "# Tasks" if tasks_text.strip().startswith("# Tasks") else ""
+    # Don't include the header if tasks_text is empty or doesn't contain tasks
     task_lines = tasks_text.splitlines()
+    output_text = ""
+    if any(line.strip() for line in task_lines if line.strip() != "# Tasks"):
+        output_text = "# Tasks"
 
     for line in task_lines:
         line = line.strip()
