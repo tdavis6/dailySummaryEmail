@@ -37,17 +37,23 @@ CACHE_FILE_PATH = "./cache/location_cache.json"
 app = Flask(__name__, template_folder='../templates', static_folder='../static')
 CORS(app)
 
-def init_config():
-    """Initialize configuration storage if not already present."""
+def ensure_directories_and_files_exist():
+    """Ensure required directories and files exist."""
+    os.makedirs("./data", exist_ok=True)
+    os.makedirs("./cache", exist_ok=True)
     if not os.path.exists(CONFIG_FILE_PATH):
-        # Create initial config file with empty data
         with open(CONFIG_FILE_PATH, "w") as f:
             json.dump({}, f)
+    if not os.path.exists(CACHE_FILE_PATH):
+        with open(CACHE_FILE_PATH, "w") as f:
+            json.dump({}, f)
+
+
 
 
 def load_config_from_json():
     """Load all configuration settings from the JSON file into a dictionary."""
-    init_config()
+    ensure_directories_and_files_exist()
     with open(CONFIG_FILE_PATH, "r") as f:
         config = json.load(f)
         # Decrypt sensitive data fields
@@ -64,6 +70,7 @@ def get_config_value(key, default=None):
 
 def save_config_to_json(config_data):
     """Save the configuration data to the config.json file."""
+    ensure_directories_and_files_exist()
     # Encrypt sensitive data fields before saving
     config_data["SMTP_PASSWORD"] = encrypt_data(config_data.get("SMTP_PASSWORD", ""))
     config_data["OPENAI_API_KEY"] = encrypt_data(config_data.get("OPENAI_API_KEY", ""))
@@ -299,6 +306,13 @@ def refresh_configuration_variables():
     logging.info("Configuration refreshed.")
 
 def load_location_cache():
+    ensure_directories_and_files_exist()
+    if not os.path.exists("./cache"):
+        os.makedirs("./cache")
+    if not os.path.exists(CACHE_FILE_PATH):
+        with open(CACHE_FILE_PATH, "w") as f:
+            json.dump({}, f)
+
     if os.path.exists(CACHE_FILE_PATH):
         with open(CACHE_FILE_PATH, "r") as f:
             try:
@@ -322,6 +336,7 @@ def save_location_cache(lat, long, city_state_str):
 
 
 def refresh_location_cache():
+    ensure_directories_and_files_exist()
     global LATITUDE, LONGITUDE, city_state_str
     LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
     logging.debug("Coordinates obtained from address.")

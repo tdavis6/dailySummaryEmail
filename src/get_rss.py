@@ -14,7 +14,9 @@ def parse_recent_feed(feed_url):
     except requests.RequestException as e:
         logging.error(f"Error fetching feed from {feed_url}: {e}")
         return []
-    if "entries" not in feed:
+
+    if not feed or not hasattr(feed, "entries") or not feed.entries:
+        logging.warning(f"The feed from {feed_url} is empty or invalid.")
         return []
 
     # Get the current time in UTC
@@ -26,13 +28,22 @@ def parse_recent_feed(feed_url):
     # Filter and collect entries published in the last 24 hours
     recent_entries = []
     for entry in feed.entries:
-        if "published_parsed" in entry:
+        published_time = None
+
+        # Check if 'published_parsed' or 'updated_parsed' exists and is valid
+        if entry.get("published_parsed"):
             published_time = datetime(*entry.published_parsed[:6], tzinfo=timezone.utc)
-        elif "updated_parsed" in entry:
+        elif entry.get("updated_parsed"):
             published_time = datetime(*entry.updated_parsed[:6], tzinfo=timezone.utc)
-        else:
+
+        # If no valid date is present, skip the entry
+        if not published_time:
+            logging.warning(
+                f"Skipping entry with no valid publication date: {entry.get('title', 'No Title')}"
+            )
             continue
 
+        # Add entries published in the last 24 hours
         if published_time > time_24_hours_ago:
             entry_info = {
                 "title": entry.get("title", "No Title"),
@@ -43,7 +54,6 @@ def parse_recent_feed(feed_url):
             recent_entries.append(entry_info)
 
     return recent_entries
-
 
 def get_rss(url_string, tz, TIME_SYSTEM):
     if not url_string:
