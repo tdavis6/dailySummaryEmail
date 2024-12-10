@@ -67,6 +67,12 @@ label {
     transition: background-color 0.3s ease;
 }
 
+.footer {
+    font-size: 0.875rem;
+    color: #777777;
+    text-align: center;
+}
+
 input[type="text"], input[type="password"], input[type="email"], input[type="number"] {
     width: 90%;
     padding: 12px;

@@ -142,8 +142,12 @@
     </form>
     <button id="send-email" class="button">Send Email Now</button>
     <div id="message" class="message"></div>
+      <footer class="footer">
+          Application Version: {{ app_version }}
+      </footer>
   </div>
 </div>
+
 <script src="{{ url_for('static', filename='scripts.js') }}"></script>
 </body>
 </html>

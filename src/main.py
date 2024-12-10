@@ -505,7 +505,7 @@ def get_seconds_until_next_schedule(hour, minute, timezone):
 
 @app.route("/")
 def home():
-    return render_template('index.html')
+    return render_template('index.html', app_version=VERSION)
 
 @app.route("/api/config", methods=["GET"])
 def get_config():
