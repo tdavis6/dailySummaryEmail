@@ -111,17 +111,6 @@ def send_email(
         <html>
         <head>
             <style>
-                @keyframes slideUp {{
-                    from {{
-                        transform: translateY(50%);
-                        opacity: 0;
-                    }}
-                    to {{
-                        transform: translateY(0);
-                        opacity: 1;
-                    }}
-                }}
-
                 html {{
                     font-size: 18px;
                 }}
@@ -272,3 +261,15 @@ def send_email(
         logging.critical(f"Error sending email: {e}")
         logging.critical(traceback.format_exc())
         raise
+
+"""                @keyframes slideUp {{
+                    from {{
+                        transform: translateY(50%);
+                        opacity: 0;
+                    }}
+                    to {{
+                        transform: translateY(0);
+                        opacity: 1;
+                    }}
+                }}
+"""
