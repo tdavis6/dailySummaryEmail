@@ -25,7 +25,7 @@ from get_forecast import get_forecast
 from get_rss import get_rss
 from get_puzzles import get_puzzles
 from get_wotd import get_wotd
-from get_quote import get_quote
+from get_qotd import get_qotd
 from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
 from send_email import send_email
@@ -286,7 +286,7 @@ def get_rss_feed():
 
 def get_quote_of_the_day():
     if QOTD and QOTD in ["True", "true", True]:
-        quote = get_quote()
+        quote = get_qotd()
         logging.debug("Quote of the day obtained.")
         return quote
     return ""
