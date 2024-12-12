@@ -82,11 +82,11 @@ def send_email(
 
         # Get summary
         if openai_api_key is not None:
-            summary = "# Summary\n\n" + generate_summary(text, openai_api_key) + "\n\n"
+            summary = generate_summary(text, openai_api_key)
             logging.debug("Summary obtained")
 
-            text = summary + text
-            summary_html = f"<div class='section summary'>{convert_section(summary)}</div>"
+            text = (summary + text) if summary else text
+            summary_html = f"<div class='section summary'>{convert_section(summary)}</div>" if summary else ""
             html_text = summary_html + html_text
 
         if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
