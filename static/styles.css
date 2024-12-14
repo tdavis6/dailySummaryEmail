@@ -88,6 +88,12 @@ input[type="text"], input[type="password"], input[type="email"], input[type="num
     color: #000000;
 }
 
+.error {
+    color: red;
+    font-size: 1rem;
+    margin-top: 20px;
+}
+
 textarea {
     width: 90%; /* Matches the width of other input types */
     padding: 12px; /* Consistent padding */

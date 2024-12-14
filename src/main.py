@@ -7,6 +7,7 @@ import threading
 import time
 import traceback
 from datetime import datetime, timedelta
+from functools import wraps
 
 import pytz
 import waitress
@@ -14,9 +15,10 @@ from apscheduler.executors.pool import ThreadPoolExecutor
 from apscheduler.schedulers.background import BackgroundScheduler
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, redirect, url_for, session
 from flask.logging import default_handler
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from get_cal_data import get_cal_data
 from get_city_state import get_city_state
@@ -160,23 +162,23 @@ def refresh_configuration_variables():
 
     if latitude_old != LATITUDE or longitude_old != LONGITUDE or address_old != ADDRESS:
         refresh_location_cache()
+        LATITUDE, LONGITUDE, city_state_str = load_location_cache()
 
-    # Validate timezone
-    try:
-        logging.debug(f"TIMEZONE: {TIMEZONE}")
-        if not TIMEZONE:
-            timezone_str = get_timezone(LATITUDE, LONGITUDE)
-            if not timezone_str:
-                raise ValueError(
-                    "TIMEZONE could not be determined. Coordinates or Address may be missing."
-                )
-            timezone = pytz.timezone(timezone_str)
-        else:
-            timezone = pytz.timezone(TIMEZONE)
-        logging.info(f"Timezone validated as: {timezone}")
-    except Exception as e:
-        logging.critical(f"Error validating TIMEZONE: {e}")
-        timezone = None  # Fallback in case of an error
+        try:
+            logging.debug(f"TIMEZONE: {TIMEZONE}")
+            if not TIMEZONE:
+                timezone_str = get_timezone(LATITUDE, LONGITUDE)
+                if not timezone_str:
+                    raise ValueError(
+                        "TIMEZONE could not be determined. Coordinates or Address may be missing."
+                    )
+                timezone = pytz.timezone(timezone_str)
+            else:
+                timezone = pytz.timezone(TIMEZONE)
+            logging.info(f"Timezone validated as: {timezone}")
+        except Exception as e:
+            logging.critical(f"Error validating TIMEZONE: {e}")
+            timezone = None
 
     # Handle schedule changes if needed
     if hour_old != HOUR or minute_old != MINUTE:
@@ -437,10 +439,17 @@ with open("./version.json", "r") as f:
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
 
 if not ENCRYPTION_KEY:
-    raise ValueError("Encryption key not found. Please set the ENCRYPTION_KEY environment variable.")
+    raise RuntimeError("Encryption key not found. Please set the ENCRYPTION_KEY environment variable.")
 
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
+# Get the encryption key from environment variables
+PASSWORD = os.getenv("PASSWORD")
+
+if not PASSWORD:
+    raise RuntimeError("Password not found. Please set the PASSWORD environment variable.")
+
+hashed_password = generate_password_hash(PASSWORD)
 
 # Initialize and save configuration from environment variables to JSON
 initialize_config()
@@ -518,17 +527,48 @@ executors = {
 global scheduler
 scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
 
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    # Check if the user is already logged in
+    if session.get("logged_in"):
+        return redirect(url_for("home"))  # Redirect to the main page
+
+    if request.method == "POST":
+        password = request.form.get("password")
+        if check_password_hash(hashed_password, password):
+            session['logged_in'] = True
+            return redirect(url_for("home"))  # Redirect to the main page after successful login
+        else:
+            return render_template("login.html", error="Invalid password")
+
+    return render_template("login.html")
+
+
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not session.get("logged_in"):
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+
+    return decorated_function
+
 @app.route("/")
+@login_required
 def home():
-    # Load the most recent configuration and pass it to the template
+    if not session.get("logged_in"):
+        return redirect(url_for("login"))
     current_config = load_config_from_json()
-    return render_template('index.html', app_version=VERSION, config=current_config)
+    return render_template('index.html', logged_in=session.get("logged_in"), app_version=VERSION, config=current_config)
 
 @app.route("/api/config", methods=["GET"])
+@login_required
 def api_get_config():
     return jsonify(load_config_from_json())
 
 @app.route("/api/save-config", methods=["POST"])
+@login_required
 def api_save_config():
     try:
         data = request.json
@@ -539,6 +579,7 @@ def api_save_config():
         return jsonify({"message": f"Failed to save settings. {str(e)}"}), 500
 
 @app.route('/api/send-email', methods=['POST'])
+@login_required
 def manually_send_email():
     try:
         prepare_send_email()
@@ -547,6 +588,7 @@ def manually_send_email():
         return jsonify({"message": f"Failed to send email: {e}"}), 500
 
 @app.route("/api/schedule-email", methods=["POST"])
+@login_required
 def schedule_email():
     try:
         data = request.json
@@ -563,6 +605,7 @@ def schedule_email():
         return jsonify({"message": f"Failed to schedule email. {e}"}), 500
 
 @app.route("/api/interrupt-schedule", methods=["POST"])
+@login_required
 def interrupt_schedule():
     try:
         scheduler.remove_job('daily_email_job')
@@ -584,7 +627,12 @@ if __name__ == "__main__":
     logging.info("Scheduler started.")
 
     def run_flask():
+        SECRET_KEY = os.getenv("SECRET_KEY")
+        if not SECRET_KEY:
+            raise RuntimeError("SECRET_KEY not found. Please set the SECRET_KEY environment variable.")
+        app.secret_key = SECRET_KEY
         waitress.serve(app, host="0.0.0.0", port=8080)
+
 
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
