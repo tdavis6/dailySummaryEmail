@@ -364,7 +364,6 @@ def prepare_send_email():
             quote_string,
             puzzles_ans_string,
         )
-        logging.info("Email sent successfully.")
 
     except Exception as e:
         error_message = str(e)
@@ -612,6 +611,14 @@ def interrupt_schedule():
         return jsonify({"message": "Email schedule interrupted!"}), 200
     except Exception as e:
         return jsonify({"message": f"Failed to interrupt schedule. {e}"}), 500
+
+
+@app.route("/logout")
+@login_required
+def logout():
+    session.clear()  # Clear all session data
+    return redirect(url_for("login"))  # Redirect to the login page
+
 
 if __name__ == "__main__":
     def handle_shutdown_signal(signum, frame):

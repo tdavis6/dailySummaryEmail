@@ -1,15 +1,16 @@
 import logging
 import smtplib
 import ssl
+import traceback
+from datetime import datetime
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
 import markdown
-from datetime import datetime
 import pytz
-import traceback
 
 from generate_summary import generate_summary
-from add_emojis import add_emojis
+
 
 def convert_section(markdown_string):
     """Convert markdown string to HTML."""
@@ -241,7 +242,7 @@ def send_email(
                         <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a>
                     </p>
                     <p style="font-size: 12px; color: inherit;">
-                        📋 Version: {version} | Generated on: {current_datetime}
+                        📋 Version: {version} | Sent at: {current_datetime}
                     </p>
                 </div>
             </div>
@@ -262,6 +263,8 @@ def send_email(
         logging.critical(traceback.format_exc())
         raise
 
+
+# deprecated code. used for animating the whole content block up on open. removed for compatibility.
 """                @keyframes slideUp {{
                     from {{
                         transform: translateY(50%);

@@ -141,6 +141,9 @@
       <button type="button" id="save-settings" class="button">Save Settings</button>
     </form>
     <button id="send-email" class="button">Send Email Now</button>
+      <form action="{{ url_for('logout') }}" method="GET">
+          <button class="button" type="submit">Logout</button>
+      </form>
     <div id="message" class="message"></div>
       <footer class="footer">
           Application Version: {{ app_version }}
