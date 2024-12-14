@@ -2,6 +2,7 @@ import logging
 
 from openai import OpenAI
 
+
 def generate_summary(text, api_key):
     try:
         client = OpenAI(api_key=api_key)
@@ -19,6 +20,7 @@ def generate_summary(text, api_key):
                                "Generate this summary in a way that the user can get a good grasp of their "
                                "day by only reading these 2-3 sentences. Ensure to use the same timing system as the content,"
                                "12hr or 24hr. ALso make sure to use imperial or metric, as seen in the content."
+                               "Make sure that all events and tasks are in the correct timezone."
                 },
                 {
                     "role": "user",
