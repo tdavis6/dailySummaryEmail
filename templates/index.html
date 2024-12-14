@@ -3,39 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Daily Summary Control Panel</title>
+    <title>Daily Summary Email Control Panel</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <div class="container">
   <div class="header">
     Control Panel
-    <div class="sub-header">Manage Your Daily Summary Settings</div>
+      <div class="sub-header">Manage Your Daily Summary Email Settings</div>
   </div>
   <div class="content">
     <form id="config-form">
       <label>
-        Recipient Email:
+          Recipient Email (required):
         <input type="email" name="RECIPIENT_EMAIL" required>
       </label><br>
       <label>
-        Recipient Name:
+          Recipient Name (required):
         <input type="text" name="RECIPIENT_NAME" required>
       </label><br>
       <label>
-        Sender Email:
+          Sender Email (required):
         <input type="email" name="SENDER_EMAIL" required>
       </label><br>
       <label>
-        SMTP Username:
+          SMTP Username (required):
         <input type="text" name="SMTP_USERNAME" required>
       </label><br>
       <label>
-        SMTP Password:
+          SMTP Password (required):
         <input type="password" name="SMTP_PASSWORD" required>
       </label><br>
       <label>
-        SMTP Host:
+          SMTP Host (required):
         <input type="text" name="SMTP_HOST" required>
       </label><br>
       <label>
@@ -69,7 +69,7 @@
         <input type="text" name="LONGITUDE" required>
       </label><br>
       <label>
-        Address:
+          Address (required if coordinates are not provided):
         <input type="text" name="ADDRESS">
       </label><br>
       <label>

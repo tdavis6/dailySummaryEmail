@@ -15,44 +15,47 @@ When the program starts up, an email will be sent so the user may see what it wi
 sent at the specified time.
 
 ## Setup
-Run the following command in the same directory as your .env file:
-```
-docker run --name dailySummaryEmail --env-file .env ghcr.io/tdavis6/dailysummaryemail:latest
-```
 
-To update the container, re-run the above command. To change settings, edit your .env
-and re-run the above command. See `.env.example` for an example .env file. Most variables are optional,
-see the following `Environment Variables` section below for more details.
+Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file,
+however
+all these options are not necessary to put in the `.env` file, they can be added later in the web UI. The only necessary
+variables to set are the `ENCRYPTION_KEY` and `PASSWORD`. The set `PASSWORD` is used to log into the web UI.
 
 ## Environment Variables
 See .env.example for an example .env file.
-- RECIPIENT_EMAIL: The recipient's email (required)
-- RECIPIENT_NAME: The name that the email is addressed to (required)
-- SENDER_EMAIL: The sending email (required)
-- SMTP_USERNAME: The username of the sending account on the SMTP server (required)
-- SMTP_PASSWORD: The password of the sending account on the SMTP server (required)
-- SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com) (required)
-- SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) (optional)
-- OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email. (optional, summary will not appear without it.)
-- UNIT_SYSTEM: METRIC or IMPERIAL. (optional, defaults to metric)
-- TIME_SYSTEM: 24HR or 12HR. (optional, defaults to 24HR)
-- LATITUDE: The latitude you wish to use for the weather and timezone. (optional)
-- LONGITUDE: The longitude you wish to use for the weather and timezone. (optional)
-- ADDRESS: The address of which the weather and timezone should be used. (optional, required if latitude and longitude
-  are not given. Use quotes.)
-- WEATHER: True or False. Enables weather. (optional, defaults to false)
-- TODOIST_API_KEY: Your Todoist API key (optional)
-- VIKUNJA_API_KEY: Your Vikunja API key (optional)
-  VIKUNJA_BASE_URL: Your Vikunja base url (optional)
-- WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
-- RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas. Do not use quotes. (optional)
-- PUZZLES: True or False. Enables puzzles. (optional, defaults to false)
-- WOTD: True or False. Enables the Word of the Day. (optional, defaults to false)
-- QOTD: True or False. Enables the Quote of the Day. (optional, defaults to false)
-- HOUR: The hour to send the email. (optional, defaults to the time when the container started)
-- MINUTE: The minute to send the email. (optional, defaults to the time when the container started)
-- TIMEZONE: Timezone as a string. (optional, not required if a latitude and longitude or an address are given, but will override that timezone. Ensure that it is spelt correctly.)
-- LOGGING_LEVEL: Level for logging (optional, defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+
+- RECIPIENT_EMAIL: The recipient's email
+- RECIPIENT_NAME: The name that the email is addressed to
+- SENDER_EMAIL: The sending email
+- SMTP_USERNAME: The username of the sending account on the SMTP server
+- SMTP_PASSWORD: The password of the sending account on the SMTP server
+- SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com)
+- SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL)
+- OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email.
+- UNIT_SYSTEM: METRIC or IMPERIAL. (defaults to metric)
+- TIME_SYSTEM: 24HR or 12HR. (defaults to 24HR)
+- LATITUDE: The latitude you wish to use for the weather and timezone.
+- LONGITUDE: The longitude you wish to use for the weather and timezone.
+- ADDRESS: The address of which the weather and timezone should be used. (Use quotes)
+- WEATHER: True or False. Enables weather. (defaults to false)
+- TODOIST_API_KEY: Your Todoist API key
+- VIKUNJA_API_KEY: Your Vikunja API key
+  VIKUNJA_BASE_URL: Your Vikunja base url
+- WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string,
+  seperated by commas. Do not use quotes.
+- RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas.
+  Do not use quotes.
+- PUZZLES: True or False. Enables puzzles. (defaults to false)
+- WOTD: True or False. Enables the Word of the Day. (defaults to false)
+- QOTD: True or False. Enables the Quote of the Day. (defaults to false)
+- HOUR: The hour to send the email. (defaults to the time when the container started)
+- MINUTE: The minute to send the email. (defaults to the time when the container started)
+- TIMEZONE: Timezone as a string. (not required if a latitude and longitude or an address are given, but will override
+  that timezone. Ensure that it is spelt correctly.)
+- LOGGING_LEVEL: Level for logging (defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
+- ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. You can use [this](https://fernetkeygen.com/)
+  website to generate them.
+- PASSWORD: Web UI password. Must be alphanumerical.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
