@@ -1,34 +1,36 @@
-from datetime import datetime, timedelta
+import json
 import logging
 import os
-import time
-import json
-import pytz
-import traceback
-from cryptography.fernet import Fernet
-from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request
-import waitress
-from flask.logging import default_handler
-from flask_cors import CORS
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.executors.pool import ThreadPoolExecutor
 import signal
 import sys
 import threading
+import time
+import traceback
+from datetime import datetime, timedelta
+
+import pytz
+import waitress
+from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.schedulers.background import BackgroundScheduler
+from cryptography.fernet import Fernet
+from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template, request
+from flask.logging import default_handler
+from flask_cors import CORS
 
 from get_cal_data import get_cal_data
+from get_city_state import get_city_state
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
-from get_city_state import get_city_state
 from get_forecast import get_forecast
-from get_rss import get_rss
 from get_puzzles import get_puzzles
-from get_wotd import get_wotd
 from get_qotd import get_qotd
+from get_rss import get_rss
 from get_timezone import get_timezone
 from get_todo_tasks import get_todo_tasks
+from get_wotd import get_wotd
 from send_email import send_email
+
 
 def ensure_directories_and_files_exist():
     """Ensure required directories and files exist."""
@@ -156,6 +158,9 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
+    if latitude_old != LATITUDE or longitude_old != LONGITUDE or address_old != ADDRESS:
+        refresh_location_cache()
+
     # Validate timezone
     try:
         logging.debug(f"TIMEZONE: {TIMEZONE}")
@@ -173,22 +178,13 @@ def refresh_configuration_variables():
         logging.critical(f"Error validating TIMEZONE: {e}")
         timezone = None  # Fallback in case of an error
 
-    # Validate LATITUDE and LONGITUDE again
-    try:
-        LATITUDE = float(LATITUDE)
-        LONGITUDE = float(LONGITUDE)
-        logging.debug(f"Validated LATITUDE: {LATITUDE}, LONGITUDE: {LONGITUDE}.")
-    except (ValueError, TypeError):
-        logging.error(
-            "Invalid LATITUDE and LONGITUDE. Attempting to resolve from ADDRESS."
-        )
-        refresh_location_cache()
-
     # Handle schedule changes if needed
     if hour_old != HOUR or minute_old != MINUTE:
         reschedule_email_job()
 
     logging.info("Configuration refreshed.")
+
+
 def load_location_cache():
     ensure_directories_and_files_exist()
     if not os.path.exists("./cache"):
