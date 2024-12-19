@@ -119,14 +119,14 @@ def send_email(
                 body {{
                     background: linear-gradient(135deg, #e3f2fd, #bbdefb);
                     font-family: 'Georgia', 'Times', serif;
-                    color: #003366;
+                    color: #000000;
                     margin: 0;
                     padding: 0;
                 }}
 
                 .container {{
                     background: #ffffff;
-                    color: #003366;
+                    color: #000000;
                     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
                     max-width: 750px;
                     margin: 40px auto;
@@ -190,12 +190,12 @@ def send_email(
                 @media (prefers-color-scheme: dark) {{
                     body {{
                         background: linear-gradient(135deg, #2a3c57, #1e2a3f);
-                        color: #e0e0e0;
+                        color: #ffffff;
                     }}
 
                     .container {{
                         background: #1b263b;
-                        color: #e0e0e0;
+                        color: #ffffff;
                         box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.5);
                     }}
 
