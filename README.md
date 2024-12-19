@@ -56,6 +56,7 @@ See .env.example for an example .env file.
 - ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. You can use [this](https://fernetkeygen.com/)
   website to generate them.
 - PASSWORD: Web UI password. Must be alphanumerical.
+- SECRET_KEY: Random alphanumerical string. Used for session cookies of the Web UI.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
