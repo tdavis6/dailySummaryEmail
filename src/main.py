@@ -512,7 +512,7 @@ LOGGING_LEVEL = get_config_value("LOGGING_LEVEL", "INFO").upper()
 if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
     raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
 logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
-logging.debug(f"Logging level set to: {LOGGING_LEVEL}")
+logging.info(f"Logging level set to: {LOGGING_LEVEL}")
 
 if not LATITUDE or LONGITUDE:
     refresh_location_cache()
