@@ -74,7 +74,7 @@ def save_config_to_json(config_data):
         json.dump(config_data, json_file, indent=4)
 
 def initialize_config():
-    """Initialize configuration by saving .env settings to config.json if they exist."""
+    """Initialize configuration by first loading config.json, then overriding with .env if present."""
     # List of configuration keys mapping to environment variables
     config_keys = [
         "RECIPIENT_EMAIL",
@@ -105,12 +105,24 @@ def initialize_config():
         "LOGGING_LEVEL",
     ]
 
-    # Initialize configuration from environment variables
-    config_data = {}
-    for key in config_keys:
-        config_data[key] = os.getenv(key, "")
+    # Load existing configuration from JSON
+    existing_config = load_config_from_json()
 
-    # Save configuration to JSON file
+    # Create a dictionary to hold final configuration values
+    config_data = {}
+
+    for key in config_keys:
+        env_val = os.getenv(key, None)
+
+        if env_val is None:
+            # Env var not present, log and use config.json or blank
+            logging.debug(f"Environment variable '{key}' not found. Using config.json or blank.")
+            config_data[key] = existing_config.get(key, "")
+        else:
+            # Env var present, use it and override config.json
+            config_data[key] = env_val
+
+    # Save final config to JSON
     save_config_to_json(config_data)
 
 def encrypt_data(data):
