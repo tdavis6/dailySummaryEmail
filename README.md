@@ -5,8 +5,8 @@
 ## Summary
 A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
 quote of the day, and more at a designated time daily.
-(Only Todoist is currently supported, 
-but I am working on more. Feel free to request any todo app with an issue)
+(Only Todoist and Vikunja are currently supported, but I am working on more.
+Feel free to request any todo app with an issue.)
 
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
