@@ -74,7 +74,7 @@ def save_config_to_json(config_data):
         json.dump(config_data, json_file, indent=4)
 
 def initialize_config():
-    """Initialize configuration by saving .env settings to config.json if they do not already exist."""
+    """Initialize configuration by saving .env settings to config.json if they exist."""
     # List of configuration keys mapping to environment variables
     config_keys = [
         "RECIPIENT_EMAIL",
@@ -105,34 +105,13 @@ def initialize_config():
         "LOGGING_LEVEL",
     ]
 
-    ensure_directories_and_files_exist()
-
-    # Load existing config if it exists
-    if os.path.exists(CONFIG_FILE_PATH):
-        with open(CONFIG_FILE_PATH, "r") as f:
-            try:
-                existing_config = json.load(f)
-            except json.JSONDecodeError:
-                existing_config = {}
-    else:
-        existing_config = {}
-
-    # Initialize configuration data
+    # Initialize configuration from environment variables
     config_data = {}
     for key in config_keys:
-        existing_value = existing_config.get(key, None)
-        env_value = os.getenv(key, "")
+        config_data[key] = os.getenv(key, "")
 
-        # If a value already exists in config and is not empty, keep it
-        # Otherwise, use the environment variable (even if it is empty)
-        if existing_value is not None and str(existing_value).strip() != "":
-            config_data[key] = existing_value
-        else:
-            config_data[key] = env_value
-
-    # Save updated configuration to JSON file
+    # Save configuration to JSON file
     save_config_to_json(config_data)
-
 
 def encrypt_data(data):
     return cipher_suite.encrypt(data.encode()).decode()
