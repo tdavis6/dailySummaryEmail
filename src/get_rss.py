@@ -1,8 +1,8 @@
+import logging
+from datetime import datetime, timedelta, timezone
 
 import feedparser
-import logging
 import requests
-from datetime import datetime, timedelta, timezone
 
 
 def parse_recent_feed(feed_url):

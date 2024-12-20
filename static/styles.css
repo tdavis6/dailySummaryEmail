@@ -15,8 +15,9 @@ label {
     margin: 10px 0; /* Adds some vertical spacing for readability */
 }
 
+/* Softer background on the container (the "css box") */
 .container {
-    background: #ffffff;
+    background: linear-gradient(135deg, #ffffff, #f7f9fb); /* Softer than pure white */
     color: #003366;
     box-shadow: 4px 4px 12px rgba(0, 0, 0, 0.2);
     width: 80%;
@@ -139,6 +140,117 @@ textarea:focus {
     opacity: 0;
 }
 
+/* Container for each toggle field */
+.switch-container {
+    display: block;
+    text-align: left;
+    margin: 10px 0;
+    font-size: 1rem;
+}
+
+/* The switch wrapper */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin-left: 10px; /* space between label text and switch */
+    vertical-align: middle;
+}
+
+/* Hide default checkbox */
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* The slider (background) */
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: gray;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+/* The slider handle */
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+/* When checked, move the slider and change background to green */
+.switch input:checked + .slider {
+    background-color: #2e7d32; /* Green */
+}
+
+.switch input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+/* Segmented control styling - add some horizontal padding and rounded corners on selection */
+.segmented-control {
+    display: inline-block;
+    border-radius: 6px;
+    overflow: hidden;
+    vertical-align: middle;
+    background: #f0f0f0;
+    padding: 0 5px; /* Add some padding to left and right sides */
+}
+
+.segmented-control input[type="radio"] {
+    display: none;
+}
+
+.segmented-control label {
+    display: inline-block;
+    padding: 6px 20px; /* Increased horizontal padding for more buffer */
+    cursor: pointer;
+    font-size: 1rem;
+    color: #003366;
+    background: none;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+
+.segmented-control label:hover {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+.segmented-control input[type="radio"]:checked + label {
+    background: #1e88e5;
+    color: #ffffff;
+    border-radius: 6px; /* Rounded corners for the selected segment */
+}
+
+/* Ensure input-row alignment */
+.input-row {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.input-row label {
+    margin-right: 10px;
+    text-align: left;
+}
+
+.switch-container {
+    display: inline-block;
+    vertical-align: middle;
+}
+
 @media (prefers-color-scheme: dark) {
     body {
         background: linear-gradient(135deg, #2a3c57, #1e2a3f);
@@ -167,6 +279,24 @@ textarea:focus {
     .button {
         background-color: #0a3d62;
         color: #ffffff;
+    }
+
+    .segmented-control {
+        background: #333333;
+    }
+
+    .segmented-control label:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .segmented-control label {
+        color: #e0e0e0;
+    }
+
+    .segmented-control input[type="radio"]:checked + label {
+        background: #0a3d62;
+        color: #ffffff;
+        border-radius: 6px;
     }
 }
 

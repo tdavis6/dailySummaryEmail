@@ -1,153 +1,207 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Summary Email Control Panel</title>
+  <meta charset="UTF-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>Daily Summary Email Control Panel</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 <body>
 <div class="container">
   <div class="header">
     Control Panel
-      <div class="sub-header">Manage Your Daily Summary Email Settings</div>
+    <div class="sub-header">Manage Your Daily Summary Email Settings</div>
   </div>
   <div class="content">
     <form id="config-form">
       <label>
-          Recipient Email (required):
+        Recipient Email (required):
         <input type="email" name="RECIPIENT_EMAIL" required>
       </label><br>
+
       <label>
-          Recipient Name (required):
+        Recipient Name (required):
         <input type="text" name="RECIPIENT_NAME" required>
       </label><br>
+
       <label>
-          Sender Email (required):
+        Sender Email (required):
         <input type="email" name="SENDER_EMAIL" required>
       </label><br>
+
       <label>
-          SMTP Username (required):
+        SMTP Username (required):
         <input type="text" name="SMTP_USERNAME" required>
       </label><br>
+
       <label>
-          SMTP Password (required):
+        SMTP Password (required):
         <input type="password" name="SMTP_PASSWORD" required>
       </label><br>
+
       <label>
-          SMTP Host (required):
+        SMTP Host (required):
         <input type="text" name="SMTP_HOST" required>
       </label><br>
+
       <label>
         SMTP Port:
         <input type="number" name="SMTP_PORT" required>
       </label><br>
+
       <label>
         OpenAI API Key:
         <input type="password" name="OPENAI_API_KEY">
       </label><br>
-      <label>
-        Unit System:
-<select name="UNIT_SYSTEM" style="font-size: large;">
-          <option value="IMPERIAL">Imperial</option>
-          <option value="METRIC">Metric</option>
-        </select>
-      </label><br>
-      <label>
-        Time System:
-<select name="TIME_SYSTEM" style="font-size: large;">
-          <option value="24HR">24 Hour</option>
-          <option value="12HR">12 Hour</option>
-        </select>
-      </label><br>
+
+      <!-- Unit System Segmented Control -->
+      <div class="input-row">
+        <label>Unit System:</label>
+        <div class="segmented-control" data-linked-input="UNIT_SYSTEM-hidden">
+          <input id="UNIT_SYSTEM_IMPERIAL" name="UNIT_SYSTEM_segment" type="radio" value="IMPERIAL">
+          <label for="UNIT_SYSTEM_IMPERIAL">Imperial</label>
+
+          <input id="UNIT_SYSTEM_METRIC" name="UNIT_SYSTEM_segment" type="radio" value="METRIC">
+          <label for="UNIT_SYSTEM_METRIC">Metric</label>
+        </div>
+        <input id="UNIT_SYSTEM-hidden" name="UNIT_SYSTEM" type="hidden" value="IMPERIAL">
+      </div>
+
+      <!-- Time System Segmented Control -->
+      <div class="input-row">
+        <label>Time System:</label>
+        <div class="segmented-control" data-linked-input="TIME_SYSTEM-hidden">
+          <input id="TIME_SYSTEM_24HR" name="TIME_SYSTEM_segment" type="radio" value="24HR">
+          <label for="TIME_SYSTEM_24HR">24 Hour</label>
+
+          <input id="TIME_SYSTEM_12HR" name="TIME_SYSTEM_segment" type="radio" value="12HR">
+          <label for="TIME_SYSTEM_12HR">12 Hour</label>
+        </div>
+        <input id="TIME_SYSTEM-hidden" name="TIME_SYSTEM" type="hidden" value="24HR">
+      </div>
+
       <label>
         Latitude:
         <input type="text" name="LATITUDE" required>
       </label><br>
+
       <label>
         Longitude:
         <input type="text" name="LONGITUDE" required>
       </label><br>
+
       <label>
-          Address (required if coordinates are not provided):
+        Address (required if coordinates are not provided):
         <input type="text" name="ADDRESS">
       </label><br>
-      <label>
-        Weather:
-<select name="WEATHER" style="font-size: large;">
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-      </label><br>
+
+      <!-- Weather Toggle -->
+      <div class="input-row">
+        <label>Weather:</label>
+        <div class="switch-container">
+          <label class="switch">
+            <input class="toggle-input" data-linked-input="WEATHER-hidden" type="checkbox">
+            <span class="slider"></span>
+          </label>
+          <input id="WEATHER-hidden" name="WEATHER" type="hidden" value="False">
+        </div>
+      </div>
+
       <label>
         Todoist API Key:
         <input type="password" name="TODOIST_API_KEY">
       </label><br>
+
       <label>
         Vikunja API Key:
         <input type="password" name="VIKUNJA_API_KEY">
       </label><br>
+
       <label>
         Vikunja Base URL:
         <input type="text" name="VIKUNJA_BASE_URL">
       </label><br>
+
       <label>
         Webcal Links:
         <textarea name="WEBCAL_LINKS" class="multi-line-input"></textarea>
       </label><br>
+
       <label>
         RSS Links:
         <textarea name="RSS_LINKS" class="multi-line-input"></textarea>
       </label><br>
-      <label>
-        Puzzles:
-<select name="PUZZLES" style="font-size: large;">
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-      </label><br>
-      <label>
-        Word of the Day:
-<select name="WOTD" style="font-size: large;">
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-      </label><br>
-      <label>
-        Quote of the Day:
-<select name="QOTD" style="font-size: large;">
-          <option value="True">True</option>
-          <option value="False">False</option>
-        </select>
-      </label><br>
-      <label>
-        Hour:
-        <input type="number" name="HOUR" min="0" max="23" required>
-      </label><br>
-      <label>
-        Minute:
-        <input type="number" name="MINUTE" min="0" max="59" required>
-      </label><br>
-      <label>
-        Logging Level:
-<select name="LOGGING_LEVEL" style="font-size: large;">
-          <option value="DEBUG">Debug</option>
-          <option value="INFO">Info</option>
-          <option value="WARNING">Warning</option>
-          <option value="ERROR">Error</option>
-          <option value="CRITICAL">Critical</option>
-        </select>
-      </label><br>
+
+      <!-- Puzzles Toggle -->
+      <div class="input-row">
+        <label>Puzzles:</label>
+        <div class="switch-container">
+          <label class="switch">
+            <input class="toggle-input" data-linked-input="PUZZLES-hidden" type="checkbox">
+            <span class="slider"></span>
+          </label>
+          <input id="PUZZLES-hidden" name="PUZZLES" type="hidden" value="False">
+        </div>
+      </div>
+
+      <!-- Word of the Day Toggle -->
+      <div class="input-row">
+        <label>Word of the Day:</label>
+        <div class="switch-container">
+          <label class="switch">
+            <input class="toggle-input" data-linked-input="WOTD-hidden" type="checkbox">
+            <span class="slider"></span>
+          </label>
+          <input id="WOTD-hidden" name="WOTD" type="hidden" value="False">
+        </div>
+      </div>
+
+      <!-- Quote of the Day Toggle -->
+      <div class="input-row">
+        <label>Quote of the Day:</label>
+        <div class="switch-container">
+          <label class="switch">
+            <input class="toggle-input" data-linked-input="QOTD-hidden" type="checkbox">
+            <span class="slider"></span>
+          </label>
+          <input id="QOTD-hidden" name="QOTD" type="hidden" value="False">
+        </div>
+      </div>
+
+      <!-- Logging Level Segmented Control -->
+      <div class="input-row">
+        <label>Logging Level:</label>
+        <div class="segmented-control" data-linked-input="LOGGING_LEVEL-hidden">
+          <input id="LOGGING_LEVEL_DEBUG" name="LOGGING_LEVEL_segment" type="radio" value="DEBUG">
+          <label for="LOGGING_LEVEL_DEBUG">Debug</label>
+
+          <input id="LOGGING_LEVEL_INFO" name="LOGGING_LEVEL_segment" type="radio" value="INFO">
+          <label for="LOGGING_LEVEL_INFO">Info</label>
+
+          <input id="LOGGING_LEVEL_WARNING" name="LOGGING_LEVEL_segment" type="radio" value="WARNING">
+          <label for="LOGGING_LEVEL_WARNING">Warning</label>
+
+          <input id="LOGGING_LEVEL_ERROR" name="LOGGING_LEVEL_segment" type="radio" value="ERROR">
+          <label for="LOGGING_LEVEL_ERROR">Error</label>
+
+          <input id="LOGGING_LEVEL_CRITICAL" name="LOGGING_LEVEL_segment" type="radio" value="CRITICAL">
+          <label for="LOGGING_LEVEL_CRITICAL">Critical</label>
+        </div>
+        <input id="LOGGING_LEVEL-hidden" name="LOGGING_LEVEL" type="hidden" value="DEBUG">
+      </div>
+
       <button type="button" id="save-settings" class="button">Save Settings</button>
     </form>
+
     <button id="send-email" class="button">Send Email Now</button>
-      <form action="{{ url_for('logout') }}" method="GET">
-          <button class="button" type="submit">Logout</button>
-      </form>
+    <form action="{{ url_for('logout') }}" method="GET">
+      <button class="button" type="submit">Logout</button>
+    </form>
+
     <div id="message" class="message"></div>
-      <footer class="footer">
-          Application Version: {{ app_version }}
-      </footer>
+    <footer class="footer">
+      Application Version: {{ app_version }}
+    </footer>
   </div>
 </div>
 
