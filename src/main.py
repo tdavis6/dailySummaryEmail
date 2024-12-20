@@ -575,7 +575,12 @@ def home():
 @app.route("/api/config", methods=["GET"])
 @login_required
 def api_get_config():
-    return jsonify(load_config_from_json())
+    try:
+        config = load_config_from_json()
+        return jsonify(config)
+    except Exception as e:
+        logging.error(f"Error retrieving configuration: {e}")
+        return jsonify({"error": "Failed to load configuration"}), 500
 
 @app.route("/api/save-config", methods=["POST"])
 @login_required
@@ -584,18 +589,20 @@ def api_save_config():
         data = request.json
         save_config_to_json(data)
         refresh_configuration_variables()
-        return jsonify({"message": "Settings saved successfully!"})
+        return jsonify({"message": "Configuration saved successfully!"})
     except Exception as e:
-        return jsonify({"message": f"Failed to save settings. {str(e)}"}), 500
+        logging.error(f"Error saving configuration: {e}")
+        return jsonify({"message": f"Failed to save configuration: {str(e)}"}), 500
 
 @app.route('/api/send-email', methods=['POST'])
 @login_required
 def manually_send_email():
     try:
         prepare_send_email()
-        return jsonify({"message": "Email sent!"}), 200
+        return jsonify({"message": "Email sent successfully!"}), 200
     except Exception as e:
-        return jsonify({"message": f"Failed to send email: {e}"}), 500
+        logging.error(f"Error sending email: {e}")
+        return jsonify({"message": f"Failed to send email: {str(e)}"}), 500
 
 @app.route("/api/schedule-email", methods=["POST"])
 @login_required
