@@ -1,6 +1,8 @@
 # Daily Summary Email
 ![GitHub last commit](https://img.shields.io/github/last-commit/tdavis6/dailySummaryEmail)
 ![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/main)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/tdavis6/dailySummaryEmail)
+![GitHub issue custom search in repo](https://img.shields.io/github/issues-search/tdavis6/dailySummaryEmail?query=is%3Aopen%20label%3Abug&label=bugs)
 
 ## Summary
 A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
