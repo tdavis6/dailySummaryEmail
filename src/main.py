@@ -406,7 +406,11 @@ def reschedule_email_job():
             )
             logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE} for the next day.")
         else:
-            logging.warning("HOUR or MINUTE not properly configured, cannot reschedule job.")
+            scheduler.add_job(
+                scheduled_email_job, 'cron', hour=6, minute=00, id='daily_email_job'
+            )
+            logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE} for the next day.")
+            logging.warning("HOUR or MINUTE not properly configured, using 0600.")
     except Exception as e:
         logging.error(f"Failed to reschedule daily email job: {e}")
 
@@ -669,11 +673,11 @@ if __name__ == "__main__":
     logging.info(f"Running version {VERSION}")
 
     if not HOUR:
-        HOUR = datetime.now(timezone).hour
+        HOUR = 6
     else:
         HOUR = int(HOUR)
     if not MINUTE:
-        MINUTE = datetime.now(timezone).minute
+        MINUTE = 00
     else:
         MINUTE = int(MINUTE)
 
