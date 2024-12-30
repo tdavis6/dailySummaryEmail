@@ -134,16 +134,24 @@ def decrypt_data(encrypted_data):
     return cipher_suite.decrypt(encrypted_data.encode()).decode()
 
 def refresh_configuration_variables():
-    global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD, SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, UNIT_SYSTEM, TIME_SYSTEM, LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY, VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, WOTD, QOTD, TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
+    """
+    Reload configuration settings, refresh global variables, and handle location/ timezone changes.
+    """
+    global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
+    global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, UNIT_SYSTEM, TIME_SYSTEM
+    global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
+    global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, WOTD, QOTD
+    global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
 
+    # Keep old values to detect changes
     logging_level_old = LOGGING_LEVEL
     latitude_old, longitude_old, address_old = LATITUDE, LONGITUDE, ADDRESS
     hour_old, minute_old = HOUR, MINUTE
 
-    # Reload configuration
+    # Reload fresh config from JSON
     config = load_config_from_json()
 
-    # Update global variables
+    # Update global vars from config
     RECIPIENT_EMAIL = config.get("RECIPIENT_EMAIL")
     RECIPIENT_NAME = config.get("RECIPIENT_NAME")
     SENDER_EMAIL = config.get("SENDER_EMAIL")
@@ -171,32 +179,44 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
-    if latitude_old != LATITUDE or longitude_old != LONGITUDE or address_old != ADDRESS:
-        refresh_location_cache()
-        LATITUDE, LONGITUDE, city_state_str = load_location_cache()
+    # If location details changed (lat/long or address), refresh location cache
+    if (LATITUDE != latitude_old) or (LONGITUDE != longitude_old) or (ADDRESS != address_old):
+        location_cache = refresh_location_cache()
+        if location_cache:
+            # Update globals from the new cache
+            LATITUDE = location_cache["latitude"]
+            LONGITUDE = location_cache["longitude"]
+            # If config ADDRESS was empty, fill it with city/state (optional)
+            if not ADDRESS or not ADDRESS.strip():
+                ADDRESS = location_cache["city_state"]
+        else:
+            # If refresh fails, revert to old lat/long to avoid None references
+            logging.warning("Location update failed. Reverting to old coordinates.")
+            LATITUDE, LONGITUDE = latitude_old, longitude_old
 
-        try:
-            logging.debug(f"TIMEZONE: {TIMEZONE}")
-            if not TIMEZONE:
-                timezone_str = get_timezone(LATITUDE, LONGITUDE)
-                if not timezone_str:
-                    raise ValueError(
-                        "TIMEZONE could not be determined. Coordinates or Address may be missing."
-                    )
-                timezone = pytz.timezone(timezone_str)
+    # Validate or re-derive the TIMEZONE
+    try:
+        if not TIMEZONE or not TIMEZONE.strip():
+            if LATITUDE and LONGITUDE:
+                TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
             else:
-                timezone = pytz.timezone(TIMEZONE)
-            logging.info(f"Timezone validated as: {timezone}")
-        except Exception as e:
-            logging.critical(f"Error validating TIMEZONE: {e}")
-            timezone = None
+                logging.warning("Cannot derive TIMEZONE; missing lat/long.")
+                TIMEZONE = None
+        timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
+        logging.info(f"Timezone validated and set to: {timezone}")
+    except Exception as e:
+        logging.critical(f"Error validating TIMEZONE: {e}")
+        timezone = None
 
-    # Handle schedule changes if needed
-    if hour_old != HOUR or minute_old != MINUTE:
+    # Update logging level if changed
+    if LOGGING_LEVEL != logging_level_old:
+        change_logging_level()
+
+    # If the schedule time changed, reschedule the daily email job
+    if (hour_old != HOUR) or (minute_old != MINUTE):
         reschedule_email_job()
 
-    logging.info("Configuration refreshed.")
-
+    logging.info("Configuration refreshed successfully.")
 
 def load_location_cache():
     ensure_directories_and_files_exist()
@@ -226,35 +246,54 @@ def save_location_cache(lat, long, city_state_str):
         )
         logging.info("Location data saved to cache.")
 
+
 def refresh_location_cache():
+    """
+    Refreshes location data. If valid LATITUDE and LONGITUDE exist, use them.
+    Otherwise, if ADDRESS is set, try geocoding.
+    Returns a dict with { 'latitude', 'longitude', 'city_state' } or None on failure.
+    """
     ensure_directories_and_files_exist()
     global LATITUDE, LONGITUDE, city_state_str
 
-    LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-    logging.debug("Coordinates obtained from address.")
-    city_state_str = get_city_state(LATITUDE, LONGITUDE)
+    # If lat/long are already set in config (and valid), skip geocoding
+    if LATITUDE and LONGITUDE:
+        logging.debug("Manual LATITUDE/LONGITUDE provided. Skipping geocoding.")
+        try:
+            LATITUDE = float(LATITUDE)
+            LONGITUDE = float(LONGITUDE)
+        except (ValueError, TypeError) as e:
+            logging.error(f"Invalid manual LATITUDE or LONGITUDE. Error: {e}")
+            return None
 
-    # Handle invalid LATITUDE and LONGITUDE
-    try:
-        LATITUDE = float(LATITUDE) if LATITUDE else None
-        LONGITUDE = float(LONGITUDE) if LONGITUDE else None
-        logging.debug(f"Validated LATITUDE: {LATITUDE}, LONGITUDE: {LONGITUDE}")
-    except (ValueError, TypeError):
-        logging.error("Invalid LATITUDE or LONGITUDE. Setting them to None.")
-        LATITUDE, LONGITUDE = None, None
+    # Otherwise, if no valid lat/long but an ADDRESS is specified, do geocoding
+    elif ADDRESS and ADDRESS.strip():
+        lat, lng = get_coordinates(ADDRESS)
+        if lat is None or lng is None:
+            logging.error("Failed to retrieve valid coordinates from ADDRESS.")
+            return None
+        # Convert to floats
+        try:
+            LATITUDE, LONGITUDE = float(lat), float(lng)
+            logging.debug(f"Coordinates obtained from ADDRESS: {LATITUDE}, {LONGITUDE}")
+        except (ValueError, TypeError) as e:
+            logging.error(f"Invalid geocoded LATITUDE/LONGITUDE. Error: {e}")
+            return None
+    else:
+        # If neither manual lat/long nor valid ADDRESS is provided, fail
+        logging.error("No valid ADDRESS or manual LATITUDE/LONGITUDE provided.")
+        return None
 
-    if not LATITUDE or not LONGITUDE:
-        if ADDRESS:
-            LATITUDE, LONGITUDE = get_coordinates(ADDRESS)
-            logging.info(f"Fallback attempt: LATITUDE and LONGITUDE resolved to {LATITUDE}, {LONGITUDE} from ADDRESS.")
-        else:
-            logging.critical("Both LATITUDE and LONGITUDE are missing or invalid, and ADDRESS is not provided.")
-            return None  # Exit early if coordinates cannot be resolved
+    # Now, attempt city_state lookup
+    city_state_str = get_city_state(LATITUDE, LONGITUDE) or ""
 
-    # Save the location to the cache
+    # Save to cache
     save_location_cache(LATITUDE, LONGITUDE, city_state_str)
-    logging.info("Location data saved to cache.")
-    return {"latitude": LATITUDE, "longitude": LONGITUDE, "city_state": city_state_str}
+    return {
+        "latitude": LATITUDE,
+        "longitude": LONGITUDE,
+        "city_state": city_state_str
+    }
 
 def change_logging_level():
     if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:

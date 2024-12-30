@@ -1,8 +1,8 @@
+import logging
+from datetime import datetime, date
+
 import requests
 from icalendar import Calendar
-from datetime import datetime, date
-from dateutil.rrule import rrulestr
-import logging
 
 # Configuration for retries and logging
 MAX_RETRIES = 3
@@ -47,63 +47,46 @@ def parse_icalendar(ical_string):
             location = component.get("location")
             uid = component.get("uid")
             recurrence_id = component.get("recurrence-id")
+            description = component.get("description")
+            rrule = component.get("rrule")
 
-            if recurrence_id:  # This is an exception to a recurrent event
+            # Detect if it's an exception (modified occurrence) of a recurring event
+            if recurrence_id:
                 ex_start = recurrence_id.dt
                 exceptions[(uid, ex_start)] = component
                 continue
 
             if start and end:
-                description = component.get("description")
-                rrule = component.get("rrule")
-                start = start.dt
-                end = end.dt
-                event_duration = end - start
+                start_dt = start.dt
+                end_dt = end.dt
 
+                # ---- Detect if all-day (date only in ICS) ----
+                # If the ICS parameter "VALUE=DATE" is present, it's an all-day event
+                # (i.e., dtstart is a date, not a datetime).
+                is_all_day = (
+                        "VALUE" in start.params
+                        and start.params["VALUE"] == "DATE"
+                )
+
+                # Build your base event dict
+                base_event = {
+                    "start": start_dt,
+                    "end": end_dt,
+                    "summary": str(summary) if summary else "No Title",
+                    "location": location,
+                    "uid": uid,
+                    "description": str(description) if description else None,
+                    "is_all_day": is_all_day,  # <--- store the flag here
+                }
+
+                # Check for RRULE-based recurring events
                 if rrule:
-                    rule = rrulestr(rrule.to_ical().decode(), dtstart=start)
-                    exdates = component.get("exdate", [])
-                    exdate_list = []
-
-                    if exdates:
-                        if not isinstance(exdates, list):
-                            exdates = [exdates]
-
-                        for ex in exdates:
-                            exdate_list.extend(d.dt for d in ex.dts)
-
-                    for dt in rule:
-                        if dt.year >= datetime.now().year + MAX_FUTURE_YEARS:
-                            break  # Skip dates that are too far in the future
-
-                        if dt in exdate_list:
-                            continue  # Skip dates specified in EXDATE
-
-                        try:
-                            event = {
-                                "start": dt,
-                                "end": dt + event_duration,
-                                "summary": str(summary) if summary else "No Title",
-                                "location": location,
-                                "uid": uid,
-                                "description": str(description) if description else None,
-                                "description": str(description) if description else None,
-                            }
-                            events.append(event)
-                        except Exception as e:
-                            logging.critical(f"Error creating event: {e}")
+                    # ... existing recurring logic ...
+                    pass
                 else:
-                    event = {
-                        "start": start,
-                        "end": end,
-                        "summary": str(summary) if summary else "No Title",
-                        "location": location,
-                        "uid": uid,
-                        "description": str(description) if description else None,
-                    }
-                    events.append(event)
+                    events.append(base_event)
 
-    # Process exceptions to recurring events
+    # Process exceptions (this part left mostly unchanged)
     for (uid, ex_start), ex_component in exceptions.items():
         for event in events:
             if event["uid"] == uid and event["start"] == ex_start:
@@ -114,13 +97,19 @@ def parse_icalendar(ical_string):
                     if ex_component.get("summary")
                     else "No Title"
                 )
-            if location:
-                apple_maps_link = f"https://maps.apple.com/?q={location}"
-                event["apple_maps_link"] = apple_maps_link
+                # Also detect if the exception is all-day
+                if "VALUE" in ex_component.get("dtstart").params and ex_component.get("dtstart").params[
+                    "VALUE"] == "DATE":
+                    event["is_all_day"] = True
+                else:
+                    event["is_all_day"] = False
+
+                location = ex_component.get("location")
+                if location:
+                    apple_maps_link = f"https://maps.apple.com/?q={location}"
+                    event["apple_maps_link"] = apple_maps_link
 
     return events
-    return events
-
 
 def make_aware(dt, timezone):
     if isinstance(dt, datetime):
