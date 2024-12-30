@@ -55,6 +55,9 @@ def load_config_from_json():
         config["OPENAI_API_KEY"] = decrypt_data(config.get("OPENAI_API_KEY", ""))
         config["TODOIST_API_KEY"] = decrypt_data(config.get("TODOIST_API_KEY", ""))
         config["VIKUNJA_API_KEY"] = decrypt_data(config.get("VIKUNJA_API_KEY", ""))
+        config["LATITUDE"] = decrypt_data(config.get("LATITUDE", ""))
+        config["LONGITUDE"] = decrypt_data(config.get("LONGITUDE", ""))
+        config["ADDRESS"] = decrypt_data(config.get("ADDRESS", ""))
         return config
 
 def get_config_value(key, default=None):
@@ -70,6 +73,9 @@ def save_config_to_json(config_data):
     config_data["OPENAI_API_KEY"] = encrypt_data(config_data.get("OPENAI_API_KEY", ""))
     config_data["TODOIST_API_KEY"] = encrypt_data(config_data.get("TODOIST_API_KEY", ""))
     config_data["VIKUNJA_API_KEY"] = encrypt_data(config_data.get("VIKUNJA_API_KEY", ""))
+    config_data["LATITUDE"] = encrypt_data(config_data.get("LATITUDE", ""))
+    config_data["LONGITUDE"] = encrypt_data(config_data.get("LONGITUDE", ""))
+    config_data["ADDRESS"] = encrypt_data(config_data.get("ADDRESS", ""))
     with open(CONFIG_FILE_PATH, "w") as json_file:
         json.dump(config_data, json_file, indent=4)
 
@@ -179,22 +185,17 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
-    # If location details changed (lat/long or address), refresh location cache
     if (LATITUDE != latitude_old) or (LONGITUDE != longitude_old) or (ADDRESS != address_old):
         location_cache = refresh_location_cache()
         if location_cache:
-            # Update globals from the new cache
             LATITUDE = location_cache["latitude"]
             LONGITUDE = location_cache["longitude"]
-            # If config ADDRESS was empty, fill it with city/state (optional)
             if not ADDRESS or not ADDRESS.strip():
                 ADDRESS = location_cache["city_state"]
         else:
-            # If refresh fails, revert to old lat/long to avoid None references
-            logging.warning("Location update failed. Reverting to old coordinates.")
+            # fallback
             LATITUDE, LONGITUDE = latitude_old, longitude_old
 
-    # Validate or re-derive the TIMEZONE
     try:
         if not TIMEZONE or not TIMEZONE.strip():
             if LATITUDE and LONGITUDE:
@@ -580,7 +581,6 @@ executors = {
 global scheduler
 scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     # Check if the user is already logged in
@@ -711,14 +711,23 @@ if __name__ == "__main__":
 
     logging.info(f"Running version {VERSION}")
 
+    config_data = load_config_from_json()
+
     if not HOUR:
         HOUR = 6
+        config_data["HOUR"] = "6"
     else:
         HOUR = int(HOUR)
+        config_data["HOUR"] = str(HOUR)
+
     if not MINUTE:
-        MINUTE = 00
+        MINUTE = 0
+        config_data["MINUTE"] = "0"
     else:
         MINUTE = int(MINUTE)
+        config_data["MINUTE"] = str(MINUTE)
+
+    save_config_to_json(config_data)
 
     # Remove existing job if any before scheduling
     if scheduler.get_job("daily_email_job"):
