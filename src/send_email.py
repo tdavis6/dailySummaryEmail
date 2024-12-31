@@ -153,7 +153,7 @@ def send_email(
                 .section h2 {{
                     font-size: 1.25rem;
                     font-weight: 500;
-                    color: #003366;
+                    color: #000;
                 }}
 
                 .section p, .section pre {{
@@ -213,10 +213,14 @@ def send_email(
                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                     }}
 
-                    .section h1, .section h2 {{
+                    .section h1 {{
                         color: #bbdefb;
                     }}
-
+                    
+                    .section h2 {{
+                        color: #fff;
+                    }}
+                    
                     .section p, .section pre {{
                         color: #e0e0e0;
                     }}
