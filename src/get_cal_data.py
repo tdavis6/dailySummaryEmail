@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from get_ical_events import get_ics_events
 
@@ -12,7 +12,6 @@ def ensure_datetime(dt):
         return datetime.combine(dt, datetime.min.time())
     return dt
 
-
 def localize_or_convert(dt, timezone):
     """
     If dt is naive, localize it to 'timezone'.
@@ -20,13 +19,32 @@ def localize_or_convert(dt, timezone):
     """
     if dt.tzinfo is None:
         # dt is naive; localize (attach the timezone)
-        # If you're using pytz, do:
         return timezone.localize(dt)
-        # If you prefer zoneinfo (Python 3.9+), do:
-        # return dt.replace(tzinfo=timezone)
     else:
         # dt is aware; convert to the desired timezone
         return dt.astimezone(timezone)
+
+
+def handle_all_day_event(event):
+    """
+    Adjust the event's end date by subtracting one day,
+    because ICS all-day events use exclusive end.
+    """
+    start_date = event["start"].date()
+    end_date = event["end"].date()
+
+    # Subtract one day from the end date to handle ICS exclusivity
+    corrected_end_date = end_date - timedelta(days=1)
+
+    # If after subtracting one day we have the same date,
+    # then it's truly just a single all-day event on start_date
+    if corrected_end_date == start_date:
+        return "\n\nAll day event"
+    else:
+        # Multi-day
+        return (
+            f"\n\nAll day event, ends {corrected_end_date.strftime('%A, %B %d, %Y')}"
+        )
 
 def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
     events = []
@@ -60,26 +78,15 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
             text += f"\n\n{description}"
 
         is_all_day = event.get("is_all_day", False)
-        start_dt = event["start"]
-        end_dt = event["end"]
 
         if is_all_day:
-            # Convert to date objects (if they're datetimes)
-            start_date = start_dt.date()
-            end_date = end_dt.date()
-
-            # ICS standard: a single all-day event from Dec 30 to Dec 31
-            # actually means "All day on Dec 30" only
-            if (end_date - start_date).days == 1:
-                # Single-day all-day event
-                text += f"\n\nAll day event"
-            else:
-                # Multi-day all-day event
-                text += (
-                    f"\n\nAll day event, ends {end_date.strftime('%A, %B %d, %Y')}"
-                )
+            # Handle all-day event logic (exclusive end date)
+            text += handle_all_day_event(event)
         else:
             # Time-based events
+            start_dt = event["start"]
+            end_dt = event["end"]
+
             time_format = "%I:%M %p" if TIME_SYSTEM.upper() == "12HR" else "%H:%M"
             date_time_format = (
                 "%I:%M %p on %A, %B %d, %Y"
