@@ -81,7 +81,6 @@ def save_config_to_json(config_data):
 
 def initialize_config():
     """Initialize configuration by first loading config.json, then overriding with .env if present."""
-    # List of configuration keys mapping to environment variables
     config_keys = [
         "RECIPIENT_EMAIL",
         "RECIPIENT_NAME",
@@ -91,6 +90,7 @@ def initialize_config():
         "SMTP_HOST",
         "SMTP_PORT",
         "OPENAI_API_KEY",
+        "ENABLE_SUMMARY",
         "UNIT_SYSTEM",
         "TIME_SYSTEM",
         "LATITUDE",
@@ -144,7 +144,7 @@ def refresh_configuration_variables():
     Reload configuration settings, refresh global variables, and handle location/ timezone changes.
     """
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
-    global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, UNIT_SYSTEM, TIME_SYSTEM
+    global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
     global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
@@ -166,6 +166,7 @@ def refresh_configuration_variables():
     SMTP_HOST = config.get("SMTP_HOST")
     SMTP_PORT = config.get("SMTP_PORT")
     OPENAI_API_KEY = config.get("OPENAI_API_KEY")
+    ENABLE_SUMMARY = config.get("ENABLE_SUMMARY", False)
     UNIT_SYSTEM = config.get("UNIT_SYSTEM", "METRIC")
     TIME_SYSTEM = config.get("TIME_SYSTEM", "24HR")
     LATITUDE = config.get("LATITUDE")
@@ -404,7 +405,8 @@ def prepare_send_email():
             SMTP_PASSWORD,
             SMTP_HOST,
             SMTP_PORT,
-            OPENAI_API_KEY if OPENAI_API_KEY else None,
+            OPENAI_API_KEY,
+            ENABLE_SUMMARY,
             date_string,
             weather_string,
             todo_string,
@@ -533,6 +535,7 @@ SMTP_PASSWORD = get_config_value("SMTP_PASSWORD")
 SMTP_HOST = get_config_value("SMTP_HOST")
 SMTP_PORT = get_config_value("SMTP_PORT")
 OPENAI_API_KEY = get_config_value("OPENAI_API_KEY")
+ENABLE_SUMMARY = get_config_value("ENABLE_SUMMARY")
 UNIT_SYSTEM = get_config_value("UNIT_SYSTEM", "METRIC")
 TIME_SYSTEM = get_config_value("TIME_SYSTEM", "24HR")
 LATITUDE = get_config_value("LATITUDE")

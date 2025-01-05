@@ -9,6 +9,7 @@ from email.mime.text import MIMEText
 import markdown
 import pytz
 
+from add_emojis import add_emojis
 from generate_summary import generate_summary
 
 
@@ -41,7 +42,8 @@ def send_email(
         smtp_password,
         smtp_host,
         smtp_port,
-        openai_api_key,
+        openai_api_key="",
+        enable_summary="",
         date_string="",
         weather_string="",
         todo_string="",
@@ -82,8 +84,9 @@ def send_email(
         if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
 
         # Get summary
-        if openai_api_key is not None:
+        if openai_api_key is not None and enable_summary in ["True", "true", True]:
             summary = generate_summary(text, openai_api_key)
+            summary = add_emojis(summary)
             logging.debug("Summary obtained")
 
             text = (summary + text) if summary else text
