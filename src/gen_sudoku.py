@@ -1,7 +1,8 @@
 import logging
-from sudoku import Sudoku
-from sudoku.sudoku import _SudokuSolver, UnsolvableSudoku
 import random
+
+from sudoku import Sudoku
+from sudoku.sudoku import UnsolvableSudoku
 
 
 def gen_sudoku(n=3, difficulty=0.5, max_retries=100):

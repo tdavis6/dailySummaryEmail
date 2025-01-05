@@ -103,6 +103,7 @@ def initialize_config():
         "WEBCAL_LINKS",
         "RSS_LINKS",
         "PUZZLES",
+        "PUZZLES_ANSWERS",
         "WOTD",
         "QOTD",
         "TIMEZONE",
@@ -146,7 +147,7 @@ def refresh_configuration_variables():
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
     global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
-    global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, WOTD, QOTD
+    global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
 
     # Keep old values to detect changes
@@ -179,6 +180,7 @@ def refresh_configuration_variables():
     WEBCAL_LINKS = config.get("WEBCAL_LINKS")
     RSS_LINKS = config.get("RSS_LINKS", False)
     PUZZLES = config.get("PUZZLES", False)
+    PUZZLES_ANSWERS = config.get("PUZZLES_ANSWERS", False)
     WOTD = config.get("WOTD", False)
     QOTD = config.get("QOTD", False)
     TIMEZONE = config.get("TIMEZONE", None)
@@ -351,6 +353,8 @@ def get_word_of_the_day():
 def get_puzzles_of_the_day():
     if PUZZLES and PUZZLES in ["True", "true", True]:
         puzzles, puzzles_ans = get_puzzles()
+        if not PUZZLES_ANSWERS or PUZZLES_ANSWERS not in ["True", "true", True]:
+            puzzles_ans = ""
         logging.debug("Puzzles obtained.")
         return puzzles, puzzles_ans
     return "", ""
@@ -548,6 +552,7 @@ VIKUNJA_BASE_URL = get_config_value("VIKUNJA_BASE_URL")
 WEBCAL_LINKS = get_config_value("WEBCAL_LINKS")
 RSS_LINKS = get_config_value("RSS_LINKS", False)
 PUZZLES = get_config_value("PUZZLES", False)
+PUZZLES_ANSWERS = get_config_value("PUZZLES_ANSWERS", False)
 WOTD = get_config_value("WOTD", False)
 QOTD = get_config_value("QOTD", False)
 TIMEZONE = get_config_value("TIMEZONE", None)

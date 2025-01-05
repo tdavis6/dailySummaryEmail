@@ -36,6 +36,7 @@ See .env.example for an example .env file.
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL)
 - OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email.
+- ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to true)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (defaults to 24HR)
 - LATITUDE: The latitude you wish to use for the weather and timezone.
@@ -50,6 +51,7 @@ See .env.example for an example .env file.
 - RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas.
   Do not use quotes.
 - PUZZLES: True or False. Enables puzzles. (defaults to false)
+- PUZZLES_ANSWERS: True or False. Enables puzzle answers. Overridden by False on PUZZLES. (defaults to false)
 - WOTD: True or False. Enables the Word of the Day. (defaults to false)
 - QOTD: True or False. Enables the Quote of the Day. (defaults to false)
 - HOUR: The hour to send the email. (defaults to the time when the container started)
