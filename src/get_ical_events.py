@@ -124,15 +124,26 @@ def make_aware(dt, timezone):
 
 def is_event_today(event_start, event_end, timezone):
     today = datetime.now(timezone).date()
+
+    # Convert event start and end times to the provided local timezone
     event_start = make_aware(event_start, timezone)
     event_end = make_aware(event_end, timezone)
 
-    # Exclude events that end exactly at 00:00 today and started on a previous day
-    if event_end.date() == today and event_end.time() == datetime.min.time() and event_start.date() < today:
+    # Ensure comparisons are based on the local date in the provided timezone
+    event_start_local_date = event_start.astimezone(timezone).date()
+    event_end_local_date = event_end.astimezone(timezone).date()
+
+    # Exclude events that end exactly at 00:00 today in local time and started on a previous day
+    if (
+            event_end_local_date == today
+            and event_end.time() == datetime.min.time()
+            and event_start_local_date < today
+    ):
         return False
 
-    # Check if today falls within the event start and end datetime range
-    return event_start.date() <= today <= event_end.date()
+    # Check if today falls within the event's local start and end date range
+    return event_start_local_date <= today <= event_end_local_date
+
 
 
 def is_all_day_event(event):
