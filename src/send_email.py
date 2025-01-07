@@ -14,11 +14,19 @@ from generate_summary import generate_summary
 
 
 def convert_section(markdown_string):
-    """Convert markdown string to HTML."""
+    """Convert markdown string to HTML with preserved new lines and nowrap styling."""
     if markdown_string:
-        return markdown.markdown(markdown_string, extensions=["markdown.extensions.fenced_code"])
+        html_output = markdown.markdown(
+            markdown_string, extensions=["markdown.extensions.fenced_code"]
+        )
+        # Add inline styles to preserve new lines and prevent wrapping
+        html_output = html_output.replace(
+            "<pre><code>", '<pre style="white-space: pre; overflow-x: auto;"><code>'
+        )
+        return html_output
     else:
         return None
+
 
 def append_section(text, html_text, markdown_string, section_class, text_format=True, is_date=False):
     """Append markdown and HTML content for a section."""

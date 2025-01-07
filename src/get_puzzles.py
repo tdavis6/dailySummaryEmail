@@ -32,6 +32,6 @@ def get_puzzles():
         word_search_ans_string += f"{word.text.capitalize()} ({word.coordinates[0]}, {word.direction.name}), "
 
     puzzles_string += f"\n\n## Word Search\n```\n{word_search_string}```\n{word_search_string_words[:-2]}"
-    puzzles_ans_string += "\n\n## Word Search" + "\n```\n" + word_search_ans_string[:-2] + "\n" + "```"
+    puzzles_ans_string += "\n\n## Word Search" + "\n" + word_search_ans_string[:-2]
 
     return puzzles_string, puzzles_ans_string
