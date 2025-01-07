@@ -21,15 +21,17 @@ def get_puzzles():
     word_search.random_words(10, secret=True, reset_size=True)
     word_search_string = ""
     word_search_ans_string = ""
+    word_search_string_words = ""
 
     for line in word_search.puzzle:
-        for word in line:
-            word_search_string += word + " "
+        for letter in line:
+            word_search_string += letter + " "
         word_search_string += "\n"
     for word in word_search.words:
-        word_search_ans_string += f"{word.text.capitalize()} ({word.coordinates[0]}, {word.direction.name}) "
+        word_search_string_words += f"{word.text.capitalize()}, "
+        word_search_ans_string += f"{word.text.capitalize()} ({word.coordinates[0]}, {word.direction.name}), "
 
-    puzzles_string += "\n\n## Word Search" + "\n```\n" + word_search_string + "\n" + "```"
-    puzzles_ans_string += "\n\n## Word Search" + "\n```\n" + word_search_ans_string + "\n" + "```"
+    puzzles_string += f"\n\n## Word Search\n```\n{word_search_string}```\n{word_search_string_words[:-2]}"
+    puzzles_ans_string += "\n\n## Word Search" + "\n```\n" + word_search_ans_string[:-2] + "\n" + "```"
 
     return puzzles_string, puzzles_ans_string
