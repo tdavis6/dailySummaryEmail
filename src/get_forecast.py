@@ -21,13 +21,10 @@ def get_forecast(
                 f"https://nominatim.openstreetmap.org/reverse?"
                 f"lat={latitude}&lon={longitude}&format=json"
             )
-            # Nominatim requires a custom User-Agent header
             headers = {"User-Agent": "MyWeatherApp/1.0"}
             geocode_resp = requests.get(geocode_url, headers=headers)
             if geocode_resp.status_code == 200:
                 geocode_data = geocode_resp.json()
-                # Extract ISO country code from Nominatim response if available
-                # Nominatim typically returns lower-case country codes
                 address_info = geocode_data.get("address", {})
                 country_code = address_info.get("country_code", "us").lower()
             else:
@@ -38,19 +35,13 @@ def get_forecast(
             logging.warning(f"Error while reverse geocoding: {e}")
 
         # Decide on AQI parameter
-        # For demonstration, we do a simple check:
-        # - 'us' => use US AQI
-        # - 'cn' => use Chinese AQI
-        # - everything else => use European AQI
         if country_code == "us":
             aqi_param = "us_aqi"
-        elif country_code == "cn":
-            aqi_param = "china_aqi"
         else:
             aqi_param = "european_aqi"
 
         # -----------------------------------
-        # 2) Fetch Weather (existing logic)
+        # 2) Fetch Weather Data
         # -----------------------------------
         daily_parameters = [
             "temperature_2m_max",
@@ -67,7 +58,6 @@ def get_forecast(
 
         hourly_parameters = ["relativehumidity_2m"]
 
-        # Choose units based on unit_system parameter
         if unit_system.upper() == "IMPERIAL":
             temperature_unit = "fahrenheit"
             windspeed_unit = "mph"
@@ -103,13 +93,15 @@ def get_forecast(
             return f"Failed to retrieve forecast data: {response.status_code}"
 
         # -----------------------------------
-        # 3) Fetch AQI data with chosen scale
+        # 3) Fetch AQI Data
         # -----------------------------------
         aqi_data = {}
         aqi_url = (
             f"https://air-quality-api.open-meteo.com/v1/air-quality?"
             f"latitude={latitude}&longitude={longitude}"
-            f"&hourly={aqi_param}"
+            f"&hourly={aqi_param},{aqi_param}_pm2_5,{aqi_param}_pm10,"
+            f"{aqi_param}_nitrogen_dioxide,{aqi_param}_ozone,"
+            f"{aqi_param}_sulphur_dioxide"
             f"&timezone=auto"
         )
 
@@ -119,9 +111,9 @@ def get_forecast(
         else:
             logging.warning(f"Failed to retrieve AQI data: {aqi_response.status_code}")
 
-        # -------------------------------------
-        # Existing logic to parse daily weather
-        # -------------------------------------
+        # -----------------------------------
+        # Parse Daily Weather Data
+        # -----------------------------------
         daily_data = forecast_data["daily"]
         dates = daily_data["time"]
         today = date.today().isoformat()
@@ -143,7 +135,6 @@ def get_forecast(
         feels_like_min = daily_data["apparent_temperature_min"][index]
         feels_like_max = daily_data["apparent_temperature_max"][index]
 
-        # Map weathercode to description and emoji
         weathercode_descriptions = {
             0: ("Clear sky", "☀️"),
             1: ("Mainly clear", "🌤️"),
@@ -177,7 +168,6 @@ def get_forecast(
 
         condition, emoji = weathercode_descriptions.get(weathercode, ("Unknown", "❓"))
 
-        # Process sunrise/sunset times
         sunrise_time = datetime.fromisoformat(sunrise)
         sunset_time = datetime.fromisoformat(sunset)
         if time_system.upper() == "12HR":
@@ -204,17 +194,59 @@ def get_forecast(
         # Calculate average AQI for today's date
         # -------------------------------------------
         avg_aqi = "N/A"
+        aqi_suggestion = ""
         try:
-            if aqi_data and "hourly" in aqi_data and aqi_param in aqi_data["hourly"]:
+            if aqi_data and "hourly" in aqi_data:
                 aqi_times = aqi_data["hourly"]["time"]
-                aqi_values = aqi_data["hourly"][aqi_param]
-
                 today_aqi_values = [
-                    val for t, val in zip(aqi_times, aqi_values) if t.startswith(today)
+                    val for t, val in zip(aqi_times, aqi_data["hourly"][aqi_param])
+                    if t.startswith(today)
                 ]
                 if today_aqi_values:
                     avg_aqi_val = sum(today_aqi_values) / len(today_aqi_values)
                     avg_aqi = round(avg_aqi_val, 1)
+
+                    if country_code == "us":
+                        if avg_aqi > 300:
+                            aqi_suggestion = "Air quality is hazardous. Stay indoors and use air purifiers."
+                        elif avg_aqi > 200:
+                            aqi_suggestion = "Air quality is very unhealthy. Avoid outdoor activities."
+                        elif avg_aqi > 150:
+                            aqi_suggestion = "Air quality is unhealthy. Sensitive groups should stay indoors."
+                        elif avg_aqi > 100:
+                            aqi_suggestion = "Air quality is unhealthy for sensitive groups. Limit outdoor exposure."
+                    else:
+                        if avg_aqi > 100:
+                            aqi_suggestion = "Air quality is extremely poor. Stay indoors and avoid physical activities."
+                        elif avg_aqi > 80:
+                            aqi_suggestion = "Air quality is very poor. Minimize outdoor activities."
+                        elif avg_aqi > 60:
+                            aqi_suggestion = "Air quality is poor. Consider staying indoors."
+                        elif avg_aqi > 40:
+                            aqi_suggestion = "Air quality is moderate. Sensitive individuals take caution."
+                        elif avg_aqi > 20:
+                            aqi_suggestion = "Air quality is fair. Some pollutants may affect sensitive individuals."
+
+                pollutants = {
+                    f"{aqi_param}_pm2_5": "PM2.5",
+                    f"{aqi_param}_pm10": "PM10",
+                    f"{aqi_param}_nitrogen_dioxide": "Nitrogen Dioxide",
+                    f"{aqi_param}_ozone": "Ozone",
+                    f"{aqi_param}_sulphur_dioxide": "Sulphur Dioxide",
+                }
+                pollutant_suggestions = ""
+                for pollutant_param, name in pollutants.items():
+                    if pollutant_param in aqi_data["hourly"]:
+                        pollutant_values = [
+                            val for t, val in zip(aqi_times, aqi_data["hourly"][pollutant_param])
+                            if t.startswith(today)
+                        ]
+                        if pollutant_values:
+                            avg_pollutant_aqi = round(sum(pollutant_values) / len(pollutant_values), 1)
+                            if avg_pollutant_aqi > 50:
+                                pollutant_suggestions += f"- {name}: AQI {avg_pollutant_aqi}. Consider reducing exposure.\n"
+                if pollutant_suggestions:
+                    aqi_suggestion += f"\nPollutant-specific warnings:\n{pollutant_suggestions}"
         except Exception as e:
             logging.warning(f"Error calculating AQI: {e}")
 
@@ -383,11 +415,10 @@ UV Index: {uv_index}\n
 Air Quality: {avg_aqi}\n
 Sunrise: {sunrise_str}\n
 Sunset: {sunset_str}\n
+{aqi_suggestion if aqi_suggestion else ""}\n
 {outfit_suggestions}\n
 """
-        # ({aqi_param.upper()})
 
-        # Add alerts if any (from weather or AQI)
         if alerts_info:
             weather_string += f"\n## Severe Weather Alerts:\n{alerts_info}"
 
