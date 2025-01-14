@@ -1,8 +1,8 @@
-import logging
-from datetime import datetime, date
-
 import requests
 from icalendar import Calendar
+from datetime import datetime, date
+from dateutil.rrule import rrulestr
+import logging
 
 # Configuration for retries and logging
 MAX_RETRIES = 3
@@ -47,46 +47,65 @@ def parse_icalendar(ical_string):
             location = component.get("location")
             uid = component.get("uid")
             recurrence_id = component.get("recurrence-id")
-            description = component.get("description")
-            rrule = component.get("rrule")
 
-            # Detect if it's an exception (modified occurrence) of a recurring event
             if recurrence_id:
+                logging.debug("Processing recurring exception")
                 ex_start = recurrence_id.dt
                 exceptions[(uid, ex_start)] = component
                 continue
 
             if start and end:
-                start_dt = start.dt
-                end_dt = end.dt
+                description = component.get("description")
+                rrule = component.get("rrule")
+                start = start.dt
+                end = end.dt
+                event_duration = end - start
 
-                # ---- Detect if all-day (date only in ICS) ----
-                # If the ICS parameter "VALUE=DATE" is present, it's an all-day event
-                # (i.e., dtstart is a date, not a datetime).
-                is_all_day = (
-                        "VALUE" in start.params
-                        and start.params["VALUE"] == "DATE"
-                )
-
-                # Build your base event dict
-                base_event = {
-                    "start": start_dt,
-                    "end": end_dt,
-                    "summary": str(summary) if summary else "No Title",
-                    "location": location,
-                    "uid": uid,
-                    "description": str(description) if description else None,
-                    "is_all_day": is_all_day,  # <--- store the flag here
-                }
-
-                # Check for RRULE-based recurring events
                 if rrule:
-                    # ... existing recurring logic ...
-                    pass
-                else:
-                    events.append(base_event)
+                    rule = rrulestr(rrule.to_ical().decode(), dtstart=start)
+                    exdates = component.get("exdate", [])
+                    exdate_list = []
 
-    # Process exceptions (this part left mostly unchanged)
+                    if exdates:
+                        if not isinstance(exdates, list):
+                            exdates = [exdates]
+
+                        for ex in exdates:
+                            exdate_list.extend(d.dt for d in ex.dts)
+
+                    for dt in rule:
+                        if dt.year >= datetime.now().year + MAX_FUTURE_YEARS:
+                            break  # Skip dates that are too far in the future
+
+                        if dt in exdate_list:
+                            continue  # Skip dates specified in EXDATE
+
+                        try:
+                            event = {
+                                "start": dt,
+                                "end": dt + event_duration,
+                                "summary": str(summary) if summary else "No Title",
+                                "location": location,
+                                "uid": uid,
+                                "description": str(description) if description else None,
+                                "description": str(description) if description else None,
+                            }
+                            logging.debug(f"Adding recurring event: {event}")
+                            events.append(event)
+                        except Exception as e:
+                            logging.critical(f"Error creating event: {e}")
+                else:
+                    event = {
+                        "start": start,
+                        "end": end,
+                        "summary": str(summary) if summary else "No Title",
+                        "location": location,
+                        "uid": uid,
+                        "description": str(description) if description else None,
+                    }
+                    events.append(event)
+
+    # Process exceptions to recurring events
     for (uid, ex_start), ex_component in exceptions.items():
         for event in events:
             if event["uid"] == uid and event["start"] == ex_start:
@@ -97,57 +116,57 @@ def parse_icalendar(ical_string):
                     if ex_component.get("summary")
                     else "No Title"
                 )
-                # Also detect if the exception is all-day
-                if "VALUE" in ex_component.get("dtstart").params and ex_component.get("dtstart").params[
-                    "VALUE"] == "DATE":
-                    event["is_all_day"] = True
-                else:
-                    event["is_all_day"] = False
-
-                location = ex_component.get("location")
-                if location:
-                    apple_maps_link = f"https://maps.apple.com/?q={location}"
-                    event["apple_maps_link"] = apple_maps_link
+            if location:
+                apple_maps_link = f"https://maps.apple.com/?q={location}"
+                event["apple_maps_link"] = apple_maps_link
 
     return events
 
 def make_aware(dt, timezone):
-    if isinstance(dt, datetime):
-        if dt.tzinfo is None:
+    try:
+        if isinstance(dt, datetime):
+            if dt.tzinfo is None:
+                return timezone.localize(dt)
+            return dt
+        elif isinstance(dt, date):
+            dt = datetime.combine(dt, datetime.min.time())
             return timezone.localize(dt)
-        return dt
-    elif isinstance(dt, date):
-        dt = datetime.combine(dt, datetime.min.time())
-        return timezone.localize(dt)
+    except Exception as e:
+        logging.critical(f"Error in make_aware: {e}")
+        raise
     raise ValueError("Unsupported date type")
 
 
 def is_event_today(event_start, event_end, timezone):
-    today = datetime.now(timezone).date()
+    try:
+        today = datetime.now(timezone).date()
+        event_start = make_aware(event_start, timezone)
+        event_end = make_aware(event_end, timezone)
 
-    # Convert event start and end times to the provided local timezone
-    event_start = make_aware(event_start, timezone)
-    event_end = make_aware(event_end, timezone)
+        if event_end.date() == today and event_end.time() == datetime.min.time() and event_start.date() < today:
+            return False
 
-    # Ensure comparisons are based on the local date in the provided timezone
-    event_start_local_date = event_start.astimezone(timezone).date()
-    event_end_local_date = event_end.astimezone(timezone).date()
-
-    # Exclude events that end exactly at 00:00 today in local time and started on a previous day
-    if (
-            event_end_local_date == today
-            and event_end.time() == datetime.min.time()
-            and event_start_local_date < today
-    ):
-        return False
-
-    # Check if today falls within the event's local start and end date range
-    return event_start_local_date <= today <= event_end_local_date
-
+        return event_start.date() <= today <= event_end.date()
+    except Exception as e:
+        logging.critical(f"Error in is_event_today: {e}")
+        raise
 
 
 def is_all_day_event(event):
+    logging.debug("Checking for all-day event")
     start = event["start"]
+    end = event["end"]
+
+def convert_all_day_event(event, timezone):
+    try:
+        if isinstance(event["start"], date) and not isinstance(event["start"], datetime):
+            event["start"] = make_aware(datetime.combine(event["start"], datetime.min.time()), timezone)
+        if isinstance(event["end"], date) and not isinstance(event["end"], datetime):
+            event["end"] = make_aware(datetime.combine(event["end"], datetime.min.time()), timezone)
+    except Exception as e:
+        logging.critical(f"Error in convert_all_day_event: {e}")
+        raise
+    return event
     end = event["end"]
     return (
             isinstance(start, date)
@@ -158,9 +177,10 @@ def is_all_day_event(event):
 
 
 def get_ics_events(url, timezone):
+    ical_string = fetch_icalendar(url)
     try:
-        ical_string = fetch_icalendar(url)
-        events = parse_icalendar(ical_string)
+        events = [convert_all_day_event(event, timezone) for event in parse_icalendar(ical_string)]
+        logging.debug("Filtered and processed events for today")
         events = [
             event
             for event in events
