@@ -359,9 +359,17 @@ def get_forecast(
                 outfit_suggestions += (
                     "It's a bit chilly. Consider wearing a light jacket. "
                 )
-            else:
+            elif max_temp > 32:
                 outfit_suggestions += (
                     "It's cold outside! Wear warm clothing such as a coat and scarf. "
+                )
+            elif max_temp > 10:
+                outfit_suggestions += (
+                    "It's quite cold outside! Wear warm clothing such as a coat and scarf. Layer if necessary."
+                )
+            else:
+                outfit_suggestions += (
+                    "It's very cold outside! Wear warm clothing such as a coat and scarf. Make sure to layer. "
                 )
             if wind_speed > 20:
                 outfit_suggestions += (
@@ -380,9 +388,17 @@ def get_forecast(
                 outfit_suggestions += (
                     "It's a bit chilly. Consider wearing a light jacket. "
                 )
-            else:
+            elif max_temp > 0:
                 outfit_suggestions += (
                     "It's cold outside! Wear warm clothing such as a coat and scarf. "
+                )
+            elif max_temp > -12:
+                outfit_suggestions += (
+                    "It's quite cold outside! Wear warm clothing such as a coat and scarf. Layer if necessary."
+                )
+            else:
+                outfit_suggestions += (
+                    "It's very cold outside! Wear warm clothing such as a coat and scarf. Make sure to layer. "
                 )
             if wind_speed > 32:
                 outfit_suggestions += (
