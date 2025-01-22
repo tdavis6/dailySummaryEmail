@@ -1,8 +1,6 @@
 import logging
 from datetime import datetime, date
-
 import requests
-
 
 def get_forecast(
         latitude, longitude, city_state_str, unit_system, time_system, timezone
@@ -81,7 +79,7 @@ def get_forecast(
             f"&temperature_unit={temperature_unit}"
             f"&windspeed_unit={windspeed_unit}"
             f"&precipitation_unit={precipitation_unit}"
-            f"&timezone=auto"
+            f"&timezone={timezone}"
             f"&alerts=true"
         )
 
