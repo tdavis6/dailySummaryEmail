@@ -1,5 +1,4 @@
 from datetime import datetime, date, timedelta
-
 from get_ical_events import get_ics_events
 
 
@@ -27,24 +26,16 @@ def localize_or_convert(dt, timezone):
 
 def handle_all_day_event(event):
     """
-    Adjust the event's end date by subtracting one day,
-    because ICS all-day events use exclusive end.
+    Return a formatted message for an all-day event, adjusting for ICS exclusive end-date.
     """
     start_date = event["start"].date()
     end_date = event["end"].date()
-
-    # Subtract one day from the end date to handle ICS exclusivity
     corrected_end_date = end_date - timedelta(days=1)
 
-    # If after subtracting one day we have the same date,
-    # then it's truly just a single all-day event on start_date
-    if corrected_end_date == start_date:
-        return "\n\nAll day event"
+    if corrected_end_date > start_date:
+        return f"\n\nAll day event, ends {corrected_end_date.strftime('%A, %B %d, %Y')}"
     else:
-        # Multi-day
-        return (
-            f"\n\nAll day event, ends {corrected_end_date.strftime('%A, %B %d, %Y')}"
-        )
+        return "\n\nAll day event"
 
 def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
     events = []
@@ -77,7 +68,13 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
         if description:
             text += f"\n\n{description}"
 
-        is_all_day = event.get("is_all_day", False)
+        is_all_day = event.get("is_all_day")
+        if is_all_day is None:
+            is_all_day = (
+                event["start"].time() == datetime.min.time()
+                and event["end"].time() == datetime.min.time()
+                and (event["end"].date() - event["start"].date()).days >= 1
+            )
 
         if is_all_day:
             # Handle all-day event logic (exclusive end date)

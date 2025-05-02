@@ -39,7 +39,7 @@ See .env.example for an example .env file.
 - SMTP_USERNAME: The username of the sending account on the SMTP server
 - SMTP_PASSWORD: The password of the sending account on the SMTP server
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com)
-- SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL)
+- SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) [Currently only 465 is supported]
 - OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email.
 - ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to true)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (defaults to metric)
