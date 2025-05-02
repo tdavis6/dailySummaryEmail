@@ -114,7 +114,7 @@ def get_forecast(
         # -----------------------------------
         daily_data = forecast_data["daily"]
         dates = daily_data["time"]
-        today = date.today().isoformat()
+        today = datetime.now(timezone).date().isoformat()
 
         try:
             index = dates.index(today)
