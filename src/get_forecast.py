@@ -363,7 +363,7 @@ def get_forecast(
                 )
             elif max_temp > 10:
                 outfit_suggestions += (
-                    "It's quite cold outside! Wear warm clothing such as a coat and scarf. Layer if necessary."
+                    "It's quite cold outside! Wear warm clothing such as a coat and scarf. Layer if necessary. "
                 )
             else:
                 outfit_suggestions += (

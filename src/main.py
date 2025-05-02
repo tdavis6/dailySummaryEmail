@@ -142,7 +142,7 @@ def decrypt_data(encrypted_data):
 
 def refresh_configuration_variables():
     """
-    Reload configuration settings, refresh global variables, and handle location/ timezone changes.
+    Reload configuration settings, refresh global variables, and handle location/timezone changes.
     """
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
     global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, UNIT_SYSTEM, TIME_SYSTEM
@@ -152,7 +152,7 @@ def refresh_configuration_variables():
 
     # Keep old values to detect changes
     logging_level_old = LOGGING_LEVEL
-    latitude_old, longitude_old, address_old = LATITUDE, LONGITUDE, ADDRESS
+    latitude_old, longitude_old, address_old = float(LATITUDE) if LATITUDE not in [None, ""] else None, float(LONGITUDE) if LONGITUDE not in [None, ""] else None, str(ADDRESS) if ADDRESS not in [None, ""] else ""
     hour_old, minute_old = HOUR, MINUTE
 
     # Reload fresh config from JSON
@@ -188,8 +188,18 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
-    if (LATITUDE != latitude_old) or (LONGITUDE != longitude_old) or (ADDRESS != address_old):
+    logging.debug(
+        f"Latitude old='{latitude_old}' vs. new='{LATITUDE}'\n"
+        f"Longitude old='{longitude_old}' vs. new='{LONGITUDE}'\n"
+        f"Address old='{address_old}' vs. new='{ADDRESS}'"
+    )
+
+    if (LATITUDE is not None and LATITUDE != "" and float(LATITUDE) != latitude_old) or \
+       (LONGITUDE is not None and LONGITUDE != "" and float(LONGITUDE) != longitude_old) or \
+       (ADDRESS is not None and ADDRESS.strip() != address_old.strip()) :
+        logging.debug("Location data changed. Refreshing location cache...")
         location_cache = refresh_location_cache()
+
         if location_cache:
             LATITUDE = location_cache["latitude"]
             LONGITUDE = location_cache["longitude"]
@@ -199,25 +209,25 @@ def refresh_configuration_variables():
             # fallback
             LATITUDE, LONGITUDE = latitude_old, longitude_old
 
-    try:
-        if not TIMEZONE or not TIMEZONE.strip():
-            if LATITUDE and LONGITUDE:
-                TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
-            else:
-                logging.warning("Cannot derive TIMEZONE; missing lat/long.")
-                TIMEZONE = None
-        timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
-        logging.info(f"Timezone validated and set to: {timezone}")
-    except Exception as e:
-        logging.critical(f"Error validating TIMEZONE: {e}")
-        timezone = None
+        try:
+            if not TIMEZONE or not TIMEZONE.strip():
+                if LATITUDE and LONGITUDE:
+                    TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
+                else:
+                    logging.warning("Cannot derive TIMEZONE; missing lat/long.")
+                    TIMEZONE = None
+            timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
+            logging.info(f"Timezone validated and set to: {timezone}")
+        except Exception as e:
+            logging.critical(f"Error validating TIMEZONE: {e}")
+            timezone = None
 
     # Update logging level if changed
     if LOGGING_LEVEL != logging_level_old:
         change_logging_level()
 
     # If the schedule time changed, reschedule the daily email job
-    if (hour_old != HOUR) or (minute_old != MINUTE):
+    if (float(hour_old) != float(HOUR)) or (float(minute_old) != float(MINUTE)):
         reschedule_email_job()
 
     logging.info("Configuration refreshed successfully.")
@@ -315,6 +325,7 @@ def get_weather():
             LATITUDE, LONGITUDE, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone
         )
         logging.debug("Weather data obtained.")
+        logging.debug(f"Weather data: {weather}")
         return weather
     return ""
 
@@ -566,7 +577,7 @@ if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
 logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
 logging.info(f"Logging level set to: {LOGGING_LEVEL}")
 
-if not LATITUDE or LONGITUDE:
+if not LATITUDE or not LONGITUDE:
     refresh_location_cache()
 
 # Ensure timezone is correctly loaded and utilized

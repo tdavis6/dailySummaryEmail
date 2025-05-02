@@ -59,6 +59,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
             configData[key] = value;
         });
 
+        const messageElement = document.getElementById('message');
+        messageElement.textContent = 'Configuration saving.';
+        messageElement.style.transition = 'opacity 0.5s';
+        messageElement.style.opacity = 1;
+
         fetch('/api/save-config', {
             method: 'POST',
             headers: {
