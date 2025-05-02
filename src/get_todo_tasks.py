@@ -91,7 +91,7 @@ def process_tasks(
             tasks.append((task, due_dt, priority))
 
     # Sort by due datetime and priority
-    tasks.sort(key=lambda x: (x[1], -x[2]))
+    tasks.sort(key=lambda x: (x[1] or datetime.datetime.max, -x[2]))
 
     now = datetime.datetime.now(tz=timezone).date()
 
