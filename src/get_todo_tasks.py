@@ -91,7 +91,7 @@ def process_tasks(
             tasks.append((task, due_dt, priority))
 
     # Sort by due datetime and priority
-    tasks.sort(key=lambda x: (x[1] or datetime.datetime.max, -x[2]))
+    tasks.sort(key=lambda x: (x[1] or datetime.datetime.max.replace(tzinfo=timezone), -x[2]))
 
     now = datetime.datetime.now(tz=timezone).date()
 
@@ -107,23 +107,20 @@ def process_tasks(
         if due_dt:
             due_local = due_dt.date()
             is_overdue = due_local < now
+            has_explicit_time = due_dt.time() != datetime.time(23, 59, 59)
 
             if is_overdue:
-                if due_dt.time() != datetime.time(23, 59, 59):
+                if has_explicit_time:
                     due_time = format_time(due_dt, TIME_SYSTEM)
                     task_text += (
                         f", overdue, due at {due_time} on {due_dt.strftime('%A, %B %d, %Y')}"
                     )
                 else:
                     task_text += f", overdue, due on {due_dt.strftime('%A, %B %d, %Y')}"
-            else:
-                if due_dt.time() != datetime.time(23, 59, 59):
-                    due_time = format_time(due_dt, TIME_SYSTEM)
-                    task_text += f", due at {due_time}"
-        else:
-                if due_dt.time() != datetime.time(23, 59, 59):
-                    due_time = format_time(due_dt, TIME_SYSTEM)
-                    task_text += f", due at {due_time}"
+            elif has_explicit_time:
+                due_time = format_time(due_dt, TIME_SYSTEM)
+                task_text += f", due at {due_time}"
+
 
         # Include priority only if it's not 4 for Todoist or 0 for Vikunja
         if source == "todoist" and 5-task.priority != 4:
