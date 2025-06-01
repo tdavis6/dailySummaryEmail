@@ -84,9 +84,9 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
             start_dt = event["start"]
             end_dt = event["end"]
 
-            time_format = "%I:%M %p" if TIME_SYSTEM.upper() == "12HR" else "%H:%M"
+            time_format = "%-I:%M %p" if TIME_SYSTEM.upper() == "12HR" else "%H:%M"
             date_time_format = (
-                "%I:%M %p on %A, %B %d, %Y"
+                "%-I:%M %p on %A, %B %d, %Y"
                 if TIME_SYSTEM.lower() == "12hr"
                 else "%H:%M on %A, %B %d, %Y"
             )

@@ -159,11 +159,15 @@ def parse_task_sections(tasks_text):
         elif "due at" in line:
             time_part = line.split("due at ")[-1].split(",")[0].strip()
             try:
-                due_time = (
-                    datetime.datetime.strptime(time_part, "%I:%M %p")
-                    if "AM" in time_part or "PM" in time_part
-                    else datetime.datetime.strptime(time_part, "%H:%M")
-                )
+                if "AM" in time_part or "PM" in time_part:
+                    # Parse using %I (allowing leading zero or not)
+                    due_time = datetime.datetime.strptime(time_part, "%I:%M %p")
+                    # Re‐format with %-I to drop any leading zero
+                    formatted = due_time.strftime("%-I:%M %p")
+                    line = line.replace(time_part, formatted)
+                else:
+                    due_time = datetime.datetime.strptime(time_part, "%H:%M")
+
                 if due_time.hour < 12:
                     sections["Morning"].append(line)
                 elif 12 <= due_time.hour < 17:
