@@ -169,8 +169,8 @@ def get_forecast(
         sunrise_time = datetime.fromisoformat(sunrise)
         sunset_time = datetime.fromisoformat(sunset)
         if time_system.upper() == "12HR":
-            sunrise_str = sunrise_time.strftime("%I:%M %p")
-            sunset_str = sunset_time.strftime("%I:%M %p")
+            sunrise_str = sunrise_time.strftime("%-I:%M %p")
+            sunset_str = sunset_time.strftime("%-I:%M %p")
         else:
             sunrise_str = sunrise_time.strftime("%H:%M")
             sunset_str = sunset_time.strftime("%H:%M")
