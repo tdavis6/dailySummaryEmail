@@ -143,8 +143,9 @@ def is_event_today(event_start, event_end, timezone):
         event_start = make_aware(event_start, timezone)
         event_end = make_aware(event_end, timezone)
 
-        if event_end.date() == today and event_end.time() == datetime.min.time() and event_start.date() < today:
-            return False
+        # Handle exclusive end time on all-day events that ends exactly at 00:00
+        if event_end.time() == datetime.min.time() and event_end.date() != event_start.date():
+            event_end -= timedelta(seconds=1)
 
         return event_start.date() <= today <= event_end.date()
     except Exception as e:
