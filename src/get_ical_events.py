@@ -1,6 +1,6 @@
 import requests
 from icalendar import Calendar
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from dateutil.rrule import rrulestr
 import logging
 
