@@ -16,7 +16,7 @@ All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 At any time, you may trigger an email send through the Web UI.
 
 If you have any specific questions or issues setting it up, please feel free to email me at 
-[support@dailysummaryemail.com](mailto:support@dailysummaryemail.com).
+[coding@tydavis.dev](mailto:coding@tydavis.dev).
 While I will try my best to respond quickly, I can make no guarantees on time nor a guaranteed solution, 
 but I will try my best.
 
