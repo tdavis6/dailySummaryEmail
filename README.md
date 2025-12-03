@@ -20,6 +20,9 @@ If you have any specific questions or issues setting it up, please feel free to 
 While I will try my best to respond quickly, I can make no guarantees on time nor a guaranteed solution, 
 but I will try my best.
 
+Please note, I am a novice developer and LLM's were consulted for some of the inner workings (namely calendar parsing
+and the web UI).
+
 ## Setup
 
 Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file,
