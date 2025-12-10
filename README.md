@@ -7,7 +7,7 @@
 ## Summary
 A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
 quote of the day, and more at a designated time daily.
-(Only Todoist and Vikunja are currently supported, but I am working on more.
+(Only Todoist and Vikunja are currently supported, but am open to adding more.
 Feel free to request any todo app with an issue.)
 
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
@@ -19,6 +19,9 @@ If you have any specific questions or issues setting it up, please feel free to 
 [coding@tydavis.dev](mailto:coding@tydavis.dev).
 While I will try my best to respond quickly, I can make no guarantees on time nor a guaranteed solution, 
 but I will try my best.
+
+Please note, I am a novice developer and LLM's were consulted for some of the inner workings (namely calendar parsing
+and the web UI).
 
 ## Setup
 
@@ -105,7 +108,3 @@ product that ChatGPT, ChatGPT Plus does not grant access to the OpenAI API.
 other newspapers likely do too ([WSJ World News Feed](https://feeds.content.dowjones.io/public/rss/RSSWorldNews)).
   - I do not claim responsibility for any content in this feed. I do not support any particular news paper, nor wish to make any
 political comments on any work. This feed was choosen because it was shown to be [close to the center of the political spectrum](https://www.allsides.com/news-source/wall-street-journal-media-bias).
-
-## Buy me a cup of coffee ☕️!
-If you find this program to be valuable, and have all your personal financials taken care of, 
-consider buying me a coffee me through [GitHub Sponsors](https://github.com/sponsors/tdavis6)!

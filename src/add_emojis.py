@@ -222,7 +222,13 @@ def add_emojis(text):
                 continue
 
             match = re.search(date_pattern, task)
-            due_date = datetime.now() if not match else datetime.strptime(match.group(2) or match.group(3), "%A, %B %d, %Y")
+            date_str = match.group(2) or match.group(3) if match else None
+            due_date = (
+                datetime.strptime(date_str, "%A, %B %d, %Y")
+                if date_str
+                else datetime.now()
+            )
+            #due_date = datetime.now() if not match else datetime.strptime(match.group(2) or match.group(3), "%A, %B %d, %Y")
 
             days_late = (datetime.now() - due_date).days
             if days_late > 0:
