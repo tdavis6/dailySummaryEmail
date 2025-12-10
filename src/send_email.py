@@ -94,6 +94,7 @@ def send_email(
         # Get summary
         if openai_api_key is not None and enable_summary in ["True", "true", True]:
             summary = generate_summary(text, openai_api_key)
+            if summary is None: summary = "Error generating summary."
             summary = add_emojis(summary)
             logging.debug("Summary obtained")
 
