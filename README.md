@@ -1,3 +1,6 @@
+# Repository moved
+This repository has been moved to [https://git.tylerdavis.net/tyler/dailySummaryEmail](https://git.tylerdavis.net/tyler/dailySummaryEmail). Packages will now be released to GHCR (like normal), but also to the package manager at the remote repository.
+
 # Daily Summary Email
 ![GitHub last commit](https://img.shields.io/github/last-commit/tdavis6/dailySummaryEmail)
 ![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/main)
