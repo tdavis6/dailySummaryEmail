@@ -66,8 +66,7 @@ See .env.example for an example .env file.
 - TIMEZONE: Timezone as a string. (not required if a latitude and longitude or an address are given, but will override
   that timezone. Ensure that it is spelt correctly.)
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
-- ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. You can use [this](https://fernetkeygen.com/)
-  website to generate them.
+- ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. One way to generate them could be ```python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"```
 - PASSWORD: Web UI password. Must be alphanumerical.
 - SECRET_KEY: Random alphanumerical string. Used for session cookies of the Web UI.
 
