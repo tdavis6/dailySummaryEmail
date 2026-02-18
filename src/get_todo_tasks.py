@@ -61,17 +61,16 @@ def process_tasks(
     for task in raw_tasks_data:
         due_dt = None
         if source.lower() == "todoist":
-            # Todoist tasks handling
-            if task.due and task.due.datetime:
-                due_dt = datetime.datetime.fromisoformat(task.due.datetime)
-                if due_dt.tzinfo is None:
+            if task.due:
+                due_val = task.due.date
+                if isinstance(due_val, datetime.datetime):
+                    due_dt = due_val
+                    if due_dt.tzinfo is None:
+                        due_dt = timezone.localize(due_dt)
+                    due_dt = due_dt.astimezone(timezone)
+                else:  # plain date object
+                    due_dt = datetime.datetime.combine(due_val, datetime.time(23, 59, 59))
                     due_dt = timezone.localize(due_dt)
-                due_dt = due_dt.astimezone(timezone)
-            elif task.due and task.due.date:
-                due_dt = datetime.datetime.fromisoformat(f"{task.due.date}T23:59:59")
-                if due_dt.tzinfo is None:
-                    due_dt = timezone.localize(due_dt)
-                due_dt = due_dt.astimezone(timezone)
             tasks.append((task, due_dt, task.priority))
 
         elif source.lower() == "vikunja":

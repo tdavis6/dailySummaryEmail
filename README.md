@@ -2,7 +2,6 @@
 ![GitHub last commit](https://img.shields.io/github/last-commit/tdavis6/dailySummaryEmail)
 ![GitHub branch check runs](https://img.shields.io/github/check-runs/tdavis6/dailySummaryEmail/main)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/tdavis6/dailySummaryEmail)
-![GitHub issue custom search in repo](https://img.shields.io/github/issues-search/tdavis6/dailySummaryEmail?query=is%3Aopen%20label%3Abug&label=bugs)
 
 ## Summary
 A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
@@ -67,8 +66,7 @@ See .env.example for an example .env file.
 - TIMEZONE: Timezone as a string. (not required if a latitude and longitude or an address are given, but will override
   that timezone. Ensure that it is spelt correctly.)
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
-- ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. You can use [this](https://fernetkeygen.com/)
-  website to generate them.
+- ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. One way to generate them could be ```python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"```
 - PASSWORD: Web UI password. Must be alphanumerical.
 - SECRET_KEY: Random alphanumerical string. Used for session cookies of the Web UI.
 
@@ -77,7 +75,7 @@ NOTE: You MUST provide either a coordinate pair or an address.
 ## OpenAI Integration
 The OpenAI Integration allows a 2-3 sentence summary of the email near the top. 
 
-Under the current API pricing (last updated 11/13/24), this integration costs about \$0.104025 USD per year of operation,
+Under the current API pricing (last updated February 18, 2026), this integration costs about \$0.104025 USD per year of operation,
 with very long emails (1250+170 input tokens per day, a maximum of 120 tokens of output per day). The output is limited at 120 
 tokens per day. The model used is GPT-4o mini, which allows for it to cost much less than a larger model. The current pricing 
 is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
