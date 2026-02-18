@@ -9,6 +9,9 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    
+    env:
+      DOCKER_API_VERSION: "1.43"
 
     steps:
       - name: Checkout repository
