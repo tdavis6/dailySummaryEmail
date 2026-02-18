@@ -18,13 +18,28 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Check if version.json changed
+        id: version_check
+        run: |
+          if ! git rev-parse HEAD~1 > /dev/null 2>&1; then
+            echo "No previous commit — treating version.json as changed."
+            echo "version_changed=true" >> $GITHUB_ENV
+          elif git diff --name-only HEAD~1 HEAD | grep -q "^version.json$"; then
+            echo "version_changed=true" >> $GITHUB_ENV
+          else
+            echo "version.json was not changed — skipping release."
+            echo "version_changed=false" >> $GITHUB_ENV
+          fi
+
       - name: Set up Docker Buildx
+        if: env.version_changed == 'true'
         uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
         with:
           driver: docker
 
       - name: Extract version from version.json
         id: get_version
+        if: env.version_changed == 'true'
         run: |
           VERSION=$(jq -r '.version' version.json)
           DOCKER_TAG="${VERSION/v/}"
@@ -36,6 +51,7 @@ jobs:
 
       - name: Determine if Pre-release and Type
         id: prerelease_check
+        if: env.version_changed == 'true'
         run: |
           if [[ "${{ env.version }}" == *"-alpha"* ]]; then
             echo "pre_release=true" >> $GITHUB_ENV
@@ -54,14 +70,28 @@ jobs:
             echo "pre_release_type=" >> $GITHUB_ENV
           fi
 
+      - name: Enforce branch/release type rules
+        if: env.version_changed == 'true'
+        run: |
+          if [[ "${{ github.ref_name }}" == "dev" && "${{ env.pre_release }}" == "false" ]]; then
+            echo "ERROR: Stable releases cannot be made from the dev branch."
+            exit 1
+          fi
+          if [[ "${{ github.ref_name }}" == "main" && "${{ env.pre_release }}" == "true" ]]; then
+            echo "ERROR: Pre-release versions cannot be released from the main branch."
+            exit 1
+          fi
+
       - name: Get All Relevant Commit Messages for Release Notes
         id: commit_messages
+        if: env.version_changed == 'true'
         run: |
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
           echo "Last stable tag: $LAST_STABLE_TAG"
           git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s (by %an)" | sed 's/[$&`"'\''\\\/]/\\&/g' | sed ':a;N;$!ba;s/\n/#NEWLINE#/g' > sanitized_commits.txt
 
       - name: Prepare Release Notes
+        if: env.version_changed == 'true'
         run: |
           SANITIZED_COMMITS=$(< sanitized_commits.txt)
           SANITIZED_COMMITS_WITH_NEWLINES=$(echo "$SANITIZED_COMMITS" | sed 's/#NEWLINE#/\n/g')
@@ -73,6 +103,7 @@ jobs:
           } > release_body.txt
 
       - name: Create Forgejo Release
+        if: env.version_changed == 'true'
         run: |
           BODY=$(cat release_body.txt)
           PRE_RELEASE=${{ env.pre_release }}
@@ -88,6 +119,7 @@ jobs:
             }"
 
       - name: Login to GitHub Container Registry
+        if: env.version_changed == 'true'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
@@ -95,13 +127,15 @@ jobs:
           password: ${{ secrets.GH_PAT }}
 
       - name: Login to Forgejo Container Registry
+        if: env.version_changed == 'true'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ secrets.FORGEJO_REGISTRY }}
           username: ${{ secrets.FORGEJO_USERNAME }}
           password: ${{ secrets.FORGEJO_TOKEN }}
 
-      - name: Build Docker Image
+      - name: Build Docker Image (Pre-release)
+        if: env.version_changed == 'true' && env.pre_release == 'true'
         run: |
           docker build \
             -t ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} \
@@ -110,23 +144,36 @@ jobs:
             -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest-dev \
             .
 
-      - name: Push to GitHub Container Registry
+      - name: Build Docker Image (Stable)
+        if: env.version_changed == 'true' && env.pre_release == 'false'
+        run: |
+          docker build \
+            -t ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} \
+            -t ghcr.io/${{ secrets.GHCR_REPO }}:latest \
+            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }} \
+            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest \
+            .
+
+      - name: Push to GitHub Container Registry (Pre-release)
+        if: env.version_changed == 'true' && env.pre_release == 'true'
         run: |
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest-dev
 
-      - name: Push to Forgejo Container Registry
+      - name: Push to GitHub Container Registry (Stable)
+        if: env.version_changed == 'true' && env.pre_release == 'false'
+        run: |
+          docker push ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }}
+          docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest
+
+      - name: Push to Forgejo Container Registry (Pre-release)
+        if: env.version_changed == 'true' && env.pre_release == 'true'
         run: |
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }}
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest-dev
 
-      - name: Tag and Push Latest for Stable Releases
-        if: ${{ env.pre_release == 'false' }}
+      - name: Push to Forgejo Container Registry (Stable)
+        if: env.version_changed == 'true' && env.pre_release == 'false'
         run: |
-          # GHCR
-          docker tag ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} ghcr.io/${{ secrets.GHCR_REPO }}:latest
-          docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest
-
-          # Forgejo
-          docker tag ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }} ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest
+          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }}
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest

@@ -24,13 +24,9 @@ and the web UI).
 
 ## Setup
 
-Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file,
-however, all these options are not necessary to put in the `.env` file, they can be added later in the web UI. The only
-necessary
-variables to set are the `ENCRYPTION_KEY` and `PASSWORD`. The set `PASSWORD` is used to log into the web UI.
-If you initially use env vars to fill out all the data, you may remove them after the first run as long as there is a
-config.json
-location configured (`./data` in `docker-compose.yml`).
+Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file, however, all these options are not necessary to put in the `.env` file, they can be added later in the web UI. The only necessary variables to set are the `ENCRYPTION_KEY` and `PASSWORD`. The set `PASSWORD` is used to log into the web UI. If you initially use env vars to fill out all the data, you may remove them after the first run as long as there is a config.json location configured (`./data` in `docker-compose.yml`).
+
+The package tagged `latest` contains the latest stable release, while the package tagged `latest-dev` contains the latest development release, ignoring all stable releases.
 
 ## Environment Variables
 See .env.example for an example .env file.
