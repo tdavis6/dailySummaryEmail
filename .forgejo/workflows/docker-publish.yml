@@ -76,7 +76,7 @@ jobs:
         run: |
           BODY=$(cat release_body.txt)
           PRE_RELEASE=${{ env.pre_release }}
-          curl -s -X POST "${{ env.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases" \
+          curl -s -X POST "${{ secrets.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases" \
             -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{
