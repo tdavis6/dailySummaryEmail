@@ -1,4 +1,4 @@
-name: Release on Push to Main Branch
+name: Package releases
 
 on:
   push:
