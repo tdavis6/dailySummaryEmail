@@ -29,10 +29,10 @@ jobs:
           VERSION=$(jq -r '.version' version.json)
           DOCKER_TAG="${VERSION/v/}"
           DOCKER_TAG="${DOCKER_TAG/+/-}"
-          REPO_NAME=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          FORGEJO_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
           echo "version=$VERSION" >> $GITHUB_ENV
           echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
-          echo "repo_name=$REPO_NAME" >> $GITHUB_ENV
+          echo "forgejo_repo=$FORGEJO_REPO" >> $GITHUB_ENV
 
       - name: Determine if Pre-release and Type
         id: prerelease_check
@@ -76,7 +76,7 @@ jobs:
         run: |
           BODY=$(cat release_body.txt)
           PRE_RELEASE=${{ env.pre_release }}
-          curl -s -X POST "${{ secrets.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases" \
+          curl -s -X POST "${{ env.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases" \
             -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
             -H "Content-Type: application/json" \
             -d "{
@@ -104,29 +104,29 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build \
-            -t ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} \
-            -t ghcr.io/${{ env.repo_name }}:latest-dev \
-            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:${{ env.docker_tag }} \
-            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:latest-dev \
+            -t ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} \
+            -t ghcr.io/${{ secrets.GHCR_REPO }}:latest-dev \
+            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }} \
+            -t ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest-dev \
             .
 
       - name: Push to GitHub Container Registry
         run: |
-          docker push ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }}
-          docker push ghcr.io/${{ env.repo_name }}:latest-dev
+          docker push ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }}
+          docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest-dev
 
       - name: Push to Forgejo Container Registry
         run: |
-          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:${{ env.docker_tag }}
-          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:latest-dev
+          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }}
+          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest-dev
 
       - name: Tag and Push Latest for Stable Releases
         if: ${{ env.pre_release == 'false' }}
         run: |
           # GHCR
-          docker tag ghcr.io/${{ env.repo_name }}:${{ env.docker_tag }} ghcr.io/${{ env.repo_name }}:latest
-          docker push ghcr.io/${{ env.repo_name }}:latest
+          docker tag ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} ghcr.io/${{ secrets.GHCR_REPO }}:latest
+          docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest
 
           # Forgejo
-          docker tag ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:${{ env.docker_tag }} ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:latest
-          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.repo_name }}:latest
+          docker tag ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }} ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest
+          docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest
