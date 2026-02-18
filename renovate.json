@@ -13,5 +13,8 @@
   ],
   "baseBranchPatterns": [
     "develop"
+  ],
+  "ignorePaths": [
+    "docker-compose.yml"
   ]
 }
