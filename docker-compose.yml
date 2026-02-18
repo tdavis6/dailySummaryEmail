@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   dailySummaryEmail:
-    image: ghcr.io/tdavis6/dailysummaryemail:latest-dev
+    image: ghcr.io/tdavis6/dailysummaryemail:latest-dev@sha256:4bf2cb4e67501f5459a33588f759b0585e3ecff22a691e03013422a6346defee
     container_name: dailySummaryEmail
     platform: "linux/amd64"
     ports:
