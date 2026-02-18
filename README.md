@@ -77,7 +77,7 @@ NOTE: You MUST provide either a coordinate pair or an address.
 ## OpenAI Integration
 The OpenAI Integration allows a 2-3 sentence summary of the email near the top. 
 
-Under the current API pricing (last updated 11/13/24), this integration costs about \$0.104025 USD per year of operation,
+Under the current API pricing (last updated February 18, 2026), this integration costs about \$0.104025 USD per year of operation,
 with very long emails (1250+170 input tokens per day, a maximum of 120 tokens of output per day). The output is limited at 120 
 tokens per day. The model used is GPT-4o mini, which allows for it to cost much less than a larger model. The current pricing 
 is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
