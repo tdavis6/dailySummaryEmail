@@ -1,9 +1,17 @@
 {
-  "extends": ["config:best-practices"],
+  "extends": [
+    "config:best-practices"
+  ],
   "packageRules": [
     {
-      "matchUpdateTypes": ["minor", "patch"],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
       "automerge": true
     }
+  ],
+  "baseBranchPatterns": [
+    "develop"
   ]
 }
