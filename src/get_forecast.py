@@ -1,16 +1,261 @@
 import logging
+import re
+import xml.etree.ElementTree as ET
 from datetime import datetime
+from email.utils import parsedate_to_datetime
 
 import requests
 
 
+# MeteoAlarm RSS feed slugs keyed by ISO 3166-1 alpha-2 country code (lowercase).
+# Source: https://feeds.meteoalarm.org/
+_METEOALARM_SLUGS = {
+    "ad": "andorra",
+    "at": "austria",
+    "be": "belgium",
+    "ba": "bosnia-herzegovina",
+    "bg": "bulgaria",
+    "hr": "croatia",
+    "cy": "cyprus",
+    "cz": "czechia",
+    "dk": "denmark",
+    "ee": "estonia",
+    "fi": "finland",
+    "fr": "france",
+    "de": "germany",
+    "gr": "greece",
+    "hu": "hungary",
+    "is": "iceland",
+    "ie": "ireland",
+    "il": "israel",
+    "it": "italy",
+    "lv": "latvia",
+    "lt": "lithuania",
+    "lu": "luxembourg",
+    "mt": "malta",
+    "md": "moldova",
+    "me": "montenegro",
+    "nl": "netherlands",
+    "mk": "republic-of-north-macedonia",
+    "no": "norway",
+    "pl": "poland",
+    "pt": "portugal",
+    "ro": "romania",
+    "rs": "serbia",
+    "sk": "slovakia",
+    "si": "slovenia",
+    "es": "spain",
+    "se": "sweden",
+    "ch": "switzerland",
+    "ua": "ukraine",
+    "gb": "united-kingdom",
+}
+
+
+def _fmt_timestamp(ts, time_system, timezone):
+    """
+    Parse a timestamp string (ISO 8601 or RFC 2822) and return a
+    formatted string in the user's preferred time format and timezone.
+    Returns the raw string unchanged if all parsing attempts fail.
+    """
+    if not ts:
+        return ""
+    # ISO 8601 variants (CAP standard)
+    for fmt_str in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M:%SZ", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            dt = datetime.strptime(ts, fmt_str)
+            if dt.tzinfo:
+                dt = dt.astimezone(timezone)
+            out_fmt = (
+                "%Y-%m-%d %I:%M %p %Z" if time_system.upper() == "12HR" else "%Y-%m-%d %H:%M %Z"
+            )
+            return dt.strftime(out_fmt)
+        except ValueError:
+            pass
+    # RFC 2822 (standard RSS pubDate)
+    try:
+        dt = parsedate_to_datetime(ts).astimezone(timezone)
+        out_fmt = (
+            "%Y-%m-%d %I:%M %p %Z" if time_system.upper() == "12HR" else "%Y-%m-%d %H:%M %Z"
+        )
+        return dt.strftime(out_fmt)
+    except Exception:
+        pass
+    return ts
+
+
+def _strip_html(text):
+    """Remove HTML tags and collapse whitespace for plain-text email output."""
+    text = re.sub(r"<[^>]+>", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
+
+
+def _fetch_alerts_us(latitude, longitude, time_system, timezone, version):
+    """
+    Fetch active weather alerts from the NWS API for a US location.
+    Returns a formatted string, or "" if no alerts or on error.
+    Endpoint: https://api.weather.gov/alerts/active?point={lat},{lon}
+    """
+    url = f"https://api.weather.gov/alerts/active?point={latitude},{longitude}"
+    headers = {
+        "User-Agent": f"dailySummaryEmail/{version}",
+        "Accept": "application/geo+json",
+    }
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+    except requests.RequestException as e:
+        logging.warning(f"Failed to fetch NWS alerts: {e}")
+        return ""
+    except Exception as e:
+        logging.warning(f"Unexpected error fetching NWS alerts: {e}")
+        return ""
+
+    features = data.get("features", [])
+    if not features:
+        logging.debug("NWS: no active alerts for this location.")
+        return ""
+
+    blocks = []
+    for feature in features:
+        props = feature.get("properties", {})
+        event = props.get("event") or "Unknown Event"
+        severity = props.get("severity") or ""
+        headline = props.get("headline") or ""
+        description = props.get("description") or ""
+        onset = _fmt_timestamp(props.get("onset") or "", time_system, timezone)
+        expires = _fmt_timestamp(props.get("expires") or "", time_system, timezone)
+
+        header = f"**{event}**"
+        if severity and severity.lower() not in ("unknown", ""):
+            header += f" [{severity}]"
+
+        parts = [header]
+        if headline:
+            parts.append(headline)
+        if onset:
+            parts.append(f"Onset:   {onset}")
+        if expires:
+            parts.append(f"Expires: {expires}")
+        if description:
+            # NWS descriptions use \n\n for paragraph breaks — show first paragraph only
+            first_para = description.split("\n\n")[0].replace("\n", " ").strip()
+            if first_para:
+                parts.append(first_para)
+
+        blocks.append("\n\n".join(parts))
+
+    logging.info(f"NWS: found {len(blocks)} active alert(s).")
+    return "\n\n".join(blocks)
+
+
+def _fetch_alerts_meteoalarm(country_code, city_state_str, time_system, timezone, version):
+    """
+    Fetch active weather alerts from MeteoAlarm RSS feeds for European countries.
+    Filters items whose title contains any word from city_state_str so only
+    locally-relevant alerts are shown. Falls back to all alerts if city_state_str
+    is empty or no items match.
+    Returns a formatted string, or "" if no alerts or on error.
+    Feed index: https://feeds.meteoalarm.org/
+    """
+    slug = _METEOALARM_SLUGS.get(country_code.lower())
+    if not slug:
+        logging.debug(f"MeteoAlarm: no feed available for country '{country_code}'.")
+        return ""
+
+    url = f"https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-rss-{slug}"
+    headers = {"User-Agent": f"dailySummaryEmail/{version}"}
+    try:
+        resp = requests.get(url, headers=headers, timeout=10)
+        resp.raise_for_status()
+        root = ET.fromstring(resp.content)
+    except requests.RequestException as e:
+        logging.warning(f"Failed to fetch MeteoAlarm feed for '{slug}': {e}")
+        return ""
+    except ET.ParseError as e:
+        logging.warning(f"Failed to parse MeteoAlarm feed XML for '{slug}': {e}")
+        return ""
+    except Exception as e:
+        logging.warning(f"Unexpected error fetching MeteoAlarm feed for '{slug}': {e}")
+        return ""
+
+    items = root.findall(".//item")
+    if not items:
+        logging.debug(f"MeteoAlarm: no items in feed for '{slug}'.")
+        return ""
+
+    # Build a set of lowercase tokens from city_state_str for region matching
+    location_tokens = (
+        {w.lower() for w in re.split(r"[\s,]+", city_state_str) if len(w) > 2}
+        if city_state_str
+        else set()
+    )
+
+    def _item_matches_location(item):
+        if not location_tokens:
+            return True
+        title = (item.findtext("title") or "").lower()
+        return any(token in title for token in location_tokens)
+
+    matched = [i for i in items if _item_matches_location(i)]
+    # Fall back to all items if nothing matched (avoids silently dropping everything)
+    display_items = matched if matched else items
+
+    cap_ns = {"cap": "urn:oasis:names:tc:emergency:cap:1.2"}
+    blocks = []
+    for item in display_items:
+        title = _strip_html(item.findtext("title") or "")
+        description = _strip_html(item.findtext("description") or "")
+        pub_date_raw = (item.findtext("pubDate") or "").strip()
+
+        onset = _fmt_timestamp(
+            (item.findtext("cap:onset", namespaces=cap_ns) or "").strip(),
+            time_system, timezone,
+        )
+        expires = _fmt_timestamp(
+            (item.findtext("cap:expires", namespaces=cap_ns) or "").strip(),
+            time_system, timezone,
+        )
+        severity = (item.findtext("cap:severity", namespaces=cap_ns) or "").strip()
+        pub_date_str = _fmt_timestamp(pub_date_raw, time_system, timezone)
+
+        header = f"**{title}**" if title else "**Weather Alert**"
+        if severity and severity.lower() not in ("unknown", ""):
+            header += f" [{severity}]"
+
+        parts = [header]
+        if onset:
+            parts.append(f"Onset:   {onset}")
+        if expires:
+            parts.append(f"Expires: {expires}")
+        elif pub_date_str:
+            parts.append(f"Issued:  {pub_date_str}")
+        if description and description.lower() != title.lower():
+            parts.append(description)
+
+        blocks.append("\n\n".join(parts))
+
+    if blocks:
+        logging.info(f"MeteoAlarm: found {len(blocks)} alert(s) for '{slug}'.")
+    else:
+        logging.debug(f"MeteoAlarm: no matching alerts for '{slug}'.")
+    return "\n\n".join(blocks)
+
+
 def get_forecast(
-    latitude, longitude, country_code, city_state_str, unit_system, time_system, timezone
+    latitude, longitude, country_code, city_state_str, unit_system, time_system, timezone, version="unknown"
 ):
     """
     Fetch weather forecast and AQI data for the given coordinates and return
     a formatted string summary. country_code and city_state_str are provided
     by the caller (resolved once at startup via get_coordinates).
+
+    Alerts are sourced from:
+      - US:     NWS API  (https://api.weather.gov/alerts/active?point=lat,lon)
+      - Europe: MeteoAlarm RSS feeds (https://feeds.meteoalarm.org/)
+      - Other:  No alerts (graceful no-op)
+    All sources are free and require no API key.
     """
     if not latitude or not longitude:
         logging.error("get_forecast called without valid latitude/longitude.")
@@ -68,7 +313,6 @@ def get_forecast(
         f"&windspeed_unit={windspeed_unit}"
         f"&precipitation_unit={precipitation_unit}"
         f"&timezone={timezone}"
-        f"&alerts=true"
     )
 
     try:
@@ -230,25 +474,13 @@ def get_forecast(
     # ------------------------------------------------------------------
     # Alerts
     # ------------------------------------------------------------------
-    def _format_alert_time(ts, time_system, timezone):
-        try:
-            dt = datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z").astimezone(timezone)
-            return dt.strftime("%Y-%m-%d %I:%M %p %Z" if time_system.upper() == "12HR" else "%Y-%m-%d %H:%M %Z")
-        except Exception:
-            return "N/A"
-
-    alerts_info = ""
-    for source, label_suffix in [(forecast_data, ""), (aqi_data, " (AQI)")]:
-        if "alerts" in source and source["alerts"]:
-            for alert in source["alerts"].get("alert", []):
-                start_str = _format_alert_time(alert.get("start", ""), time_system, timezone) if alert.get("start") else "N/A"
-                end_str = _format_alert_time(alert.get("end", ""), time_system, timezone) if alert.get("end") else "N/A"
-                alerts_info += (
-                    f"\n**{alert.get('event', 'Unknown Event')}{label_suffix}**\n"
-                    f"Start: {start_str}\n"
-                    f"End: {end_str}\n"
-                    f"{alert.get('description', '')}\n"
-                )
+    if country_code == "us":
+        alerts_info = _fetch_alerts_us(latitude, longitude, time_system, timezone, version)
+    elif country_code in _METEOALARM_SLUGS:
+        alerts_info = _fetch_alerts_meteoalarm(country_code, city_state_str, time_system, timezone, version)
+    else:
+        alerts_info = ""
+        logging.debug(f"No alerts source available for country '{country_code}'.")
 
     # ------------------------------------------------------------------
     # Outfit suggestions

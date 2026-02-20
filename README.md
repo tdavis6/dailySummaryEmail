@@ -93,6 +93,7 @@ product that ChatGPT, ChatGPT Plus does not grant access to the OpenAI API.
 ## Attribution
 - Geocoding provided by [Nominatim](https://nominatim.org/).
 - Weather data provided by [Open-Meteo](https://open-meteo.com/)
+- Weather alerts provided by the [NWS API](https://www.weather.gov/documentation/services-web-api) (United States) and [MeteoAlarm](https://feeds.meteoalarm.org/) (Europe)
 - Quotes provided by [ZenQuotes API](https://zenquotes.io/).
 
 ## Other Notes
