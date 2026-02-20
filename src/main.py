@@ -21,7 +21,6 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from get_cal_data import get_cal_data
-from get_city_state import get_city_state
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
@@ -45,12 +44,12 @@ def ensure_directories_and_files_exist():
         with open(CACHE_FILE_PATH, "w") as f:
             json.dump({}, f)
 
+
 def load_config_from_json():
     """Load all configuration settings from the JSON file into a dictionary, decrypting sensitive fields."""
     ensure_directories_and_files_exist()
     with open(CONFIG_FILE_PATH, "r") as f:
         config = json.load(f)
-        # Decrypt sensitive data fields
         config["SMTP_PASSWORD"] = decrypt_data(config.get("SMTP_PASSWORD", ""))
         config["OPENAI_API_KEY"] = decrypt_data(config.get("OPENAI_API_KEY", ""))
         config["TODOIST_API_KEY"] = decrypt_data(config.get("TODOIST_API_KEY", ""))
@@ -60,15 +59,16 @@ def load_config_from_json():
         config["ADDRESS"] = decrypt_data(config.get("ADDRESS", ""))
         return config
 
+
 def get_config_value(key, default=None):
     """Retrieve a specific configuration setting from the JSON file."""
     config = load_config_from_json()
     return config.get(key, default)
 
+
 def save_config_to_json(config_data):
     """Save the configuration data to the config.json file with encrypted sensitive fields."""
     ensure_directories_and_files_exist()
-    # Encrypt sensitive data fields before saving
     config_data["SMTP_PASSWORD"] = encrypt_data(config_data.get("SMTP_PASSWORD", ""))
     config_data["OPENAI_API_KEY"] = encrypt_data(config_data.get("OPENAI_API_KEY", ""))
     config_data["TODOIST_API_KEY"] = encrypt_data(config_data.get("TODOIST_API_KEY", ""))
@@ -78,6 +78,7 @@ def save_config_to_json(config_data):
     config_data["ADDRESS"] = encrypt_data(config_data.get("ADDRESS", ""))
     with open(CONFIG_FILE_PATH, "w") as json_file:
         json.dump(config_data, json_file, indent=4)
+
 
 def initialize_config():
     """Initialize configuration by first loading config.json, then overriding with .env if present."""
@@ -112,33 +113,29 @@ def initialize_config():
         "LOGGING_LEVEL",
     ]
 
-    # Load existing configuration from JSON
     existing_config = load_config_from_json()
-
-    # Create a dictionary to hold final configuration values
     config_data = {}
 
     for key in config_keys:
         env_val = os.getenv(key, None)
-
         if env_val is None:
-            # Env var not present, log and use config.json or blank
             logging.debug(f"Environment variable '{key}' not found. Using config.json or blank.")
             config_data[key] = existing_config.get(key, "")
         else:
-            # Env var present, use it and override config.json
             config_data[key] = env_val
 
-    # Save final config to JSON
     save_config_to_json(config_data)
+
 
 def encrypt_data(data):
     return cipher_suite.encrypt(data.encode()).decode()
+
 
 def decrypt_data(encrypted_data):
     if not encrypted_data:
         return ""
     return cipher_suite.decrypt(encrypted_data.encode()).decode()
+
 
 def refresh_configuration_variables():
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
@@ -146,7 +143,7 @@ def refresh_configuration_variables():
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
     global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
-    global city_state_str
+    global city_state_str, country_code
 
     # Keep old values to detect changes
     logging_level_old = LOGGING_LEVEL
@@ -155,10 +152,8 @@ def refresh_configuration_variables():
     address_old = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
     hour_old, minute_old = HOUR, MINUTE
 
-    # Reload fresh config from JSON
     config = load_config_from_json()
 
-    # Update global vars from config
     RECIPIENT_EMAIL = config.get("RECIPIENT_EMAIL")
     RECIPIENT_NAME = config.get("RECIPIENT_NAME")
     SENDER_EMAIL = config.get("SENDER_EMAIL")
@@ -188,15 +183,14 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
-    # Determine new lat/long/address as floats/strings for comparison
     new_lat = float(LATITUDE) if LATITUDE not in [None, ""] else None
     new_lng = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
     new_address = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
 
     location_changed = (
-        new_lat != latitude_old or
-        new_lng != longitude_old or
-        new_address != address_old
+        new_lat != latitude_old
+        or new_lng != longitude_old
+        or new_address != address_old
     )
 
     if location_changed:
@@ -206,9 +200,10 @@ def refresh_configuration_variables():
         if location_cache:
             LATITUDE = location_cache["latitude"]
             LONGITUDE = location_cache["longitude"]
-            city_state_str = location_cache["city_state"]  # FIX: update the global!
+            country_code = location_cache["country_code"]
+            city_state_str = location_cache["city_state"]
             if not ADDRESS or not ADDRESS.strip():
-                ADDRESS = location_cache["city_state"]
+                ADDRESS = city_state_str
         else:
             logging.warning("Location cache refresh failed, reverting to old coordinates.")
             LATITUDE, LONGITUDE = latitude_old, longitude_old
@@ -235,102 +230,120 @@ def refresh_configuration_variables():
 
     logging.info("Configuration refreshed successfully.")
 
+
 def load_location_cache():
+    """Load cached location data. Returns a dict or None if cache is missing/invalid."""
     ensure_directories_and_files_exist()
-    if not os.path.exists("./cache"):
-        os.makedirs("./cache")
-    if not os.path.exists(CACHE_FILE_PATH):
-        with open(CACHE_FILE_PATH, "w") as f:
-            json.dump({}, f)
-
-    if os.path.exists(CACHE_FILE_PATH):
+    try:
         with open(CACHE_FILE_PATH, "r") as f:
-            try:
-                data = json.load(f)
-                return (
-                    data.get("LATITUDE"),
-                    data.get("LONGITUDE"),
-                    data.get("city_state_str"),
-                )
-            except json.JSONDecodeError:
-                logging.error("Error decoding JSON from location cache.")
-    return None, None, None
+            data = json.load(f)
+            if data.get("LATITUDE") and data.get("LONGITUDE"):
+                return {
+                    "latitude": data["LATITUDE"],
+                    "longitude": data["LONGITUDE"],
+                    "country_code": data.get("country_code", "us"),
+                    "city_state": data.get("city_state_str", ""),
+                }
+    except (json.JSONDecodeError, FileNotFoundError):
+        logging.error("Error reading location cache.")
+    return None
 
-def save_location_cache(lat, long, city_state_str):
+
+def save_location_cache(lat, lng, country_code, city_state):
+    """Save location data to the cache file."""
     with open(CACHE_FILE_PATH, "w") as f:
         json.dump(
-            {"LATITUDE": lat, "LONGITUDE": long, "city_state_str": city_state_str}, f
+            {
+                "LATITUDE": lat,
+                "LONGITUDE": lng,
+                "country_code": country_code,
+                "city_state_str": city_state,
+            },
+            f,
         )
-        logging.info("Location data saved to cache.")
+    logging.info("Location data saved to cache.")
 
 
 def refresh_location_cache():
     """
-    Refreshes location data. If valid LATITUDE and LONGITUDE exist, use them.
-    Otherwise, if ADDRESS is set, try geocoding.
-    Returns a dict with { 'latitude', 'longitude', 'city_state' } or None on failure.
+    Refreshes location data. If valid LATITUDE and LONGITUDE are provided, use them
+    directly and do a single reverse-geocode via get_coordinates to get country_code
+    and city_state. If only ADDRESS is set, forward-geocode it via get_coordinates.
+    Returns a dict with { 'latitude', 'longitude', 'country_code', 'city_state' }
+    or None on failure.
     """
     ensure_directories_and_files_exist()
-    global LATITUDE, LONGITUDE, city_state_str
+    global LATITUDE, LONGITUDE, country_code, city_state_str
 
-    # If lat/long are already set in config (and valid), skip geocoding
     if LATITUDE and LONGITUDE:
-        logging.debug("Manual LATITUDE/LONGITUDE provided. Skipping geocoding.")
+        # Manual coords provided — still call get_coordinates for reverse-geocode metadata
+        logging.debug("Manual LATITUDE/LONGITUDE provided. Reverse-geocoding for metadata.")
         try:
-            LATITUDE = float(LATITUDE)
-            LONGITUDE = float(LONGITUDE)
+            lat = float(LATITUDE)
+            lng = float(LONGITUDE)
         except (ValueError, TypeError) as e:
-            logging.error(f"Invalid manual LATITUDE or LONGITUDE. Error: {e}")
+            logging.error(f"Invalid manual LATITUDE or LONGITUDE: {e}")
             return None
 
-    # Otherwise, if no valid lat/long but an ADDRESS is specified, do geocoding
+        # Pass coords as a "lat,lng" string so get_coordinates can reverse-geocode
+        resolved_lat, resolved_lng, resolved_country, resolved_city_state = get_coordinates(
+            f"{lat},{lng}", VERSION
+        )
+        if resolved_lat is None:
+            logging.warning(
+                "Reverse-geocode for metadata failed; proceeding with coords only."
+            )
+            resolved_lat, resolved_lng = lat, lng
+            resolved_country = "us"
+            resolved_city_state = ""
+
     elif ADDRESS and ADDRESS.strip():
-        lat, lng = get_coordinates(ADDRESS)
-        if lat is None or lng is None:
+        logging.debug(f"Geocoding ADDRESS: {ADDRESS}")
+        resolved_lat, resolved_lng, resolved_country, resolved_city_state = get_coordinates(
+            ADDRESS, VERSION
+        )
+        if resolved_lat is None or resolved_lng is None:
             logging.error("Failed to retrieve valid coordinates from ADDRESS.")
             return None
-        # Convert to floats
-        try:
-            LATITUDE, LONGITUDE = float(lat), float(lng)
-            logging.debug(f"Coordinates obtained from ADDRESS: {LATITUDE}, {LONGITUDE}")
-        except (ValueError, TypeError) as e:
-            logging.error(f"Invalid geocoded LATITUDE/LONGITUDE. Error: {e}")
-            return None
     else:
-        # If neither manual lat/long nor valid ADDRESS is provided, fail
         logging.error("No valid ADDRESS or manual LATITUDE/LONGITUDE provided.")
         return None
 
-    # Now, attempt city_state lookup
-    city_state_str = get_city_state(LATITUDE, LONGITUDE) or ""
+    LATITUDE = resolved_lat
+    LONGITUDE = resolved_lng
+    country_code = resolved_country
+    city_state_str = resolved_city_state
 
-    # Save to cache
-    save_location_cache(LATITUDE, LONGITUDE, city_state_str)
+    save_location_cache(LATITUDE, LONGITUDE, country_code, city_state_str)
     return {
         "latitude": LATITUDE,
         "longitude": LONGITUDE,
-        "city_state": city_state_str
+        "country_code": country_code,
+        "city_state": city_state_str,
     }
+
 
 def change_logging_level():
     if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
         raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
     logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
     logging.getLogger().setLevel(getattr(logging, LOGGING_LEVEL))
-    app.logger.removeHandler(default_handler)  # Remove default handler
-    app.logger.addHandler(logging.StreamHandler())  # Add new handler if needed
+    app.logger.removeHandler(default_handler)
+    app.logger.addHandler(logging.StreamHandler())
     app.logger.setLevel(getattr(logging, LOGGING_LEVEL))
     logging.info(f"Logging level changed to: {LOGGING_LEVEL}")
+
 
 def get_weather():
     if WEATHER in ["True", "true", True]:
         weather = get_forecast(
-            LATITUDE, LONGITUDE, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone
+            LATITUDE, LONGITUDE, country_code, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone
         )
         logging.debug("Weather data obtained.")
         logging.debug(f"Weather data: {weather}")
         return weather
     return ""
+
 
 def get_todo():
     if TODOIST_API_KEY or VIKUNJA_API_KEY:
@@ -342,6 +355,7 @@ def get_todo():
     logging.warning("Todo content is None or empty.")
     return ""
 
+
 def get_rss_feed():
     if RSS_LINKS:
         rss = get_rss(RSS_LINKS, timezone, TIME_SYSTEM)
@@ -350,6 +364,7 @@ def get_rss_feed():
     logging.warning("RSS content is None or empty.")
     return ""
 
+
 def get_quote_of_the_day():
     if QOTD and QOTD in ["True", "true", True]:
         quote = get_qotd()
@@ -357,12 +372,14 @@ def get_quote_of_the_day():
         return quote
     return ""
 
+
 def get_word_of_the_day():
     if WOTD and WOTD in ["True", "true", True]:
         wotd = get_wotd()
         logging.debug("Word of the day obtained.")
         return wotd
     return ""
+
 
 def get_puzzles_of_the_day():
     if PUZZLES and PUZZLES in ["True", "true", True]:
@@ -373,46 +390,36 @@ def get_puzzles_of_the_day():
         return puzzles, puzzles_ans
     return "", ""
 
+
 def prepare_send_email():
-    """Function to gather info and send an email."""
+    """Gather all content and send the daily summary email."""
     try:
         logging.debug("prepare_send_email called.")
 
-        # Start data collection
-        logging.debug("Starting data collection for email content...")
-
-        # Get current date string
         date_string = get_current_date_in_timezone(timezone)
         logging.debug("Date string obtained.")
 
-        # Get weather information
         weather_string = get_weather() or ""
         logging.debug("Weather string obtained.")
 
         todo_string = get_todo() or ""
         logging.debug("Todo string obtained.")
 
-        # Get calendar events
         calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
         logging.debug("Calendar events obtained.")
 
         rss_string = get_rss_feed() or ""
         logging.debug("RSS string obtained.")
 
-        # Get Word of the Day
         wotd_string = get_word_of_the_day() or ""
         logging.debug("Word of the Day string obtained.")
 
-        # Get Quote of the Day
         quote_string = get_quote_of_the_day() or ""
         logging.debug("Quote of the Day string obtained.")
 
-        # Get puzzles
         puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
-        logging.debug("Puzzles string obtained.")
-        logging.debug("Puzzles answers string obtained.")
+        logging.debug("Puzzles strings obtained.")
 
-        # Attempt to send the email
         send_email(
             VERSION,
             timezone,
@@ -437,10 +444,9 @@ def prepare_send_email():
         )
 
     except Exception as e:
-        error_message = str(e)
-        traceback_str = traceback.format_exc()
-        logging.critical(f"Error sending email: {error_message}")
-        logging.critical(f"Traceback: {traceback_str}")
+        logging.critical(f"Error sending email: {e}")
+        logging.critical(traceback.format_exc())
+
 
 def scheduled_email_job():
     if not scheduler.running:
@@ -457,81 +463,72 @@ def scheduled_email_job():
         logging.error(f"Unexpected error in scheduled_email_job: {e}")
         logging.error(traceback.format_exc())
 
+
 def reschedule_email_job():
     try:
         scheduler.remove_job("daily_email_job")
         if HOUR and MINUTE:
             scheduler.add_job(
-                scheduled_email_job, 'cron', hour=int(HOUR), minute=int(MINUTE), id='daily_email_job'
+                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job"
             )
-            logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE} for the next day.")
+            logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE}.")
         else:
             scheduler.add_job(
-                scheduled_email_job, 'cron', hour=6, minute=00, id='daily_email_job'
+                scheduled_email_job, "cron", hour=6, minute=0, id="daily_email_job"
             )
-            logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE} for the next day.")
-            logging.warning("HOUR or MINUTE not properly configured, using 0600.")
+            logging.warning("HOUR or MINUTE not properly configured, using 06:00.")
     except Exception as e:
         logging.error(f"Failed to reschedule daily email job: {e}")
 
+
 def format_wait_time(seconds):
-    """Convert seconds into hours, minutes, and seconds for display."""
+    """Convert seconds into a human-readable hours/minutes/seconds string."""
     hours, remainder = divmod(seconds, 3600)
     minutes, seconds = divmod(remainder, 60)
     return f"{int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
+
 
 def get_seconds_until_next_schedule(hour, minute, timezone):
     """Calculate the seconds until the next scheduled time."""
     if isinstance(timezone, str):
         timezone = pytz.timezone(timezone)
-        logging.debug(f"Converted timezone string to pytz timezone object: {timezone}")
     now = datetime.now(timezone).astimezone(timezone)
     next_schedule = now.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-
-    if now > next_schedule:
+    if now >= next_schedule:
         next_schedule += timedelta(days=1)
-
-    logging.debug(f"Current time: {now}")
-    logging.debug(f"Next scheduled time: {next_schedule}")
-
+    logging.debug(f"Current time: {now}, Next scheduled time: {next_schedule}")
     return (next_schedule - now).seconds
 
-# Configuration file paths
+
+# ---------------------------------------------------------------------------
+# App setup
+# ---------------------------------------------------------------------------
+
 CONFIG_FILE_PATH = "./data/config.json"
 CACHE_FILE_PATH = "./cache/location_cache.json"
 
-app = Flask(__name__, template_folder='../templates', static_folder='../static')
+app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
 
-# Load .env variables and version
 load_dotenv()
 
 with open("./version.json", "r") as f:
     VERSION = json.load(f)["version"]
 
-# Get the encryption key from environment variables
 ENCRYPTION_KEY = os.getenv("ENCRYPTION_KEY")
-
 if not ENCRYPTION_KEY:
     raise RuntimeError("Encryption key not found. Please set the ENCRYPTION_KEY environment variable.")
-
 cipher_suite = Fernet(ENCRYPTION_KEY)
 
-# Get the encryption key from environment variables
 PASSWORD = os.getenv("PASSWORD")
-
 if not PASSWORD:
     raise RuntimeError("Password not found. Please set the PASSWORD environment variable.")
-
 hashed_password = generate_password_hash(PASSWORD)
 
-# Initialize and save configuration from environment variables to JSON
 initialize_config()
 
-# Load configuration from JSON
 CONFIG = load_config_from_json()
 
-# Mandatory configuration checks
 REQUIRED_CONFIG_KEYS = [
     "RECIPIENT_EMAIL",
     "RECIPIENT_NAME",
@@ -541,7 +538,6 @@ REQUIRED_CONFIG_KEYS = [
     "SMTP_HOST",
     "SMTP_PORT",
 ]
-
 for key in REQUIRED_CONFIG_KEYS:
     assert CONFIG.get(key), f"{key} is not configured."
 
@@ -574,17 +570,16 @@ HOUR = get_config_value("HOUR")
 MINUTE = get_config_value("MINUTE")
 LOGGING_LEVEL = get_config_value("LOGGING_LEVEL", "INFO").upper()
 
-# Initialize logging
+# Initialize globals that get_weather() depends on so they always exist
+country_code = "us"
+city_state_str = ""
+
 if LOGGING_LEVEL not in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
     raise ValueError(f"Invalid logging level: {LOGGING_LEVEL}")
 logging.basicConfig(level=getattr(logging, LOGGING_LEVEL), force=True)
 logging.info(f"Logging level set to: {LOGGING_LEVEL}")
 
-if not LATITUDE or not LONGITUDE:
-    refresh_location_cache()
-
-# Ensure timezone is correctly loaded and utilized
-global timezone
+# Ensure timezone is correctly loaded
 try:
     if not TIMEZONE:
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
@@ -594,29 +589,26 @@ try:
     logging.info(f"Timezone found: {timezone}.")
 except Exception as e:
     logging.critical(f"Error creating timezone: {e}")
-    exit(1)
+    sys.exit(1)
 
-executors = {
-    'default': ThreadPoolExecutor(max_workers=5)
-}
-
-global scheduler
+executors = {"default": ThreadPoolExecutor(max_workers=5)}
 scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
-    # Check if the user is already logged in
     if session.get("logged_in"):
-        return redirect(url_for("home"))  # Redirect to the main page
-
+        return redirect(url_for("home"))
     if request.method == "POST":
         password = request.form.get("password")
         if check_password_hash(hashed_password, password):
-            session['logged_in'] = True
-            return redirect(url_for("home"))  # Redirect to the main page after successful login
-        else:
-            return render_template("login.html", error="Invalid password")
-
+            session["logged_in"] = True
+            return redirect(url_for("home"))
+        return render_template("login.html", error="Invalid password")
     return render_template("login.html")
 
 
@@ -626,16 +618,17 @@ def login_required(f):
         if not session.get("logged_in"):
             return redirect(url_for("login"))
         return f(*args, **kwargs)
-
     return decorated_function
+
 
 @app.route("/")
 @login_required
 def home():
-    if not session.get("logged_in"):
-        return redirect(url_for("login"))
     current_config = load_config_from_json()
-    return render_template('index.html', logged_in=session.get("logged_in"), app_version=VERSION, config=current_config)
+    return render_template(
+        "index.html", logged_in=session.get("logged_in"), app_version=VERSION, config=current_config
+    )
+
 
 @app.route("/api/config", methods=["GET"])
 @login_required
@@ -646,6 +639,7 @@ def api_get_config():
     except Exception as e:
         logging.error(f"Error retrieving configuration: {e}")
         return jsonify({"error": "Failed to load configuration"}), 500
+
 
 @app.route("/api/save-config", methods=["POST"])
 @login_required
@@ -659,7 +653,8 @@ def api_save_config():
         logging.error(f"Error saving configuration: {e}")
         return jsonify({"message": f"Failed to save configuration: {str(e)}"}), 500
 
-@app.route('/api/send-email', methods=['POST'])
+
+@app.route("/api/send-email", methods=["POST"])
 @login_required
 def manually_send_email():
     try:
@@ -669,6 +664,7 @@ def manually_send_email():
         logging.error(f"Error sending email: {e}")
         return jsonify({"message": f"Failed to send email: {str(e)}"}), 500
 
+
 @app.route("/api/schedule-email", methods=["POST"])
 @login_required
 def schedule_email():
@@ -677,31 +673,40 @@ def schedule_email():
         hour = data.get("hour", 0)
         minute = data.get("minute", 0)
         if scheduler.get_job("daily_email_job"):
-            logging.info("Removing existing job 'daily_email_job'.")
             scheduler.remove_job("daily_email_job")
         scheduler.add_job(
-            scheduled_email_job, 'cron', hour=int(hour), minute=int(minute), id='daily_email_job', timezone=timezone
+            scheduled_email_job,
+            "cron",
+            hour=int(hour),
+            minute=int(minute),
+            id="daily_email_job",
+            timezone=timezone,
         )
         return jsonify({"message": "Email schedule set!"}), 200
     except Exception as e:
-        return jsonify({"message": f"Failed to schedule email. {e}"}), 500
+        return jsonify({"message": f"Failed to schedule email: {e}"}), 500
+
 
 @app.route("/api/interrupt-schedule", methods=["POST"])
 @login_required
 def interrupt_schedule():
     try:
-        scheduler.remove_job('daily_email_job')
+        scheduler.remove_job("daily_email_job")
         return jsonify({"message": "Email schedule interrupted!"}), 200
     except Exception as e:
-        return jsonify({"message": f"Failed to interrupt schedule. {e}"}), 500
+        return jsonify({"message": f"Failed to interrupt schedule: {e}"}), 500
 
 
 @app.route("/logout")
 @login_required
 def logout():
-    session.clear()  # Clear all session data
-    return redirect(url_for("login"))  # Redirect to the login page
+    session.clear()
+    return redirect(url_for("login"))
 
+
+# ---------------------------------------------------------------------------
+# Entry point
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     shutdown_event = threading.Event()
@@ -732,10 +737,12 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
+    # Populate location globals on startup (single Nominatim call)
     location_cache = refresh_location_cache()
     if location_cache:
         LATITUDE = location_cache["latitude"]
         LONGITUDE = location_cache["longitude"]
+        country_code = location_cache["country_code"]
         city_state_str = location_cache["city_state"]
     else:
         logging.warning("Could not refresh location cache on startup.")
@@ -761,14 +768,12 @@ if __name__ == "__main__":
     save_config_to_json(config_data)
 
     if scheduler.get_job("daily_email_job"):
-        logging.info("Removing existing job 'daily_email_job'.")
         scheduler.remove_job("daily_email_job")
 
-    if HOUR is not None and MINUTE is not None:
-        scheduler.add_job(
-            scheduled_email_job, 'cron', hour=HOUR, minute=MINUTE, id='daily_email_job'
-        )
-        logging.info(f"Daily email job scheduled with APScheduler at {HOUR}:{MINUTE}.")
+    scheduler.add_job(
+        scheduled_email_job, "cron", hour=HOUR, minute=MINUTE, id="daily_email_job"
+    )
+    logging.info(f"Daily email job scheduled at {HOUR}:{MINUTE}.")
 
     shutdown_event.wait()
 
