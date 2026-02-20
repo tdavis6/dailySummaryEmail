@@ -13,20 +13,33 @@ def get_vikunja_tasks(VIKUNJA_API_KEY, VIKUNJA_BASE_URL):
 
         tasks = []
         for task in vikunja_data:
-            # Skip completed tasks
             if task.get("done"):
                 continue
 
-            # Prefer full datetime if present, else date-only
             due_raw = task.get("due_datetime") or task.get("due_date") or task.get("dueDate")
-            tasks.append(
-                {
-                    "id": task["id"],
-                    "title": task["title"],
-                    "due_date": due_raw,           # always a string or None
-                    "priority": task.get("priority", 1),
-                }
+
+            project_name = (
+                task.get("project", {}).get("title")
+                or task.get("list", {}).get("title")
+                or "Inbox"
             )
+
+            # bucket = kanban column / section equivalent in Vikunja
+            section_name = (
+                task.get("bucket", {}).get("title")
+                if task.get("bucket")
+                else None
+            )
+
+            full_project_name = f"{project_name} › {section_name}" if section_name else project_name
+
+            tasks.append({
+                "id": task["id"],
+                "title": task["title"],
+                "due_date": due_raw,
+                "priority": task.get("priority", 1),
+                "project_name": full_project_name,
+            })
         return tasks
     except Exception as e:
         logging.critical(f"Error occurred in get_vikunja_tasks: {e}")

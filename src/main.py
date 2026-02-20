@@ -347,13 +347,13 @@ def get_weather():
 
 def get_todo():
     if TODOIST_API_KEY or VIKUNJA_API_KEY:
-        todo = get_todo_tasks(
+        todo_html, todo_plain = get_todo_tasks(
             timezone, TIME_SYSTEM, TODOIST_API_KEY, VIKUNJA_API_KEY, VIKUNJA_BASE_URL
         )
         logging.debug("Todo data obtained.")
-        return todo
+        return todo_html, todo_plain
     logging.warning("Todo content is None or empty.")
-    return ""
+    return "", ""
 
 
 def get_rss_feed():
@@ -402,7 +402,7 @@ def prepare_send_email():
         weather_string = get_weather() or ""
         logging.debug("Weather string obtained.")
 
-        todo_string = get_todo() or ""
+        todo_html_string, todo_plain_string = get_todo()
         logging.debug("Todo string obtained.")
 
         calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
@@ -434,7 +434,8 @@ def prepare_send_email():
             ENABLE_SUMMARY,
             date_string,
             weather_string,
-            todo_string,
+            todo_html_string,
+            todo_plain_string,
             calendar_events,
             rss_string,
             puzzles_string,

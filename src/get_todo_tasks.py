@@ -8,7 +8,7 @@ from get_vikunja_tasks import get_vikunja_tasks
 def format_time(datetime_obj, time_system):
     if time_system.upper() == "12HR":
         return datetime_obj.strftime("%I:%M %p")
-    else:  # default to 24hr
+    else:
         return datetime_obj.strftime("%H:%M")
 
 
@@ -19,43 +19,42 @@ def get_todo_tasks(
         VIKUNJA_API_KEY=None,
         VIKUNJA_BASE_URL=None,
 ):
+    html_text = ""
+    plain_text = ""
 
-    tasks_text = ""
     if TODOIST_API_KEY or VIKUNJA_API_KEY:
-        tasks_text += "\n\n# Tasks"  # Main header
+        html_text += "\n\n# Tasks"
+        plain_text += "\n\n# Tasks"
 
     if TODOIST_API_KEY:
-        # Fetch raw task data from Todoist
         raw_todoist_data = get_todoist_tasks(TODOIST_API_KEY)
-        tasks_text += process_tasks(
-            tasks_text, raw_todoist_data, timezone, TIME_SYSTEM, source="todoist"
-        )
+        h, p = process_tasks(raw_todoist_data, timezone, TIME_SYSTEM, source="todoist")
+        html_text += h
+        plain_text += p
 
     if VIKUNJA_API_KEY and VIKUNJA_BASE_URL:
-        # Fetch raw task data from Vikunja
         raw_vikunja_data = get_vikunja_tasks(VIKUNJA_API_KEY, VIKUNJA_BASE_URL)
-
-        tasks_text += process_tasks(
-            tasks_text,
+        h, p = process_tasks(
             raw_vikunja_data,
             timezone,
             TIME_SYSTEM,
             source="vikunja",
             VIKUNJA_BASE_URL=VIKUNJA_BASE_URL,
         )
+        html_text += h
+        plain_text += p
 
-    logging.debug(tasks_text)
-    return parse_task_sections(tasks_text)
+    logging.debug(html_text)
+    return parse_task_sections(html_text), parse_task_sections(plain_text, plain=True)
 
 
 def process_tasks(
-        tasks_text,
         raw_tasks_data,
         timezone,
         TIME_SYSTEM,
         source="todoist",
         VIKUNJA_BASE_URL=None,
-) -> str:
+):
     tasks = []
 
     for task in raw_tasks_data:
@@ -68,20 +67,18 @@ def process_tasks(
                     if due_dt.tzinfo is None:
                         due_dt = timezone.localize(due_dt)
                     due_dt = due_dt.astimezone(timezone)
-                else:  # plain date object
+                else:
                     due_dt = datetime.datetime.combine(due_val, datetime.time(23, 59, 59))
                     due_dt = timezone.localize(due_dt)
             tasks.append((task, due_dt, task.priority))
 
         elif source.lower() == "vikunja":
-            # Vikunja tasks handling
             due_date = task.get("due_date")
             if due_date:
-                if "T" in due_date:  # Full datetime
+                if "T" in due_date:
                     due_dt = datetime.datetime.fromisoformat(due_date)
-                else:  # Only date part
+                else:
                     due_dt = datetime.datetime.fromisoformat(f"{due_date}T23:59:59")
-
                 if due_dt.tzinfo is None:
                     due_dt = timezone.localize(due_dt)
                 due_dt = due_dt.astimezone(timezone)
@@ -89,19 +86,26 @@ def process_tasks(
             priority = task.get("priority", 5)
             tasks.append((task, due_dt, priority))
 
-    # Sort by due datetime and priority
     tasks.sort(key=lambda x: (x[1] or datetime.datetime.max.replace(tzinfo=timezone), -x[2]))
 
     now = datetime.datetime.now(tz=timezone).date()
 
-    tasks_text = ""
+    html_tasks_text = ""
+    plain_tasks_text = ""
+
     for task, due_dt, priority in tasks:
         if source == "todoist":
-            task_text = f"\n\n - [{task.content}]({task.url})"
+            project_name = getattr(task, "_project_name", "Inbox")
+            html_title = f"[{task.content}]({task.url})"
+            plain_title = f"{task.content} ({task.url})"
         elif source == "vikunja":
-            task_text = (
-                f"\n\n - [{task['title']}]({VIKUNJA_BASE_URL}/tasks/{task['id']})"
-            )
+            project_name = task.get("project_name", "Inbox")
+            url = f"{VIKUNJA_BASE_URL}/tasks/{task['id']}"
+            html_title = f"[{task['title']}]({url})"
+            plain_title = f"{task['title']} ({url})"
+
+        # Build shared metadata parts
+        meta_parts = [project_name]
 
         if due_dt:
             due_local = due_dt.date()
@@ -111,29 +115,32 @@ def process_tasks(
             if is_overdue:
                 if has_explicit_time:
                     due_time = format_time(due_dt, TIME_SYSTEM)
-                    task_text += (
-                        f", overdue, due at {due_time} on {due_dt.strftime('%A, %B %d, %Y')}"
-                    )
+                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%A, %B %d, %Y')} at {due_time}")
                 else:
-                    task_text += f", overdue, due on {due_dt.strftime('%A, %B %d, %Y')}"
+                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%A, %B %d, %Y')}")
             elif has_explicit_time:
                 due_time = format_time(due_dt, TIME_SYSTEM)
-                task_text += f", due at {due_time}"
+                meta_parts.append(f"🕐 Due at {due_time}")
 
-
-        # Include priority only if it's not 4 for Todoist or 0 for Vikunja
-        if source == "todoist" and 5-task.priority != 4:
-            task_text += f", priority {5-task.priority}"
-
+        if source == "todoist" and 5 - task.priority != 4:
+            meta_parts.append(f"Priority {5 - task.priority}")
         if source == "vikunja" and task["priority"] != 0:
-            task_text += f", priority {6-task['priority']}"
+            meta_parts.append(f"Priority {6 - task['priority']}")
 
-        tasks_text += task_text
+        meta_html = (
+            f'<small style="color: #888; font-size: 0.8em; display: block; margin-top: 2px;">'
+            f'{" &nbsp;·&nbsp; ".join(meta_parts)}'
+            f'</small>'
+        )
+        meta_plain = "  " + " · ".join(meta_parts)
 
-    return tasks_text
+        html_tasks_text += f"\n\n - {html_title}<br>{meta_html}"
+        plain_tasks_text += f"\n\n - {plain_title}\n{meta_plain}"
+
+    return html_tasks_text, plain_tasks_text
 
 
-def parse_task_sections(tasks_text):
+def parse_task_sections(tasks_text, plain=False):
     sections = {
         "Overdue": [],
         "Morning": [],
@@ -142,41 +149,38 @@ def parse_task_sections(tasks_text):
         "General": [],
     }
 
-    # Don't include the header if tasks_text is empty or doesn't contain tasks
     task_lines = tasks_text.splitlines()
     output_text = ""
     if any(line.strip() for line in task_lines if line.strip() != "# Tasks"):
         output_text = "# Tasks"
 
     for line in task_lines:
-        line = line.strip()
-        if not line or line == "# Tasks":
+        stripped = line.strip()
+        if not stripped or stripped == "# Tasks":
             continue
 
-        if "overdue" in line or "due on" in line:
-            sections["Overdue"].append(line)
-        elif "due at" in line:
-            time_part = line.split("due at ")[-1].split(",")[0].strip()
+        if "⚠️ Overdue" in line:
+            sections["Overdue"].append(stripped)
+        elif "🕐 Due at" in line:
+            time_part = line.split("🕐 Due at ")[-1].split("&")[0].split("<")[0].strip()
             try:
                 if "AM" in time_part or "PM" in time_part:
-                    # Parse using %I (allowing leading zero or not)
                     due_time = datetime.datetime.strptime(time_part, "%I:%M %p")
-                    # Re‐format with %-I to drop any leading zero
                     formatted = due_time.strftime("%-I:%M %p")
-                    line = line.replace(time_part, formatted)
+                    stripped = line.replace(time_part, formatted).strip()
                 else:
                     due_time = datetime.datetime.strptime(time_part, "%H:%M")
 
                 if due_time.hour < 12:
-                    sections["Morning"].append(line)
+                    sections["Morning"].append(stripped)
                 elif 12 <= due_time.hour < 17:
-                    sections["Afternoon"].append(line)
+                    sections["Afternoon"].append(stripped)
                 else:
-                    sections["Evening"].append(line)
+                    sections["Evening"].append(stripped)
             except ValueError:
-                sections["General"].append(line)
+                sections["General"].append(stripped)
         else:
-            sections["General"].append(line)
+            sections["General"].append(stripped)
 
     for section, tasks in sections.items():
         if tasks:

@@ -55,6 +55,7 @@ def send_email(
         date_string="",
         weather_string="",
         todo_string="",
+        todo_plain_string="",
         cal_string="",
         rss_string="",
         puzzles_string="",
@@ -88,7 +89,15 @@ def send_email(
 
         # Append sections
         if weather_string: text, html_text = append_section(text, html_text, weather_string, "weather")
-        if todo_string: text, html_text = append_section(text, html_text, todo_string, "todo")
+
+        # Todo: plain text and HTML are separate strings
+        if todo_plain_string and todo_plain_string.strip():
+            text += todo_plain_string + "\n\n"
+        if todo_string and todo_string.strip():
+            converted = convert_section(todo_string)
+            if converted:
+                html_text += f"<div class='section todo'>{converted}</div>"
+
         if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
 
         # Get summary
