@@ -141,18 +141,18 @@ def decrypt_data(encrypted_data):
     return cipher_suite.decrypt(encrypted_data.encode()).decode()
 
 def refresh_configuration_variables():
-    """
-    Reload configuration settings, refresh global variables, and handle location/timezone changes.
-    """
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
     global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
     global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
+    global city_state_str
 
     # Keep old values to detect changes
     logging_level_old = LOGGING_LEVEL
-    latitude_old, longitude_old, address_old = float(LATITUDE) if LATITUDE not in [None, ""] else None, float(LONGITUDE) if LONGITUDE not in [None, ""] else None, str(ADDRESS) if ADDRESS not in [None, ""] else ""
+    latitude_old = float(LATITUDE) if LATITUDE not in [None, ""] else None
+    longitude_old = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
+    address_old = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
     hour_old, minute_old = HOUR, MINUTE
 
     # Reload fresh config from JSON
@@ -188,27 +188,32 @@ def refresh_configuration_variables():
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
 
-    logging.debug(
-        f"Latitude old='{latitude_old}' vs. new='{LATITUDE}'\n"
-        f"Longitude old='{longitude_old}' vs. new='{LONGITUDE}'\n"
-        f"Address old='{address_old}' vs. new='{ADDRESS}'"
+    # Determine new lat/long/address as floats/strings for comparison
+    new_lat = float(LATITUDE) if LATITUDE not in [None, ""] else None
+    new_lng = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
+    new_address = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
+
+    location_changed = (
+        new_lat != latitude_old or
+        new_lng != longitude_old or
+        new_address != address_old
     )
 
-    if (LATITUDE is not None and LATITUDE != "" and float(LATITUDE) != latitude_old) or \
-       (LONGITUDE is not None and LONGITUDE != "" and float(LONGITUDE) != longitude_old) or \
-       (ADDRESS is not None and ADDRESS.strip() != address_old.strip()) :
-        logging.debug("Location data changed. Refreshing location cache...")
+    if location_changed:
+        logging.info("Location data changed. Refreshing location cache...")
         location_cache = refresh_location_cache()
 
         if location_cache:
             LATITUDE = location_cache["latitude"]
             LONGITUDE = location_cache["longitude"]
+            city_state_str = location_cache["city_state"]  # FIX: update the global!
             if not ADDRESS or not ADDRESS.strip():
                 ADDRESS = location_cache["city_state"]
         else:
-            # fallback
+            logging.warning("Location cache refresh failed, reverting to old coordinates.")
             LATITUDE, LONGITUDE = latitude_old, longitude_old
 
+        # Re-derive timezone when location changes
         try:
             if not TIMEZONE or not TIMEZONE.strip():
                 if LATITUDE and LONGITUDE:
@@ -222,12 +227,10 @@ def refresh_configuration_variables():
             logging.critical(f"Error validating TIMEZONE: {e}")
             timezone = None
 
-    # Update logging level if changed
     if LOGGING_LEVEL != logging_level_old:
         change_logging_level()
 
-    # If the schedule time changed, reschedule the daily email job
-    if (float(hour_old) != float(HOUR)) or (float(minute_old) != float(MINUTE)):
+    if HOUR and MINUTE and (str(hour_old) != str(HOUR) or str(minute_old) != str(MINUTE)):
         reschedule_email_job()
 
     logging.info("Configuration refreshed successfully.")
@@ -724,9 +727,13 @@ if __name__ == "__main__":
     flask_thread = threading.Thread(target=run_flask)
     flask_thread.start()
 
-    LATITUDE, LONGITUDE, city_state_str = load_location_cache()
-    if not LATITUDE or not LONGITUDE or not city_state_str:
-        refresh_location_cache()
+    location_cache = refresh_location_cache()
+    if location_cache:
+        LATITUDE = location_cache["latitude"]
+        LONGITUDE = location_cache["longitude"]
+        city_state_str = location_cache["city_state"]
+    else:
+        logging.warning("Could not refresh location cache on startup.")
 
     logging.info(f"Running version {VERSION}")
 
