@@ -704,11 +704,13 @@ def logout():
 
 
 if __name__ == "__main__":
+    shutdown_event = threading.Event()
+    _waitress_server = None
+
     def handle_shutdown_signal(signum, frame):
-        logging.info("Shutdown signal received, shutting down scheduler...")
-        scheduler.shutdown(wait=True)
-        logging.info("Scheduler shutdown complete.")
-        sys.exit(0)
+        sig_name = signal.Signals(signum).name
+        logging.info(f"Received {sig_name}. Initiating graceful shutdown...")
+        shutdown_event.set()
 
     signal.signal(signal.SIGTERM, handle_shutdown_signal)
     signal.signal(signal.SIGINT, handle_shutdown_signal)
@@ -717,14 +719,17 @@ if __name__ == "__main__":
     logging.info("Scheduler started.")
 
     def run_flask():
+        global _waitress_server
         SECRET_KEY = os.getenv("SECRET_KEY")
         if not SECRET_KEY:
             raise RuntimeError("SECRET_KEY not found. Please set the SECRET_KEY environment variable.")
         app.secret_key = SECRET_KEY
-        waitress.serve(app, host="0.0.0.0", port=8080)
+        from waitress.server import create_server
+        _waitress_server = create_server(app, host="0.0.0.0", port=8080)
+        logging.info("Waitress server started on port 8080.")
+        _waitress_server.run()
 
-
-    flask_thread = threading.Thread(target=run_flask)
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
     flask_thread.start()
 
     location_cache = refresh_location_cache()
@@ -755,22 +760,29 @@ if __name__ == "__main__":
 
     save_config_to_json(config_data)
 
-    # Remove existing job if any before scheduling
     if scheduler.get_job("daily_email_job"):
         logging.info("Removing existing job 'daily_email_job'.")
         scheduler.remove_job("daily_email_job")
 
-    # Schedule the email job with APScheduler if HOUR and MINUTE are set
     if HOUR is not None and MINUTE is not None:
         scheduler.add_job(
             scheduled_email_job, 'cron', hour=HOUR, minute=MINUTE, id='daily_email_job'
         )
         logging.info(f"Daily email job scheduled with APScheduler at {HOUR}:{MINUTE}.")
 
-    try:
-        while True:
-            time.sleep(1)
-    except (KeyboardInterrupt, SystemExit):
-        logging.info("Application shutting down...")
-        scheduler.shutdown(wait=True)
-        logging.info("Scheduler shutdown complete. Exiting.")
+    shutdown_event.wait()
+
+    logging.info("Shutting down scheduler...")
+    scheduler.shutdown(wait=False)
+    logging.info("Scheduler shut down.")
+
+    if _waitress_server is not None:
+        logging.info("Closing Waitress server...")
+        _waitress_server.close()
+
+    flask_thread.join(timeout=5)
+    if flask_thread.is_alive():
+        logging.warning("Flask thread did not exit cleanly within timeout.")
+
+    logging.info("Shutdown complete. Goodbye.")
+    sys.exit(0)
