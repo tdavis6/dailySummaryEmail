@@ -1,18 +1,22 @@
-# Use a lightweight Python base image
 FROM python:3.14-slim@sha256:486b8092bfb12997e10d4920897213a06563449c951c5506c2a2cfaf591c599f
 
-# Set working directory inside the container
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
 WORKDIR /app
 
-# Install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+COPY requirements.txt ./
+RUN pip install --no-cache-dir --no-compile --prefer-binary -r requirements.txt \
+    && find /usr/local -type d \( -name "__pycache__" -o -name "tests" -o -name "test" \) -prune -exec rm -rf '{}' + \
+    && find /usr/local -type f \( -name "*.pyc" -o -name "*.pyo" -o -name "*.a" \) -delete
 
-# Copy the application code into the container
-COPY . .
+COPY src ./src
+COPY templates ./templates
+COPY static ./static
+COPY version.json ./version.json
 
-# Expose the port Flask or Waitress will use
 EXPOSE 8080
 
-# Command to start the app
 CMD ["python", "src/main.py"]
