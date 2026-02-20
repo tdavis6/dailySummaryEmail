@@ -260,8 +260,8 @@ def send_email(
                 {html_content}
                 <div class="footer">
                     <p style="font-size: 14px; color: inherit;">
-                        View the project on 
-                        <a href="https://github.com/tdavis6/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">GitHub</a>
+                        View the project here:  
+                        <a href="https://git.tylerdavis.net/tyler/dailySummaryEmail" target="_blank" style="color: inherit; text-decoration: underline;">Forgejo</a>
                     </p>
                     <p style="font-size: 12px; color: inherit;">
                         📋 Version: {version} | Sent at: {current_datetime}
