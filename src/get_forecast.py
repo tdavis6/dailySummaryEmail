@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from email.utils import parsedate_to_datetime
@@ -50,6 +51,30 @@ _METEOALARM_SLUGS = {
     "ua": "ukraine",
     "gb": "united-kingdom",
 }
+
+_HTTP_TIMEOUT_SECONDS = 10
+_HTTP_RETRY_DELAY_SECONDS = 30
+
+
+def _get_with_timeout_retry(
+    url, headers=None, timeout=_HTTP_TIMEOUT_SECONDS, retry_delay=_HTTP_RETRY_DELAY_SECONDS
+):
+    """
+    Run an HTTP GET with timeout handling that mirrors get_coordinates:
+    retry on transient timeout/unavailability, fail fast on other request errors.
+    """
+    while True:
+        try:
+            response = requests.get(url, headers=headers, timeout=timeout)
+            response.raise_for_status()
+            return response
+        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+            logging.warning(
+                f"Request timed out or service unavailable for '{url}'. "
+                f"Retrying in {retry_delay} seconds... ({e})"
+            )
+            time.sleep(retry_delay)
+            continue
 
 
 def _fmt_timestamp(ts, time_system, timezone):
@@ -102,8 +127,7 @@ def _fetch_alerts_us(latitude, longitude, time_system, timezone, version):
         "Accept": "application/geo+json",
     }
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.raise_for_status()
+        resp = _get_with_timeout_retry(url, headers=headers)
         data = resp.json()
     except requests.RequestException as e:
         logging.warning(f"Failed to fetch NWS alerts: {e}")
@@ -167,8 +191,7 @@ def _fetch_alerts_meteoalarm(country_code, city_state_str, time_system, timezone
     url = f"https://feeds.meteoalarm.org/feeds/meteoalarm-legacy-rss-{slug}"
     headers = {"User-Agent": f"dailySummaryEmail/{version}"}
     try:
-        resp = requests.get(url, headers=headers, timeout=10)
-        resp.raise_for_status()
+        resp = _get_with_timeout_retry(url, headers=headers)
         root = ET.fromstring(resp.content)
     except requests.RequestException as e:
         logging.warning(f"Failed to fetch MeteoAlarm feed for '{slug}': {e}")
@@ -316,8 +339,7 @@ def get_forecast(
     )
 
     try:
-        response = requests.get(weather_url, timeout=10)
-        response.raise_for_status()
+        response = _get_with_timeout_retry(weather_url)
         forecast_data = response.json()
     except requests.RequestException as e:
         logging.error(f"Failed to retrieve forecast data: {e}")
@@ -337,8 +359,7 @@ def get_forecast(
 
     aqi_data = {}
     try:
-        aqi_response = requests.get(aqi_url, timeout=10)
-        aqi_response.raise_for_status()
+        aqi_response = _get_with_timeout_retry(aqi_url)
         aqi_data = aqi_response.json()
     except requests.RequestException as e:
         logging.warning(f"Failed to retrieve AQI data: {e}")
