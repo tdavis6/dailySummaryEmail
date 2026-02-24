@@ -20,54 +20,88 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
-        with:
-          driver: docker
-
-      - name: Extract version from version.json
-        id: get_version
+      - name: Preflight release rules
+        id: preflight
         run: |
           VERSION=$(jq -r '.version' version.json)
           DOCKER_TAG="${VERSION/v/}"
           DOCKER_TAG="${DOCKER_TAG/+/-}"
           FORGEJO_REPO=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          echo "version=$VERSION" >> $GITHUB_ENV
-          echo "docker_tag=$DOCKER_TAG" >> $GITHUB_ENV
-          echo "forgejo_repo=$FORGEJO_REPO" >> $GITHUB_ENV
+          BRANCH="${{ github.ref_name }}"
 
-      - name: Determine if Pre-release and Type
-        id: prerelease_check
-        run: |
-          if [[ "${{ env.version }}" == *"-alpha"* ]]; then
-            echo "pre_release=true" >> $GITHUB_ENV
-            echo "pre_release_type=alpha" >> $GITHUB_ENV
-          elif [[ "${{ env.version }}" == *"-beta"* ]]; then
-            echo "pre_release=true" >> $GITHUB_ENV
-            echo "pre_release_type=beta" >> $GITHUB_ENV
-          elif [[ "${{ env.version }}" == *"-rc"* ]]; then
-            echo "pre_release=true" >> $GITHUB_ENV
-            echo "pre_release_type=rc" >> $GITHUB_ENV
-          elif [[ "${{ env.version }}" =~ ^v0\..* ]]; then
-            echo "pre_release=true" >> $GITHUB_ENV
-            echo "pre_release_type=dev" >> $GITHUB_ENV
+          PRE_RELEASE=false
+          PRE_RELEASE_TYPE=""
+
+          if [[ "$VERSION" == *"-alpha"* ]]; then
+            PRE_RELEASE=true
+            PRE_RELEASE_TYPE=alpha
+          elif [[ "$VERSION" == *"-beta"* ]]; then
+            PRE_RELEASE=true
+            PRE_RELEASE_TYPE=beta
+          elif [[ "$VERSION" == *"-rc"* ]]; then
+            PRE_RELEASE=true
+            PRE_RELEASE_TYPE=rc
+          elif [[ "$VERSION" =~ ^v0\..* ]]; then
+            PRE_RELEASE=true
+            PRE_RELEASE_TYPE=dev
+          fi
+
+          SHOULD_RELEASE=true
+          SKIP_REASON=""
+
+          if [[ "$BRANCH" == "develop" ]]; then
+            git fetch origin main --depth=1
+            MAIN_VERSION=$(git show origin/main:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
+
+            if [[ -n "$MAIN_VERSION" && "$VERSION" == "$MAIN_VERSION" ]]; then
+              SHOULD_RELEASE=false
+              SKIP_REASON="Skipping release: version.json matches main ($VERSION)."
+            elif [[ "$PRE_RELEASE" != true ]]; then
+              SHOULD_RELEASE=false
+              SKIP_REASON="Skipping release: stable versions are not published from develop."
+            fi
+          elif [[ "$BRANCH" == "main" ]]; then
+            if [[ "$PRE_RELEASE" == true ]]; then
+              SHOULD_RELEASE=false
+              SKIP_REASON="Skipping release: pre-release versions are not published from main."
+            fi
           else
-            echo "pre_release=false" >> $GITHUB_ENV
-            echo "pre_release_type=" >> $GITHUB_ENV
+            SHOULD_RELEASE=false
+            SKIP_REASON="Skipping release: unsupported branch '$BRANCH'."
           fi
 
-      - name: Enforce branch/release type rules
-        run: |
-          if [[ "${{ github.ref_name }}" == "dev" && "${{ env.pre_release }}" == "false" ]]; then
-            echo "ERROR: Stable releases cannot be made from the dev branch."
-            exit 1
+          echo "should_release=$SHOULD_RELEASE" >> "$GITHUB_OUTPUT"
+          echo "skip_reason=$SKIP_REASON" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "docker_tag=$DOCKER_TAG" >> "$GITHUB_OUTPUT"
+          echo "forgejo_repo=$FORGEJO_REPO" >> "$GITHUB_OUTPUT"
+          echo "pre_release=$PRE_RELEASE" >> "$GITHUB_OUTPUT"
+          echo "pre_release_type=$PRE_RELEASE_TYPE" >> "$GITHUB_OUTPUT"
+
+          echo "version=$VERSION" >> "$GITHUB_ENV"
+          echo "docker_tag=$DOCKER_TAG" >> "$GITHUB_ENV"
+          echo "forgejo_repo=$FORGEJO_REPO" >> "$GITHUB_ENV"
+          echo "pre_release=$PRE_RELEASE" >> "$GITHUB_ENV"
+          echo "pre_release_type=$PRE_RELEASE_TYPE" >> "$GITHUB_ENV"
+
+          if [[ "$SHOULD_RELEASE" == false ]]; then
+            echo "$SKIP_REASON"
+          else
+            echo "Release enabled for $BRANCH with version $VERSION"
           fi
-          if [[ "${{ github.ref_name }}" == "main" && "${{ env.pre_release }}" == "true" ]]; then
-            echo "ERROR: Pre-release versions cannot be released from the main branch."
-            exit 1
-          fi
+
+      - name: Explain why release was skipped
+        if: steps.preflight.outputs.should_release != 'true'
+        run: echo "${{ steps.preflight.outputs.skip_reason }}"
+
+      - name: Set up Docker Buildx
+        if: steps.preflight.outputs.should_release == 'true'
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
+        with:
+          driver: docker
 
       - name: Get All Relevant Commit Messages for Release Notes
+        if: steps.preflight.outputs.should_release == 'true'
         id: commit_messages
         run: |
           LAST_STABLE_TAG=$(git tag -l | grep -E '^v[0-9]+(\.[0-9]+)*$' | sort -V | tail -1)
@@ -75,6 +109,7 @@ jobs:
           git log "$LAST_STABLE_TAG"..HEAD --pretty=format:"* %h: %s (by %an)" | sed 's/[$&`"'\''\\\/]/\\&/g' | sed ':a;N;$!ba;s/\n/#NEWLINE#/g' > sanitized_commits.txt
 
       - name: Prepare Release Notes
+        if: steps.preflight.outputs.should_release == 'true'
         run: |
           SANITIZED_COMMITS=$(< sanitized_commits.txt)
           SANITIZED_COMMITS_WITH_NEWLINES=$(echo "$SANITIZED_COMMITS" | sed 's/#NEWLINE#/\n/g')
@@ -86,6 +121,7 @@ jobs:
           } > release_body.txt
 
       - name: Create Forgejo Release
+        if: steps.preflight.outputs.should_release == 'true'
         run: |
           BODY=$(cat release_body.txt)
           PRE_RELEASE=${{ env.pre_release }}
@@ -101,6 +137,7 @@ jobs:
             }"
 
       - name: Login to GitHub Container Registry
+        if: steps.preflight.outputs.should_release == 'true'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ghcr.io
@@ -108,6 +145,7 @@ jobs:
           password: ${{ secrets.GH_PAT }}
 
       - name: Login to Forgejo Container Registry
+        if: steps.preflight.outputs.should_release == 'true'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ secrets.FORGEJO_REGISTRY }}
@@ -115,7 +153,7 @@ jobs:
           password: ${{ secrets.FORGEJO_TOKEN }}
 
       - name: Build Docker Image (Pre-release)
-        if: env.pre_release == 'true'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'true'
         run: |
           docker build \
             -t ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} \
@@ -125,7 +163,7 @@ jobs:
             .
 
       - name: Build Docker Image (Stable)
-        if: env.pre_release == 'false'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'false'
         run: |
           docker build \
             -t ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }} \
@@ -135,25 +173,25 @@ jobs:
             .
 
       - name: Push to GitHub Container Registry (Pre-release)
-        if: env.pre_release == 'true'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'true'
         run: |
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest-dev
 
       - name: Push to GitHub Container Registry (Stable)
-        if: env.pre_release == 'false'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'false'
         run: |
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:${{ env.docker_tag }}
           docker push ghcr.io/${{ secrets.GHCR_REPO }}:latest
 
       - name: Push to Forgejo Container Registry (Pre-release)
-        if: env.pre_release == 'true'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'true'
         run: |
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }}
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest-dev
 
       - name: Push to Forgejo Container Registry (Stable)
-        if: env.pre_release == 'false'
+        if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'false'
         run: |
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:${{ env.docker_tag }}
           docker push ${{ secrets.FORGEJO_REGISTRY }}/${{ env.forgejo_repo }}:latest
