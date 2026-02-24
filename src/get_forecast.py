@@ -54,6 +54,7 @@ _METEOALARM_SLUGS = {
 
 _HTTP_TIMEOUT_SECONDS = 10
 _HTTP_RETRY_DELAY_SECONDS = 30
+_TRANSIENT_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
 def _get_with_timeout_retry(
@@ -61,13 +62,24 @@ def _get_with_timeout_retry(
 ):
     """
     Run an HTTP GET with timeout handling that mirrors get_coordinates:
-    retry on transient timeout/unavailability, fail fast on other request errors.
+    retry on transient timeout/unavailability (timeouts, connection errors, and
+    408/429/5xx responses), fail fast on other request errors.
     """
     while True:
         try:
             response = requests.get(url, headers=headers, timeout=timeout)
             response.raise_for_status()
             return response
+        except requests.exceptions.HTTPError as e:
+            status_code = e.response.status_code if e.response else None
+            if status_code in _TRANSIENT_HTTP_STATUS_CODES:
+                logging.warning(
+                    f"Transient HTTP {status_code} for '{url}'. "
+                    f"Retrying in {retry_delay} seconds... ({e})"
+                )
+                time.sleep(retry_delay)
+                continue
+            raise
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
             logging.warning(
                 f"Request timed out or service unavailable for '{url}'. "
