@@ -27,6 +27,8 @@ Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.examp
 
 The package tagged `latest` contains the latest stable release, while the package tagged `latest-dev` contains the latest development release, ignoring all stable releases.
 
+The branch `stable` is the stable branch, while all development occurs on `dev`. Therefore, `dev` is considered the default branch.
+
 ## Environment Variables
 See .env.example for an example .env file.
 
