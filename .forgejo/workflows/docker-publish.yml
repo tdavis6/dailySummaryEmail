@@ -3,7 +3,7 @@ name: Package releases
 on:
   push:
     branches:
-      - main
+      - stable
       - develop
     paths:
       - version.json
@@ -50,20 +50,20 @@ jobs:
           SKIP_REASON=""
 
           if [[ "$BRANCH" == "develop" ]]; then
-            git fetch origin main --depth=1
-            MAIN_VERSION=$(git show origin/main:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
+            git fetch origin stable --depth=1
+            STABLE=$(git show origin/stable:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
 
-            if [[ -n "$MAIN_VERSION" && "$VERSION" == "$MAIN_VERSION" ]]; then
+            if [[ -n "$STABLE_VERSION" && "$VERSION" == "$STABLE_VERSION" ]]; then
               SHOULD_RELEASE=false
-              SKIP_REASON="Skipping release: version.json matches main ($VERSION)."
+              SKIP_REASON="Skipping release: version.json matches stable ($VERSION)."
             elif [[ "$PRE_RELEASE" != true ]]; then
               SHOULD_RELEASE=false
               SKIP_REASON="Skipping release: stable versions are not published from develop."
             fi
-          elif [[ "$BRANCH" == "main" ]]; then
+          elif [[ "$BRANCH" == "stable" ]]; then
             if [[ "$PRE_RELEASE" == true ]]; then
               SHOULD_RELEASE=false
-              SKIP_REASON="Skipping release: pre-release versions are not published from main."
+              SKIP_REASON="Skipping release: pre-release versions are not published from stable."
             fi
           else
             SHOULD_RELEASE=false
