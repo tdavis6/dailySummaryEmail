@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - stable
-      - develop
+      - dev
     paths:
       - version.json
 
@@ -49,7 +49,7 @@ jobs:
           SHOULD_RELEASE=true
           SKIP_REASON=""
 
-          if [[ "$BRANCH" == "develop" ]]; then
+          if [[ "$BRANCH" == "dev" ]]; then
             git fetch origin stable --depth=1
             STABLE=$(git show origin/stable:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
 
@@ -58,7 +58,7 @@ jobs:
               SKIP_REASON="Skipping release: version.json matches stable ($VERSION)."
             elif [[ "$PRE_RELEASE" != true ]]; then
               SHOULD_RELEASE=false
-              SKIP_REASON="Skipping release: stable versions are not published from develop."
+              SKIP_REASON="Skipping release: stable versions are not published from dev."
             fi
           elif [[ "$BRANCH" == "stable" ]]; then
             if [[ "$PRE_RELEASE" == true ]]; then
