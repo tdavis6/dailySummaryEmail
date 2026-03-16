@@ -53,19 +53,46 @@ _METEOALARM_SLUGS = {
 }
 
 _HTTP_TIMEOUT_SECONDS = 10
-_HTTP_RETRY_DELAY_SECONDS = 30
+_HTTP_INITIAL_RETRY_DELAY_SECONDS = 10
+_HTTP_MAX_RETRY_DELAY_SECONDS = 60
+_HTTP_MAX_ELAPSED_SECONDS = 300  # give up after 5 minutes total
 _TRANSIENT_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
 def _get_with_timeout_retry(
-    url, headers=None, timeout=_HTTP_TIMEOUT_SECONDS, retry_delay=_HTTP_RETRY_DELAY_SECONDS
+    url,
+    headers=None,
+    timeout=_HTTP_TIMEOUT_SECONDS,
+    initial_retry_delay=_HTTP_INITIAL_RETRY_DELAY_SECONDS,
+    max_retry_delay=_HTTP_MAX_RETRY_DELAY_SECONDS,
+    max_elapsed_seconds=_HTTP_MAX_ELAPSED_SECONDS,
 ):
     """
-    Run an HTTP GET with timeout handling that mirrors get_coordinates:
-    retry on transient timeout/unavailability (timeouts, connection errors, and
-    408/429/5xx responses), fail fast on other request errors.
+    Run an HTTP GET with exponential backoff + jitter on transient failures.
+
+    Retries on timeouts, connection errors, and 408/429/5xx responses.
+    Fails fast on non-transient HTTP errors (e.g. 400, 404).
+
+    The delay sequence starts at `initial_retry_delay`, doubles each attempt,
+    caps at `max_retry_delay`, and adds ±20 % jitter to spread concurrent
+    callers.  Gives up entirely once `max_elapsed_seconds` have passed since
+    the first attempt.
     """
+    import random
+
+    start_time = time.monotonic()
+    delay = initial_retry_delay
+    last_exc = None
+
     while True:
+        elapsed = time.monotonic() - start_time
+        if last_exc is not None and elapsed >= max_elapsed_seconds:
+            logging.error(
+                f"Giving up on '{url}' after {elapsed:.0f}s ({max_elapsed_seconds}s limit). "
+                f"Last error: {last_exc}"
+            )
+            raise last_exc
+
         try:
             response = requests.get(url, headers=headers, timeout=timeout)
             response.raise_for_status()
@@ -73,20 +100,33 @@ def _get_with_timeout_retry(
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code if e.response else None
             if status_code in _TRANSIENT_HTTP_STATUS_CODES:
-                logging.warning(
-                    f"Transient HTTP {status_code} for '{url}'. "
-                    f"Retrying in {retry_delay} seconds... ({e})"
-                )
-                time.sleep(retry_delay)
-                continue
-            raise
+                last_exc = e
+            else:
+                raise
         except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
-            logging.warning(
-                f"Request timed out or service unavailable for '{url}'. "
-                f"Retrying in {retry_delay} seconds... ({e})"
+            last_exc = e
+
+        # Jitter: ±20 % of current delay
+        jitter = delay * 0.2 * (2 * random.random() - 1)
+        sleep_time = min(delay + jitter, max_retry_delay)
+
+        # Don't sleep past the overall deadline
+        remaining = max_elapsed_seconds - (time.monotonic() - start_time)
+        sleep_time = min(sleep_time, remaining)
+        if sleep_time <= 0:
+            logging.error(
+                f"Giving up on '{url}' after {time.monotonic() - start_time:.0f}s "
+                f"({max_elapsed_seconds}s limit). Last error: {last_exc}"
             )
-            time.sleep(retry_delay)
-            continue
+            raise last_exc
+
+        logging.warning(
+            f"Transient error for '{url}'. "
+            f"Retrying in {sleep_time:.1f}s (elapsed {time.monotonic() - start_time:.0f}s / "
+            f"{max_elapsed_seconds}s). Last error: {last_exc}"
+        )
+        time.sleep(sleep_time)
+        delay = min(delay * 2, max_retry_delay)
 
 
 def _fmt_timestamp(ts, time_system, timezone):
