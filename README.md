@@ -38,7 +38,8 @@ See .env.example for an example .env file.
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com)
 - SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) [Currently only 465 is supported]
 - OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email.
-- ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to true)
+- ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to True)
+- ENABLE_EMOJIS: True of False. Toggle for if the summary should have emojis interpolated within it. (defaults to False)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (defaults to 24HR)
 - LATITUDE: The latitude you wish to use for the weather and timezone.

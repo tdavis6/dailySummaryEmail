@@ -52,6 +52,7 @@ def send_email(
         smtp_port,
         openai_api_key="",
         enable_summary="",
+        enable_emjois="",
         date_string="",
         weather_string="",
         todo_string="",
@@ -104,7 +105,8 @@ def send_email(
         if openai_api_key is not None and enable_summary in ["True", "true", True]:
             summary = generate_summary(text, openai_api_key)
             if summary is None: summary = "Error generating summary."
-            summary = add_emojis(summary)
+            summary = add_emojis(summary) if enable_emjois in ["True", "true", True] else summary
+            logging.debug(f"enable_emojis is set to {enable_emjois}")
             logging.debug("Summary obtained")
 
             text = (summary + text) if summary else text
