@@ -16,7 +16,5 @@
   ],
   "ignorePaths": [
     "docker-compose.yml"
-  ],
-  "osvVulnerabilityAlerts": true,
-  "dependencyDashboardOSVVulnerabilitySummary": true
+  ]
 }
