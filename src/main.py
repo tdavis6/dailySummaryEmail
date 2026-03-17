@@ -112,6 +112,7 @@ def initialize_config():
         "HOUR",
         "MINUTE",
         "LOGGING_LEVEL",
+        "DISABLE_SCHEDULE",
     ]
 
     existing_config = load_config_from_json()
@@ -143,7 +144,7 @@ def refresh_configuration_variables():
     global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, ENABLE_EMOJIS, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
     global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
-    global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler
+    global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler, DISABLE_SCHEDULE
     global city_state_str, country_code
 
     # Keep old values to detect changes
@@ -152,6 +153,7 @@ def refresh_configuration_variables():
     longitude_old = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
     address_old = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
     hour_old, minute_old = HOUR, MINUTE
+    disable_schedule_old = DISABLE_SCHEDULE
 
     config = load_config_from_json()
 
@@ -184,6 +186,7 @@ def refresh_configuration_variables():
     HOUR = config.get("HOUR")
     MINUTE = config.get("MINUTE")
     LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
+    DISABLE_SCHEDULE = config.get("DISABLE_SCHEDULE", "False")
 
     new_lat = float(LATITUDE) if LATITUDE not in [None, ""] else None
     new_lng = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
@@ -227,7 +230,14 @@ def refresh_configuration_variables():
     if LOGGING_LEVEL != logging_level_old:
         change_logging_level()
 
-    if HOUR and MINUTE and (str(hour_old) != str(HOUR) or str(minute_old) != str(MINUTE)):
+    if str(disable_schedule_old) != str(DISABLE_SCHEDULE):
+        if DISABLE_SCHEDULE in ["True", "true", True]:
+            if scheduler.get_job("daily_email_job"):
+                scheduler.remove_job("daily_email_job")
+            logging.info("Scheduling disabled.")
+        else:
+            reschedule_email_job()
+    elif HOUR and MINUTE and (str(hour_old) != str(HOUR) or str(minute_old) != str(MINUTE)):
         reschedule_email_job()
 
     logging.info("Configuration refreshed successfully.")
@@ -469,6 +479,9 @@ def scheduled_email_job():
 
 
 def reschedule_email_job():
+    if DISABLE_SCHEDULE in ["True", "true", True]:
+        logging.info("Scheduling is disabled. Skipping reschedule.")
+        return
     try:
         scheduler.remove_job("daily_email_job")
         if HOUR and MINUTE:
@@ -574,6 +587,9 @@ TIMEZONE = get_config_value("TIMEZONE", None)
 HOUR = get_config_value("HOUR")
 MINUTE = get_config_value("MINUTE")
 LOGGING_LEVEL = get_config_value("LOGGING_LEVEL", "INFO").upper()
+DISABLE_SCHEDULE = get_config_value("DISABLE_SCHEDULE", "False")
+
+API_TOKEN = os.getenv("API_TOKEN")
 
 # Initialize globals that get_weather() depends on so they always exist
 country_code = "us"
@@ -702,6 +718,32 @@ def interrupt_schedule():
         return jsonify({"message": f"Failed to interrupt schedule: {e}"}), 500
 
 
+def api_key_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not API_TOKEN:
+            return jsonify({"error": "API trigger is not enabled. Set the API_TOKEN environment variable."}), 403
+        auth_header = request.headers.get("Authorization", "")
+        if not auth_header.startswith("Bearer "):
+            return jsonify({"error": "Missing or malformed Authorization header. Expected: Bearer <token>"}), 401
+        token = auth_header.split(" ", 1)[1]
+        if token != API_TOKEN:
+            return jsonify({"error": "Invalid API token."}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+@app.route("/api/trigger-email", methods=["POST"])
+@api_key_required
+def trigger_email_via_api():
+    try:
+        prepare_send_email()
+        return jsonify({"message": "Email triggered successfully!"}), 200
+    except Exception as e:
+        logging.error(f"Error triggering email via API: {e}")
+        return jsonify({"message": f"Failed to trigger email: {str(e)}"}), 500
+
+
 @app.route("/logout")
 @login_required
 def logout():
@@ -775,10 +817,14 @@ if __name__ == "__main__":
     if scheduler.get_job("daily_email_job"):
         scheduler.remove_job("daily_email_job")
 
-    scheduler.add_job(
-        scheduled_email_job, "cron", hour=HOUR, minute=MINUTE, id="daily_email_job"
-    )
-    logging.info(f"Daily email job scheduled at {HOUR}:{MINUTE}.")
+    DISABLE_SCHEDULE = config_data.get("DISABLE_SCHEDULE", "False")
+    if DISABLE_SCHEDULE in ["True", "true", True]:
+        logging.info("Scheduling is disabled (DISABLE_SCHEDULE=True). Skipping job creation.")
+    else:
+        scheduler.add_job(
+            scheduled_email_job, "cron", hour=HOUR, minute=MINUTE, id="daily_email_job"
+        )
+        logging.info(f"Daily email job scheduled at {HOUR}:{MINUTE}.")
 
     shutdown_event.wait()
 
