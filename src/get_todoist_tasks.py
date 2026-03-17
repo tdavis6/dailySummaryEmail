@@ -15,7 +15,7 @@ def get_todoist_tasks(TODOIST_API_KEY):
                 sections[section.id] = section.name
 
         tasks = []
-        for page in api.filter_tasks(query="due before: tomorrow & (assigned to: me | !assigned)"):
+        for page in api.filter_tasks(query="(due before: tomorrow | deadline before: tomorrow) & (assigned to: me | !assigned)"):
             for task in page:
                 project_name = projects.get(task.project_id, "Inbox")
                 section_name = sections.get(task.section_id) if task.section_id else None

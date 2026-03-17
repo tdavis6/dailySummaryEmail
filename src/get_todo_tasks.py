@@ -107,6 +107,22 @@ def process_tasks(
         # Build shared metadata parts
         meta_parts = [project_name]
 
+        deadline_date = None
+        deadline_overdue = False
+        if source == "todoist" and getattr(task, "deadline", None):
+            try:
+                d = task.deadline.date
+                if isinstance(d, str):
+                    deadline_date = datetime.date.fromisoformat(d)
+                elif isinstance(d, datetime.datetime):
+                    deadline_date = d.date()
+                elif isinstance(d, datetime.date):
+                    deadline_date = d
+                if deadline_date is not None:
+                    deadline_overdue = deadline_date < now
+            except (ValueError, AttributeError):
+                pass
+
         if due_dt:
             due_local = due_dt.date()
             is_overdue = due_local < now
@@ -115,12 +131,18 @@ def process_tasks(
             if is_overdue:
                 if has_explicit_time:
                     due_time = format_time(due_dt, TIME_SYSTEM)
-                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%A, %B %d, %Y')} at {due_time}")
+                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%b %-d')} at {due_time}")
                 else:
-                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%A, %B %d, %Y')}")
+                    meta_parts.append(f"⚠️ Overdue · {due_dt.strftime('%b %-d')}")
             elif has_explicit_time:
                 due_time = format_time(due_dt, TIME_SYSTEM)
-                meta_parts.append(f"🕐 Due at {due_time}")
+                meta_parts.append(f"Due at {due_time}")
+
+        if deadline_date is not None:
+            if deadline_overdue:
+                meta_parts.append(f"🚨 Deadline passed · {deadline_date.strftime('%b %-d')}")
+            else:
+                meta_parts.append(f"Deadline: {deadline_date.strftime('%b %-d')}")
 
         if source == "todoist" and 5 - task.priority != 4:
             meta_parts.append(f"Priority {5 - task.priority}")
@@ -128,7 +150,7 @@ def process_tasks(
             meta_parts.append(f"Priority {6 - task['priority']}")
 
         meta_html = (
-            f'<small style="color: #888; font-size: 0.8em; display: block; margin-top: 2px;">'
+            f'<small style="color: #888; font-size: 0.8em; display: block; margin-top: 2px; white-space: normal; word-break: break-word;">'
             f'{" &nbsp;·&nbsp; ".join(meta_parts)}'
             f'</small>'
         )
@@ -159,7 +181,7 @@ def parse_task_sections(tasks_text, plain=False):
         if not stripped or stripped == "# Tasks":
             continue
 
-        if "⚠️ Overdue" in line:
+        if "⚠️ Overdue" in line or "🚨 Deadline passed" in line:
             sections["Overdue"].append(stripped)
         elif "🕐 Due at" in line:
             time_part = line.split("🕐 Due at ")[-1].split("&")[0].split("<")[0].strip()
