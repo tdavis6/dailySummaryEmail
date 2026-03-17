@@ -12,7 +12,7 @@ Feel free to request any todo app with an issue.)
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
 
-At any time, you may trigger an email send through the Web UI.
+At any time, you may trigger an email send through the Web UI or via the API (see `API_TOKEN` below).
 
 If you have any specific questions or issues setting it up, please feel free to create an issue here.
 While I will try my best to respond quickly, I can make no guarantees on time nor a guaranteed solution, 
@@ -61,12 +61,14 @@ See .env.example for an example .env file.
 - QOTD: True or False. Enables the Quote of the Day. (defaults to false)
 - HOUR: The hour to send the email. (defaults to the time when the container started)
 - MINUTE: The minute to send the email. (defaults to the time when the container started)
+- DISABLE_SCHEDULE: True or False. Disables the automatic scheduled send. Useful when triggering via the API instead. (defaults to False)
 - TIMEZONE: Timezone as a string. (not required if a latitude and longitude or an address are given, but will override
   that timezone. Ensure that it is spelt correctly.)
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
 - ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. One way to generate them could be ```python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"```
 - PASSWORD: Web UI password. Must be alphanumerical.
 - SECRET_KEY: Random alphanumerical string. Used for session cookies of the Web UI.
+- API_TOKEN: Secret token that enables the `POST /api/trigger-email` endpoint. When set, email sends can be triggered externally with `Authorization: Bearer <token>` — no web session required. If unset, the endpoint returns 403.
 
 NOTE: You MUST provide either a coordinate pair or an address.
 
