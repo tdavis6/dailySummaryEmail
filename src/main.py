@@ -462,6 +462,89 @@ def prepare_send_email():
         logging.critical(traceback.format_exc())
 
 
+def prepare_send_email_with_location(lat, lng):
+    """Gather all content and send the daily summary email using the provided coordinates."""
+    try:
+        logging.debug(f"prepare_send_email_with_location called with lat={lat}, lng={lng}.")
+
+        # Resolve metadata (country code, city/state) from provided coordinates
+        resolved_lat, resolved_lng, resolved_country, resolved_city_state = get_coordinates(
+            f"{lat},{lng}", VERSION
+        )
+        if resolved_lat is None:
+            logging.warning("Reverse-geocode for provided location failed; using raw coordinates.")
+            resolved_lat, resolved_lng = lat, lng
+            resolved_country = "us"
+            resolved_city_state = ""
+
+        # Derive timezone from provided coordinates (fall back to configured timezone)
+        try:
+            loc_timezone_str = get_timezone(resolved_lat, resolved_lng)
+            loc_timezone = pytz.timezone(loc_timezone_str) if loc_timezone_str else timezone
+        except Exception as e:
+            logging.warning(f"Could not derive timezone for provided location: {e}. Using configured timezone.")
+            loc_timezone = timezone
+
+        date_string = get_current_date_in_timezone(loc_timezone)
+        logging.debug("Date string obtained.")
+
+        if WEATHER in ["True", "true", True]:
+            weather_string = get_forecast(
+                resolved_lat, resolved_lng, resolved_country, resolved_city_state,
+                UNIT_SYSTEM, TIME_SYSTEM, loc_timezone
+            ) or ""
+        else:
+            weather_string = ""
+        logging.debug("Weather string obtained.")
+
+        todo_html_string, todo_plain_string = get_todo()
+        logging.debug("Todo string obtained.")
+
+        calendar_events = get_cal_data(WEBCAL_LINKS, loc_timezone, TIME_SYSTEM)
+        logging.debug("Calendar events obtained.")
+
+        rss_string = get_rss_feed() or ""
+        logging.debug("RSS string obtained.")
+
+        wotd_string = get_word_of_the_day() or ""
+        logging.debug("Word of the Day string obtained.")
+
+        quote_string = get_quote_of_the_day() or ""
+        logging.debug("Quote of the Day string obtained.")
+
+        puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
+        logging.debug("Puzzles strings obtained.")
+
+        send_email(
+            VERSION,
+            loc_timezone,
+            RECIPIENT_EMAIL,
+            RECIPIENT_NAME,
+            SENDER_EMAIL,
+            SMTP_USERNAME,
+            SMTP_PASSWORD,
+            SMTP_HOST,
+            SMTP_PORT,
+            OPENAI_API_KEY,
+            ENABLE_SUMMARY,
+            ENABLE_EMOJIS,
+            date_string,
+            weather_string,
+            todo_html_string,
+            todo_plain_string,
+            calendar_events,
+            rss_string,
+            puzzles_string,
+            wotd_string,
+            quote_string,
+            puzzles_ans_string,
+        )
+
+    except Exception as e:
+        logging.critical(f"Error sending email with location: {e}")
+        logging.critical(traceback.format_exc())
+
+
 def scheduled_email_job():
     if not scheduler.running:
         logging.error("Scheduler is not running. Aborting job execution.")
@@ -741,6 +824,34 @@ def trigger_email_via_api():
         return jsonify({"message": "Email triggered successfully!"}), 200
     except Exception as e:
         logging.error(f"Error triggering email via API: {e}")
+        return jsonify({"message": f"Failed to trigger email: {str(e)}"}), 500
+
+
+@app.route("/api/trigger-email-with-location", methods=["POST"])
+@api_key_required
+def trigger_email_with_location():
+    data = request.json or {}
+    lat = data.get("latitude")
+    lng = data.get("longitude")
+
+    if lat is None or lng is None:
+        return jsonify({"error": "Missing required fields: 'latitude' and 'longitude'"}), 400
+
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except (ValueError, TypeError):
+        return jsonify({"error": "'latitude' and 'longitude' must be numeric values"}), 400
+
+    if not (-90 <= lat <= 90) or not (-180 <= lng <= 180):
+        return jsonify({"error": "'latitude' must be between -90 and 90, 'longitude' between -180 and 180"}), 400
+
+    try:
+        logging.info(f"Email with location triggered via API: lat={lat}, lng={lng}")
+        prepare_send_email_with_location(lat, lng)
+        return jsonify({"message": "Email triggered successfully!", "latitude": lat, "longitude": lng}), 200
+    except Exception as e:
+        logging.error(f"Error triggering email with location via API: {e}")
         return jsonify({"message": f"Failed to trigger email: {str(e)}"}), 500
 
 
