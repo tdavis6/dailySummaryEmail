@@ -563,8 +563,9 @@ def get_forecast(
     # Outfit suggestions
     # ------------------------------------------------------------------
     outfit_suggestions = ""
+    # Primary suggestion based on daytime high
     if max_temp > hot_thresh:
-        outfit_suggestions += "It's hot outside! Wear light clothing and stay hydrated. "
+        outfit_suggestions += "It's hot outside! Wear light, breathable clothing and stay hydrated. "
     elif max_temp > warm_thresh:
         outfit_suggestions += "The weather is warm. A t-shirt and shorts should be comfortable. "
     elif max_temp > chilly_thresh:
@@ -572,12 +573,22 @@ def get_forecast(
     elif max_temp > cold_thresh:
         outfit_suggestions += "It's cold outside! Wear warm clothing such as a coat and scarf. "
     elif max_temp > very_cold_thresh:
-        outfit_suggestions += "It's quite cold outside! Wear warm clothing such as a coat and scarf. Layer if necessary. "
+        outfit_suggestions += "It's quite cold outside! Layer up with thermals, a heavy coat, scarf, and gloves. "
     else:
-        outfit_suggestions += "It's very cold outside! Wear warm clothing such as a coat and scarf. Make sure to layer. "
+        outfit_suggestions += "It's dangerously cold outside! Wear multiple thermal layers, a heavy insulated coat, face protection, and warm gloves and boots. "
 
+    # If the daily low is noticeably colder than the high, flag it
+    if max_temp > chilly_thresh and min_temp <= chilly_thresh:
+        outfit_suggestions += f"Temperatures drop to {min_temp}{temp_unit}, bring a layer for morning and evening. "
+
+    # Wind suggestion scaled to temperature context
     if wind_speed > windy_thresh:
-        outfit_suggestions += "It's quite windy. Wearing a windbreaker might be a good idea. "
+        if max_temp > warm_thresh:
+            outfit_suggestions += "It's windy. A light, breathable layer will help cut the wind. "
+        elif max_temp > cold_thresh:
+            outfit_suggestions += "It's quite windy. A windbreaker would be a good idea. "
+        else:
+            outfit_suggestions += "It's windy and cold — a windproof, insulated outer layer is essential. "
 
     rain_codes = {51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82, 95, 96, 99}
     snow_codes = {66, 67, 71, 73, 75, 77, 85, 86}
