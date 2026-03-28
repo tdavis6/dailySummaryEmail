@@ -1,16 +1,17 @@
 name: Package releases
 
 on:
-  push:
+  workflow_run:
+    workflows: ["Tests"]
+    types:
+      - completed
     branches:
       - stable
       - dev
-    paths:
-      - version.json
-    needs: test
 
 jobs:
   release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     env:
       DOCKER_API_VERSION: "1.43"
