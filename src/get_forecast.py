@@ -99,11 +99,15 @@ def _get_with_timeout_retry(
             return response
         except requests.exceptions.HTTPError as e:
             status_code = e.response.status_code if e.response else None
-            if status_code in _TRANSIENT_HTTP_STATUS_CODES:
+            if status_code is None or status_code in _TRANSIENT_HTTP_STATUS_CODES:
                 last_exc = e
             else:
                 raise
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.ChunkedEncodingError,
+        ) as e:
             last_exc = e
 
         # Jitter: ±20 % of current delay
