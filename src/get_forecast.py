@@ -579,7 +579,7 @@ def get_forecast(
 
     # If the daily low is noticeably colder than the high, flag it
     if max_temp > chilly_thresh and min_temp <= chilly_thresh:
-        outfit_suggestions += f"Temperatures drop to {min_temp}{temp_unit}, bring a layer for morning and evening. "
+        outfit_suggestions += f"Temperatures drop to {min_temp}{temp_unit}, bring a layer for the morning and evening. "
 
     # Wind suggestion scaled to temperature context
     if wind_speed > windy_thresh:
