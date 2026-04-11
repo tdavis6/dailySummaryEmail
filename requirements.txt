@@ -17,5 +17,5 @@ openai~=2.31.0
 todoist_api_python~=4.0.0
 py-sudoku~=2.0.0
 Werkzeug>=3.1.4
-word_search_generator~=5.0.0
+word_search_generator~=5.1.0
 pydantic~=2.12.5
