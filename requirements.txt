@@ -19,4 +19,4 @@ py-sudoku~=2.0.0
 Werkzeug>=3.1.4
 word_search_generator~=5.1.0
 pydantic~=2.13.0
-caldav~=1.4.0
+caldav~=3.1.0
