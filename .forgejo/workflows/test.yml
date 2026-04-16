@@ -1,12 +1,6 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - stable
-      - dev
-    paths:
-      - version.json
   pull_request:
     branches:
       - "**"
