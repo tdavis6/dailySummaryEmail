@@ -323,8 +323,8 @@ textarea:focus {
 
 .cal-account-card {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    flex-direction: column;
+    gap: 0;
     background: #f0f6ff;
     border: 1px solid #c7ddf5;
     border-radius: 10px;

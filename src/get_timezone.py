@@ -18,7 +18,8 @@ def get_timezone(lat, lon):
         if timezone_str:
             return timezone_str
         else:
-            return "Timezone not found"
+            logging.warning(f"No timezone found for coordinates ({lat}, {lon}).")
+            return None
     except Exception as e:
         logging.critical(f"An error occurred: {e}")
         return None

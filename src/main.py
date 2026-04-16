@@ -123,12 +123,16 @@ def initialize_config():
     config_data = {}
 
     for key in config_keys:
-        env_val = os.getenv(key, None)
-        if env_val is None:
-            logging.debug(f"Environment variable '{key}' not found. Using config.json or blank.")
-            config_data[key] = existing_config.get(key, "")
+        existing_val = existing_config.get(key, "")
+        if existing_val:
+            # config.json takes precedence — preserves UI edits across restarts
+            config_data[key] = existing_val
         else:
-            config_data[key] = env_val
+            # Fall back to .env for initial setup / missing keys
+            env_val = os.getenv(key, None)
+            config_data[key] = env_val if env_val is not None else ""
+            if env_val is not None:
+                logging.debug(f"Using .env value for '{key}' (not set in config.json).")
 
     save_config_to_json(config_data)
 
@@ -218,19 +222,19 @@ def refresh_configuration_variables():
             logging.warning("Location cache refresh failed, reverting to old coordinates.")
             LATITUDE, LONGITUDE = latitude_old, longitude_old
 
-        # Re-derive timezone when location changes
-        try:
-            if not TIMEZONE or not TIMEZONE.strip():
-                if LATITUDE and LONGITUDE:
-                    TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
-                else:
-                    logging.warning("Cannot derive TIMEZONE; missing lat/long.")
-                    TIMEZONE = None
-            timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
-            logging.info(f"Timezone validated and set to: {timezone}")
-        except Exception as e:
-            logging.critical(f"Error validating TIMEZONE: {e}")
-            timezone = None
+    # Always re-derive timezone from coordinates when available so that a
+    # stale TIMEZONE value in config.json never wins over the actual location.
+    try:
+        if LATITUDE and LONGITUDE:
+            TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
+        elif not TIMEZONE or not TIMEZONE.strip():
+            logging.warning("Cannot derive TIMEZONE; missing lat/long.")
+            TIMEZONE = None
+        timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
+        logging.info(f"Timezone validated and set to: {timezone}")
+    except Exception as e:
+        logging.critical(f"Error validating TIMEZONE: {e}")
+        timezone = None
 
     if LOGGING_LEVEL != logging_level_old:
         change_logging_level()
@@ -691,11 +695,14 @@ logging.info(f"Logging level set to: {LOGGING_LEVEL}")
 
 # Ensure timezone is correctly loaded
 try:
-    if not TIMEZONE:
+    if LATITUDE and LONGITUDE:
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
         timezone = pytz.timezone(timezone_str)
-    else:
+    elif TIMEZONE:
         timezone = pytz.timezone(TIMEZONE)
+    else:
+        logging.critical("Cannot determine timezone: no coordinates or TIMEZONE configured.")
+        sys.exit(1)
     logging.info(f"Timezone found: {timezone}.")
 except Exception as e:
     logging.critical(f"Error creating timezone: {e}")

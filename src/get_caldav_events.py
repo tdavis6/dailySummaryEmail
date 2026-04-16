@@ -4,12 +4,36 @@ from datetime import datetime, timedelta
 
 from get_ical_events import parse_icalendar, is_event_today, convert_all_day_event
 
-# Known CalDAV base URLs for common providers.
-# {username} is replaced with the account username where needed.
+# Known CalDAV principal URLs for common providers.
+# Notes per provider:
+#
+# icloud  – Use full Apple ID email as username.  Password must be an
+#           App-Specific Password (Settings → Passwords & Security).
+#           The base URL triggers a PROPFIND redirect to the user's
+#           actual server (pXX-caldav.icloud.com); the caldav library
+#           follows this automatically.
+#
+# google  – Endpoint updated to the current v2 API path.  Google still
+#           supports HTTP Basic auth against this endpoint when the
+#           account has 2FA disabled *or* via an App Password.  If the
+#           account uses OAuth-only (Workspace enforce-OAuth policy),
+#           supply an OAuth2 bearer token in the "password" field and
+#           set "auth_type": "bearer" — the caldav library will use it.
+#
+# microsoft – Office 365 / Outlook.com.  Basic auth was fully deprecated
+#             by Microsoft in October 2022 for consumer accounts and is
+#             being phased out for M365 tenants.  Provide an OAuth2
+#             access token in the "password" field and set
+#             "auth_type": "bearer".  The principal URL below is the
+#             correct RFC 6764 discovery base.
+#
+# webdav  – Generic / self-hosted (SOGo, Nextcloud, Radicale, …).
+#           Provide "url" pointing at the user's principal or calendar
+#           collection.  HTTP Basic auth is used by default.
 _PROVIDER_URLS = {
     "icloud": "https://caldav.icloud.com",
-    "google": "https://www.google.com/calendar/dav/{username}/user/",
-    "microsoft": "https://outlook.office365.com/dav/{username}/calendar/",
+    "google": "https://apidata.googleusercontent.com/caldav/v2/{username}/user/",
+    "microsoft": "https://outlook.office365.com/dav/{username}/",
 }
 
 
@@ -23,7 +47,15 @@ def _resolve_url(account_type, username, url_override):
 
 
 def _connect(account):
-    """Return a (client, principal, calendars) tuple, or raise on failure."""
+    """Return a list of calendars for the account, or raise on failure.
+
+    Supports two auth modes via the optional "auth_type" account field:
+      "basic"  (default) – HTTP Basic auth with username + password.
+      "bearer"           – OAuth2 bearer token supplied in the "password"
+                           field.  Required for Google Workspace accounts
+                           with OAuth enforcement and Microsoft 365 after
+                           basic-auth deprecation.
+    """
     try:
         import caldav
     except ImportError:
@@ -32,6 +64,7 @@ def _connect(account):
     account_type = account.get("type", "webdav").lower()
     username = account.get("username", "")
     password = account.get("password", "")
+    auth_type = account.get("auth_type", "basic").lower()
     url = _resolve_url(account_type, username, account.get("url", ""))
 
     if not url:
@@ -40,7 +73,12 @@ def _connect(account):
             "Provide a 'url' field for generic WebDAV accounts."
         )
 
-    client = caldav.DAVClient(url=url, username=username, password=password)
+    if auth_type == "bearer":
+        headers = {"Authorization": f"Bearer {password}"}
+        client = caldav.DAVClient(url=url, headers=headers)
+    else:
+        client = caldav.DAVClient(url=url, username=username, password=password)
+
     principal = client.principal()
     return principal.calendars()
 
@@ -78,7 +116,7 @@ def _fetch_account_events(account, timezone):
         enabled_urls = None  # No filter — include all
 
     today = datetime.now(timezone).date()
-    search_start = datetime.combine(today, datetime.min.time())
+    search_start = timezone.localize(datetime.combine(today, datetime.min.time()))
     search_end = search_start + timedelta(days=1)
 
     events = []
@@ -86,9 +124,10 @@ def _fetch_account_events(account, timezone):
         if enabled_urls is not None and str(cal.url) not in enabled_urls:
             continue
         try:
-            cal_events = cal.date_search(start=search_start, end=search_end, expand=True)
-            for event in cal_events:
-                events.extend(parse_icalendar(event.data))
+            cal_events = cal.date_search(start=search_start, end=search_end, expand=False)
+            cal_event_data = [e for event in cal_events for e in parse_icalendar(event.data)]
+            logging.info(f"CalDAV calendar '{cal.name}' ({account_type}): {len(cal_event_data)} events fetched")
+            events.extend(cal_event_data)
         except Exception as e:
             logging.warning(f"Error reading calendar from {account_type} account: {e}")
 

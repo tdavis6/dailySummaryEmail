@@ -179,15 +179,21 @@ def convert_all_day_event(event, timezone):
 
 def get_ics_events(url, timezone):
     ical_string = fetch_icalendar(url)
-    try:
-        events = [convert_all_day_event(event, timezone) for event in parse_icalendar(ical_string)]
-        logging.debug("Filtered and processed events for today")
-        events = [
-            event
-            for event in events
-            if is_event_today(event["start"], event["end"], timezone)
-        ]
-        return events
-    except Exception as e:
-        logging.critical(f"Failed to get events: {e}")
-        return []
+    converted = []
+    for event in parse_icalendar(ical_string):
+        try:
+            converted.append(convert_all_day_event(event, timezone))
+        except Exception as e:
+            logging.warning(f"Skipping event due to conversion error: {e}")
+
+    result = []
+    for event in converted:
+        try:
+            if is_event_today(event["start"], event["end"], timezone):
+                result.append(event)
+        except Exception as e:
+            logging.warning(f"Skipping event due to date filter error: {e}")
+
+    short_url = url[:60] + "..." if len(url) > 60 else url
+    logging.info(f"iCal {short_url}: {len(converted)} total events, {len(result)} today")
+    return result
