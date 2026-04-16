@@ -127,7 +127,7 @@ jobs:
           BODY=$(cat release_body.txt)
           PRE_RELEASE=${{ env.pre_release }}
           curl -s -X POST "${{ secrets.FORGEJO_URL }}/api/v1/repos/${{ github.repository }}/releases" \
-            -H "Authorization: token ${{ secrets.FORGEJO_TOKEN }}" \
+            -H "Authorization: token ${{ secrets.FJ_PAT }}" \
             -H "Content-Type: application/json" \
             -d "{
               \"tag_name\": \"${{ env.version }}\",
@@ -151,7 +151,7 @@ jobs:
         with:
           registry: ${{ secrets.FORGEJO_REGISTRY }}
           username: ${{ secrets.FORGEJO_USERNAME }}
-          password: ${{ secrets.FORGEJO_TOKEN }}
+          password: ${{ secrets.FJ_PAT }}
 
       - name: Build Docker Image (Pre-release)
         if: steps.preflight.outputs.should_release == 'true' && env.pre_release == 'true'
