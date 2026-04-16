@@ -214,3 +214,387 @@ textarea:focus {
         opacity: 1;
     }
 }
+
+/* ── Inline button variant ─────────────────────────────────────────────────── */
+.button-inline {
+    display: inline-block;
+    width: auto;
+    padding: 10px 20px;
+    margin: 0;
+    font-size: 1rem;
+    border-radius: 8px;
+}
+
+/* ── Calendar manager row (label + count + button) ──────────────────────────── */
+.cal-manager-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 10px 0 10px 0;
+    flex-wrap: wrap;
+}
+
+.cal-manager-label {
+    font-size: 1rem;
+    color: inherit;
+}
+
+.cal-account-count {
+    font-size: 0.9rem;
+    color: #1e88e5;
+    font-style: italic;
+}
+
+/* ── Modal overlay ──────────────────────────────────────────────────────────── */
+.cal-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.cal-modal-overlay[hidden] {
+    display: none;
+}
+
+.cal-modal {
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px;
+    box-sizing: border-box;
+    color: #003366;
+    font-family: 'Georgia', 'Times', serif;
+}
+
+.cal-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.cal-modal-header h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #003366;
+}
+
+.cal-modal-close {
+    background: none;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: #888;
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 0.2s;
+}
+
+.cal-modal-close:hover {
+    color: #333;
+}
+
+/* ── Account list ───────────────────────────────────────────────────────────── */
+.cal-account-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 22px;
+    min-height: 20px;
+}
+
+.cal-empty-state {
+    text-align: center;
+    color: #999;
+    font-style: italic;
+    font-size: 0.95rem;
+    padding: 10px 0;
+}
+
+.cal-account-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f0f6ff;
+    border: 1px solid #c7ddf5;
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.cal-type-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 20px;
+    color: #fff;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.cal-badge-icloud    { background: #1e88e5; }
+.cal-badge-google    { background: #43a047; }
+.cal-badge-microsoft { background: #5e35b1; }
+.cal-badge-webdav    { background: #607d8b; }
+
+.cal-account-info {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.95rem;
+    color: #003366;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cal-account-sub {
+    font-size: 0.78rem;
+    color: #666;
+    margin-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.cal-remove-btn {
+    background: none;
+    border: 1px solid #e57373;
+    color: #e57373;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    flex-shrink: 0;
+}
+
+.cal-remove-btn:hover {
+    background: #e57373;
+    color: #fff;
+}
+
+/* ── Add account section ────────────────────────────────────────────────────── */
+.cal-add-section {
+    border-top: 1px solid #d0e4f7;
+    padding-top: 18px;
+    margin-bottom: 18px;
+}
+
+.cal-add-title {
+    margin: 0 0 14px 0;
+    font-size: 1.1rem;
+    color: #1e88e5;
+}
+
+.cal-field-label {
+    display: block;
+    font-size: 0.95rem;
+    color: #003366;
+    margin-bottom: 10px;
+}
+
+.cal-select,
+.cal-input {
+    display: block;
+    width: 100%;
+    padding: 9px 11px;
+    margin-top: 4px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    background: #fff;
+    color: #000;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.cal-select:focus,
+.cal-input:focus {
+    border-color: #1e88e5;
+    box-shadow: 0 0 0 3px rgba(30, 136, 229, 0.18);
+    outline: none;
+}
+
+.cal-add-error {
+    color: #c62828;
+    font-size: 0.88rem;
+    margin-bottom: 8px;
+}
+
+.cal-add-btn {
+    margin-top: 6px;
+}
+
+/* ── Calendar list inside each account card ─────────────────────────────────── */
+.cal-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cal-calendar-section {
+    margin-top: 12px;
+    border-top: 1px solid #d0e4f7;
+    padding-top: 10px;
+}
+
+.cal-calendar-section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.cal-calendar-section-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #5a7fa0;
+    flex: 1;
+}
+
+.cal-load-btn {
+    background: none;
+    border: 1px solid #1e88e5;
+    color: #1e88e5;
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.cal-load-btn:hover:not(:disabled) {
+    background: #1e88e5;
+    color: #fff;
+}
+
+.cal-load-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
+
+.cal-load-status {
+    font-size: 0.8rem;
+    color: #888;
+    white-space: nowrap;
+}
+
+.cal-load-error {
+    color: #c62828;
+}
+
+.cal-calendar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cal-calendar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 6px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 0.9rem;
+    color: #003366;
+    user-select: none;
+}
+
+.cal-calendar-row:hover {
+    background: #daeeff;
+}
+
+.cal-calendar-checkbox {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+    cursor: pointer;
+    accent-color: #1e88e5;
+}
+
+.cal-calendar-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── Dark mode ──────────────────────────────────────────────────────────────── */
+@media (prefers-color-scheme: dark) {
+    .cal-modal {
+        background: #1b263b;
+        color: #e0e0e0;
+    }
+
+    .cal-modal-header h2 {
+        color: #e0e0e0;
+    }
+
+    .cal-account-card {
+        background: #243447;
+        border-color: #2e4a6e;
+    }
+
+    .cal-account-info {
+        color: #d0e4ff;
+    }
+
+    .cal-account-sub {
+        color: #90aac8;
+    }
+
+    .cal-add-section {
+        border-top-color: #2e4a6e;
+    }
+
+    .cal-field-label {
+        color: #c8ddf0;
+    }
+
+    .cal-select,
+    .cal-input {
+        background: #243447;
+        color: #e0e0e0;
+        border-color: #3d5a80;
+    }
+
+    .cal-account-count {
+        color: #64b5f6;
+    }
+
+    .cal-calendar-section {
+        border-top-color: #2e4a6e;
+    }
+
+    .cal-calendar-section-title {
+        color: #7eafd0;
+    }
+
+    .cal-calendar-row {
+        color: #d0e4ff;
+    }
+
+    .cal-calendar-row:hover {
+        background: #2e4a6e;
+    }
+
+    .cal-load-status {
+        color: #90aac8;
+    }
+}

@@ -1,5 +1,6 @@
 from datetime import datetime, date, timedelta
 from get_ical_events import get_ics_events
+from get_caldav_events import get_caldav_events
 
 
 def ensure_datetime(dt):
@@ -37,13 +38,16 @@ def handle_all_day_event(event):
     else:
         return "\n\nAll day event"
 
-def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM):
+def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, caldav_accounts=None):
     events = []
 
     if WEBCAL_LINKS:
         for link in WEBCAL_LINKS.split(","):
             ics_events = get_ics_events(url=link, timezone=timezone)
             events.extend(ics_events)
+
+    if caldav_accounts:
+        events.extend(get_caldav_events(caldav_accounts, timezone))
 
         # Unify all event start/end to aware datetimes in the same timezone
         for event in events:

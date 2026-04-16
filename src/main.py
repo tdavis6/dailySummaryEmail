@@ -21,6 +21,7 @@ from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from get_cal_data import get_cal_data
+from get_caldav_events import list_caldav_calendars
 from get_coordinates import get_coordinates
 from get_date import get_current_date_in_timezone
 from get_forecast import get_forecast
@@ -57,6 +58,7 @@ def load_config_from_json():
         config["LATITUDE"] = decrypt_data(config.get("LATITUDE", ""))
         config["LONGITUDE"] = decrypt_data(config.get("LONGITUDE", ""))
         config["ADDRESS"] = decrypt_data(config.get("ADDRESS", ""))
+        config["CALDAV_ACCOUNTS"] = decrypt_data(config.get("CALDAV_ACCOUNTS", ""))
         return config
 
 
@@ -76,6 +78,7 @@ def save_config_to_json(config_data):
     config_data["LATITUDE"] = encrypt_data(config_data.get("LATITUDE", ""))
     config_data["LONGITUDE"] = encrypt_data(config_data.get("LONGITUDE", ""))
     config_data["ADDRESS"] = encrypt_data(config_data.get("ADDRESS", ""))
+    config_data["CALDAV_ACCOUNTS"] = encrypt_data(config_data.get("CALDAV_ACCOUNTS", ""))
     with open(CONFIG_FILE_PATH, "w") as json_file:
         json.dump(config_data, json_file, indent=4)
 
@@ -103,6 +106,7 @@ def initialize_config():
         "VIKUNJA_API_KEY",
         "VIKUNJA_BASE_URL",
         "WEBCAL_LINKS",
+        "CALDAV_ACCOUNTS",
         "RSS_LINKS",
         "PUZZLES",
         "PUZZLES_ANSWERS",
@@ -143,7 +147,7 @@ def refresh_configuration_variables():
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
     global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, ENABLE_EMOJIS, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
-    global VIKUNJA_BASE_URL, WEBCAL_LINKS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
+    global VIKUNJA_BASE_URL, WEBCAL_LINKS, CALDAV_ACCOUNTS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler, DISABLE_SCHEDULE
     global city_state_str, country_code
 
@@ -177,6 +181,7 @@ def refresh_configuration_variables():
     VIKUNJA_API_KEY = config.get("VIKUNJA_API_KEY")
     VIKUNJA_BASE_URL = config.get("VIKUNJA_BASE_URL")
     WEBCAL_LINKS = config.get("WEBCAL_LINKS")
+    CALDAV_ACCOUNTS = config.get("CALDAV_ACCOUNTS")
     RSS_LINKS = config.get("RSS_LINKS", "False")
     PUZZLES = config.get("PUZZLES", "False")
     PUZZLES_ANSWERS = config.get("PUZZLES_ANSWERS", "False")
@@ -417,7 +422,7 @@ def prepare_send_email():
         todo_html_string, todo_plain_string = get_todo()
         logging.debug("Todo string obtained.")
 
-        calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM)
+        calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, CALDAV_ACCOUNTS)
         logging.debug("Calendar events obtained.")
 
         rss_string = get_rss_feed() or ""
@@ -661,6 +666,7 @@ TODOIST_API_KEY = get_config_value("TODOIST_API_KEY")
 VIKUNJA_API_KEY = get_config_value("VIKUNJA_API_KEY")
 VIKUNJA_BASE_URL = get_config_value("VIKUNJA_BASE_URL")
 WEBCAL_LINKS = get_config_value("WEBCAL_LINKS")
+CALDAV_ACCOUNTS = get_config_value("CALDAV_ACCOUNTS")
 RSS_LINKS = get_config_value("RSS_LINKS", "False")
 PUZZLES = get_config_value("PUZZLES", "False")
 PUZZLES_ANSWERS = get_config_value("PUZZLES_ANSWERS", "False")
@@ -799,6 +805,21 @@ def interrupt_schedule():
         return jsonify({"message": "Email schedule interrupted!"}), 200
     except Exception as e:
         return jsonify({"message": f"Failed to interrupt schedule: {e}"}), 500
+
+
+@app.route("/api/caldav-calendars", methods=["POST"])
+@login_required
+def api_caldav_calendar_list():
+    """Return the list of calendars for a given CalDAV account config."""
+    account = (request.json or {}).get("account", {})
+    if not account:
+        return jsonify({"error": "No account provided."}), 400
+    try:
+        calendars = list_caldav_calendars(account)
+        return jsonify({"calendars": calendars})
+    except Exception as e:
+        logging.error(f"Failed to list CalDAV calendars: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 def api_key_required(f):

@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                     element.value = data[key];
                 }
             });
+            document.dispatchEvent(new CustomEvent('configLoaded'));
         });
 
     // Handle save button click event

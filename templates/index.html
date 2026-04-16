@@ -111,6 +111,12 @@
           Webcal Links:
           <textarea name="WEBCAL_LINKS" class="multi-line-input"></textarea>
         </label><br>
+        <input type="hidden" name="CALDAV_ACCOUNTS">
+        <div class="cal-manager-row">
+          <span class="cal-manager-label">Authenticated Calendars:</span>
+          <span id="cal-account-count" class="cal-account-count"></span>
+          <button type="button" id="open-cal-modal" class="button button-inline">Manage Accounts</button>
+        </div>
         <label>
           RSS Links:
           <textarea name="RSS_LINKS" class="multi-line-input"></textarea>
@@ -174,7 +180,51 @@
     </div>
   </div>
 
+  <!-- Calendar Accounts Modal -->
+  <div id="cal-modal-overlay" class="cal-modal-overlay" hidden>
+    <div class="cal-modal" role="dialog" aria-modal="true" aria-labelledby="cal-modal-title">
+      <div class="cal-modal-header">
+        <h2 id="cal-modal-title">Calendar Accounts</h2>
+        <button type="button" id="close-cal-modal" class="cal-modal-close" aria-label="Close">&times;</button>
+      </div>
+
+      <div id="cal-account-list" class="cal-account-list">
+        <!-- Account cards injected here by JS -->
+      </div>
+
+      <div class="cal-add-section">
+        <h3 class="cal-add-title">Add Account</h3>
+        <label class="cal-field-label">
+          Type
+          <select id="cal-type" class="cal-select">
+            <option value="icloud">iCloud</option>
+            <option value="google">Google</option>
+            <option value="microsoft">Microsoft</option>
+            <option value="webdav">WebDAV</option>
+          </select>
+        </label>
+        <label class="cal-field-label" id="cal-url-row">
+          Server URL
+          <input type="url" id="cal-url" class="cal-input" placeholder="https://your-server.com/dav/calendars/user/">
+        </label>
+        <label class="cal-field-label">
+          Username
+          <input type="text" id="cal-username" class="cal-input" placeholder="user@example.com" autocomplete="off">
+        </label>
+        <label class="cal-field-label">
+          Password / App Password
+          <input type="password" id="cal-password" class="cal-input" autocomplete="new-password">
+        </label>
+        <div id="cal-add-error" class="cal-add-error" hidden></div>
+        <button type="button" id="cal-add-btn" class="button button-inline cal-add-btn">+ Add Account</button>
+      </div>
+
+      <button type="button" id="cal-done-btn" class="button">Done</button>
+    </div>
+  </div>
+
   <script src="{{ url_for('static', filename='scripts.js') }}"></script>
+  <script src="{{ url_for('static', filename='cal-manager.js') }}"></script>
 </body>
 
 </html>
