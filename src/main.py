@@ -509,7 +509,7 @@ def prepare_send_email_with_location(lat, lng):
         todo_html_string, todo_plain_string = get_todo()
         logging.debug("Todo string obtained.")
 
-        calendar_events = get_cal_data(WEBCAL_LINKS, loc_timezone, TIME_SYSTEM)
+        calendar_events = get_cal_data(WEBCAL_LINKS, loc_timezone, TIME_SYSTEM, CALDAV_ACCOUNTS)
         logging.debug("Calendar events obtained.")
 
         rss_string = get_rss_feed() or ""

@@ -49,16 +49,14 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, caldav_accounts=None):
     if caldav_accounts:
         events.extend(get_caldav_events(caldav_accounts, timezone))
 
-        # Unify all event start/end to aware datetimes in the same timezone
-        for event in events:
-            event["start"] = ensure_datetime(event["start"])
-            event["end"] = ensure_datetime(event["end"])
+    # Unify all event start/end to aware datetimes in the same timezone
+    for event in events:
+        event["start"] = ensure_datetime(event["start"])
+        event["end"] = ensure_datetime(event["end"])
+        event["start"] = localize_or_convert(event["start"], timezone)
+        event["end"] = localize_or_convert(event["end"], timezone)
 
-            event["start"] = localize_or_convert(event["start"], timezone)
-            event["end"] = localize_or_convert(event["end"], timezone)
-
-        # Now safe to sort by start time (all are offset-aware)
-        events.sort(key=lambda e: e["start"])
+    events.sort(key=lambda e: e["start"])
 
     # Prepare the final text
     text = "\n\n# Events" if events else ""
