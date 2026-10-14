@@ -8,7 +8,7 @@ def generate_summary(text, api_key):
         client = OpenAI(api_key=api_key)
 
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-6-luna",
             messages=[
                 {
                     "role": "system",
