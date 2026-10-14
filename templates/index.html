@@ -49,6 +49,21 @@
           <input type="password" name="OPENAI_API_KEY">
         </label><br>
         <label>
+          Summary Provider:
+          <select name="SUMMARY_PROVIDER" style="font-size: large;">
+            <option value="OPENAI">OpenAI</option>
+            <option value="LOCAL">Local LLM (e.g. Ollama)</option>
+          </select>
+        </label><br>
+        <label>
+          Local LLM Base URL:
+          <input type="text" name="LOCAL_LLM_BASE_URL" placeholder="http://localhost:11434/v1">
+        </label><br>
+        <label>
+          Local LLM Model:
+          <input type="text" name="LOCAL_LLM_MODEL" placeholder="llama3.2">
+        </label><br>
+        <label>
           Enable Summary:
           <select name="ENABLE_SUMMARY" style="font-size: large;">
             <option value="True">True</option>

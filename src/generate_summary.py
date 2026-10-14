@@ -2,13 +2,28 @@ import logging
 
 from openai import OpenAI
 
+OPENAI_MODEL = "gpt-6-luna"
+DEFAULT_LOCAL_LLM_BASE_URL = "http://localhost:11434/v1"
 
-def generate_summary(text, api_key):
+
+def generate_summary(text, api_key, provider="OPENAI", local_base_url="", local_model=""):
     try:
-        client = OpenAI(api_key=api_key)
+        if str(provider).upper() == "LOCAL":
+            # Local LLMs (e.g. Ollama) expose an OpenAI-compatible API, so the same client is reused.
+            # The API key is ignored by Ollama but required by the client.
+            if not local_model:
+                raise ValueError("LOCAL_LLM_MODEL must be set when SUMMARY_PROVIDER is LOCAL.")
+            client = OpenAI(
+                base_url=local_base_url or DEFAULT_LOCAL_LLM_BASE_URL,
+                api_key=api_key or "local",
+            )
+            model = local_model
+        else:
+            client = OpenAI(api_key=api_key)
+            model = OPENAI_MODEL
 
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             messages=[
                 {
                     "role": "system",
