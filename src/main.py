@@ -94,6 +94,9 @@ def initialize_config():
         "SMTP_HOST",
         "SMTP_PORT",
         "OPENAI_API_KEY",
+        "SUMMARY_PROVIDER",
+        "LOCAL_LLM_BASE_URL",
+        "LOCAL_LLM_MODEL",
         "ENABLE_SUMMARY",
         "ENABLE_EMOJIS",
         "UNIT_SYSTEM",
@@ -149,7 +152,7 @@ def decrypt_data(encrypted_data):
 
 def refresh_configuration_variables():
     global RECIPIENT_EMAIL, RECIPIENT_NAME, SENDER_EMAIL, SMTP_USERNAME, SMTP_PASSWORD
-    global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, ENABLE_SUMMARY, ENABLE_EMOJIS, UNIT_SYSTEM, TIME_SYSTEM
+    global SMTP_HOST, SMTP_PORT, OPENAI_API_KEY, SUMMARY_PROVIDER, LOCAL_LLM_BASE_URL, LOCAL_LLM_MODEL, ENABLE_SUMMARY, ENABLE_EMOJIS, UNIT_SYSTEM, TIME_SYSTEM
     global LATITUDE, LONGITUDE, ADDRESS, WEATHER, TODOIST_API_KEY, VIKUNJA_API_KEY
     global VIKUNJA_BASE_URL, WEBCAL_LINKS, CALDAV_ACCOUNTS, RSS_LINKS, PUZZLES, PUZZLES_ANSWERS, WOTD, QOTD
     global TIMEZONE, HOUR, MINUTE, LOGGING_LEVEL, timezone, scheduler, DISABLE_SCHEDULE
@@ -173,6 +176,9 @@ def refresh_configuration_variables():
     SMTP_HOST = config.get("SMTP_HOST")
     SMTP_PORT = config.get("SMTP_PORT")
     OPENAI_API_KEY = config.get("OPENAI_API_KEY")
+    SUMMARY_PROVIDER = config.get("SUMMARY_PROVIDER") or "OPENAI"
+    LOCAL_LLM_BASE_URL = config.get("LOCAL_LLM_BASE_URL")
+    LOCAL_LLM_MODEL = config.get("LOCAL_LLM_MODEL")
     ENABLE_SUMMARY = config.get("ENABLE_SUMMARY", "False")
     ENABLE_EMOJIS = config.get("ENABLE_EMOJIS", "False")
     UNIT_SYSTEM = config.get("UNIT_SYSTEM", "METRIC")
@@ -464,6 +470,9 @@ def prepare_send_email():
             wotd_string,
             quote_string,
             puzzles_ans_string,
+            summary_provider=SUMMARY_PROVIDER,
+            local_llm_base_url=LOCAL_LLM_BASE_URL,
+            local_llm_model=LOCAL_LLM_MODEL,
         )
 
     except Exception as e:
@@ -547,6 +556,9 @@ def prepare_send_email_with_location(lat, lng):
             wotd_string,
             quote_string,
             puzzles_ans_string,
+            summary_provider=SUMMARY_PROVIDER,
+            local_llm_base_url=LOCAL_LLM_BASE_URL,
+            local_llm_model=LOCAL_LLM_MODEL,
         )
 
     except Exception as e:
@@ -658,6 +670,9 @@ SMTP_PASSWORD = get_config_value("SMTP_PASSWORD")
 SMTP_HOST = get_config_value("SMTP_HOST")
 SMTP_PORT = get_config_value("SMTP_PORT")
 OPENAI_API_KEY = get_config_value("OPENAI_API_KEY")
+SUMMARY_PROVIDER = get_config_value("SUMMARY_PROVIDER") or "OPENAI"
+LOCAL_LLM_BASE_URL = get_config_value("LOCAL_LLM_BASE_URL")
+LOCAL_LLM_MODEL = get_config_value("LOCAL_LLM_MODEL")
 ENABLE_SUMMARY = get_config_value("ENABLE_SUMMARY", "False")
 ENABLE_EMOJIS = get_config_value("ENABLE_EMOJIS", "False")
 UNIT_SYSTEM = get_config_value("UNIT_SYSTEM", "METRIC")
