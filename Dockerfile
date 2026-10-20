@@ -1,4 +1,4 @@
-FROM python:3.15-slim@sha256:ea4f1f290e071bf7d28199cfb3e09f5dbad31b50e9c32fd58f2f2d7be915f3ae
+FROM python:3.15-slim@sha256:2da676046630d7bf14c6764ae1143dc7fa0377a53f94bf5a642f0b214aca5bce
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -8,7 +8,10 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt ./
-RUN pip install --no-cache-dir --no-compile --prefer-binary -r requirements.txt \
+RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ cmake make \
+    && pip install --no-cache-dir --no-compile --prefer-binary -r requirements.txt \
+    && apt-get purge -y --auto-remove gcc g++ cmake make \
+    && rm -rf /var/lib/apt/lists/* \
     && find /usr/local -type d \( -name "__pycache__" -o -name "tests" -o -name "test" \) -prune -exec rm -rf '{}' + \
     && find /usr/local -type f \( -name "*.pyc" -o -name "*.pyo" -o -name "*.a" \) -delete
 
