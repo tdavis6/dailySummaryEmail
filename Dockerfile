@@ -8,9 +8,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY requirements.txt ./
-RUN apt-get update && apt-get install -y --no-install-recommends gcc g++ cmake make zlib1g-dev \
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc g++ cmake make \
+        zlib1g-dev libjpeg-dev libfreetype6-dev liblcms2-dev libwebp-dev libtiff-dev \
     && pip install --no-cache-dir --no-compile --prefer-binary -r requirements.txt \
-    && apt-get purge -y --auto-remove gcc g++ cmake make zlib1g-dev \
+    && apt-get purge -y --auto-remove \
+        gcc g++ cmake make \
+        zlib1g-dev libjpeg-dev libfreetype6-dev liblcms2-dev libwebp-dev libtiff-dev \
     && rm -rf /var/lib/apt/lists/* \
     && find /usr/local -type d \( -name "__pycache__" -o -name "tests" -o -name "test" \) -prune -exec rm -rf '{}' + \
     && find /usr/local -type f \( -name "*.pyc" -o -name "*.pyo" -o -name "*.a" \) -delete
