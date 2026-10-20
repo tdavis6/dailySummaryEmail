@@ -63,6 +63,9 @@ def send_email(
         wotd_string="",
         quote_string="",
         puzzles_ans_string="",
+        summary_provider="OPENAI",
+        local_llm_base_url="",
+        local_llm_model="",
 ) -> None:
     try:
         # Ensure timezone is a valid pytz timezone object
@@ -102,8 +105,9 @@ def send_email(
         if cal_string: text, html_text = append_section(text, html_text, cal_string, "calendar")
 
         # Get summary
-        if openai_api_key is not None and enable_summary in ["True", "true", True]:
-            summary = generate_summary(text, openai_api_key)
+        use_local_llm = str(summary_provider).upper() == "LOCAL"
+        if (use_local_llm or openai_api_key is not None) and enable_summary in ["True", "true", True]:
+            summary = generate_summary(text, openai_api_key, summary_provider, local_llm_base_url, local_llm_model)
             if summary is None: summary = "Error generating summary."
             summary = add_emojis(summary) if enable_emjois in ["True", "true", True] else summary
             logging.debug(f"enable_emojis is set to {enable_emjois}")
