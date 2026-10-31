@@ -1,0 +1,7 @@
+# Installed with --no-deps (see Dockerfile). recurring-ical-events caps
+# python-dateutil<3, which conflicts with python-dateutil 3.x in requirements.txt,
+# even though it works fine with it. Their other dependencies are listed in
+# requirements.txt.
+caldav~=3.7.0
+icalendar-searcher~=1.3.0
+recurring-ical-events~=3.8.2

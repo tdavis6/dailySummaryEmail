@@ -7,11 +7,13 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-COPY requirements.txt ./
+COPY requirements.txt requirements-nodeps.txt ./
 RUN apt-get update && apt-get install -y --no-install-recommends \
         gcc g++ cmake make \
         zlib1g-dev libjpeg-dev libfreetype6-dev liblcms2-dev libwebp-dev libtiff-dev \
     && pip install --no-cache-dir --no-compile --prefer-binary -r requirements.txt \
+    && pip install --no-cache-dir --no-compile --prefer-binary --no-deps -r requirements-nodeps.txt \
+    && python -c "import caldav, recurring_ical_events" \
     && apt-get purge -y --auto-remove \
         gcc g++ cmake make \
         zlib1g-dev libjpeg-dev libfreetype6-dev liblcms2-dev libwebp-dev libtiff-dev \
