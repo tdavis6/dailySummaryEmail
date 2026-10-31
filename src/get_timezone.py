@@ -1,6 +1,13 @@
 import logging
+from functools import lru_cache
 
 from timezonefinder import TimezoneFinder
+
+
+@lru_cache(maxsize=1)
+def _finder():
+    # Building a TimezoneFinder loads its data files, so create it once.
+    return TimezoneFinder()
 
 
 def get_timezone(lat, lon):
@@ -9,11 +16,8 @@ def get_timezone(lat, lon):
         lat = float(lat)
         lon = float(lon)
 
-        # Initialize timezone finder
-        tf = TimezoneFinder()
-
         # Get the timezone name
-        timezone_str = tf.timezone_at(lng=lon, lat=lat)
+        timezone_str = _finder().timezone_at(lng=lon, lat=lat)
 
         if timezone_str:
             return timezone_str

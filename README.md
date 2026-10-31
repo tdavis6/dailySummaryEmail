@@ -6,8 +6,8 @@
 ## Summary
 A program that emails the user the weather, any tasks on their to-do list, their events, puzzles, a word of the day, a
 quote of the day, and more at a designated time daily.
-(Only Todoist and Vikunja are currently supported, but am open to adding more.
-Feel free to request any todo app with an issue.)
+(Only Todoist and Vikunja are currently supported for tasks, but am open to adding more.
+Feel free to request any todo app with an issue. Events can come from webcal/ICS links or CalDAV accounts.)
 
 To change the time of day that the email is sent, use the MINUTE and HOUR environment variables. 
 All times should be in 24hr (0-23 for hours, 0-59 for minutes) time.
@@ -23,7 +23,18 @@ and the web UI).
 
 ## Setup
 
-Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file, however, all these options are not necessary to put in the `.env` file, they can be added later in the web UI. The only necessary variables to set are the `ENCRYPTION_KEY` and `PASSWORD`. The set `PASSWORD` is used to log into the web UI. If you initially use env vars to fill out all the data, you may remove them after the first run as long as there is a config.json location configured (`./data` in `docker-compose.yml`).
+Run this in Docker, using the provided `docker-compose.yml`. Use the `.env.example` as a guideline for the `.env` file.
+
+The app will not start unless these are set in the `.env` file (or already saved in `data/config.json`):
+- `ENCRYPTION_KEY`, `PASSWORD` and `SECRET_KEY`
+- The mail settings: `RECIPIENT_EMAIL`, `RECIPIENT_NAME`, `SENDER_EMAIL`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_HOST` and `SMTP_PORT`
+- A location (`ADDRESS`, or `LATITUDE` and `LONGITUDE`) or a `TIMEZONE`
+
+Everything else is optional and can be added later in the web UI, which you log into with `PASSWORD`. Settings saved in
+the web UI are stored in `data/config.json` (mounted from `./data` in `docker-compose.yml`) and take precedence over the
+`.env` file on later starts. Once a setting is saved there, you may remove it from `.env`. Passwords and API keys are
+encrypted in that file, and the web UI only ever shows them as `********`; leave that placeholder as-is to keep the
+saved value.
 
 The package tagged `latest` contains the latest stable release, while the package tagged `latest-dev` contains the latest development release, ignoring all stable releases.
 
@@ -38,61 +49,66 @@ See .env.example for an example .env file.
 - SMTP_USERNAME: The username of the sending account on the SMTP server
 - SMTP_PASSWORD: The password of the sending account on the SMTP server
 - SMTP_HOST: The host of the SMTP server (e.g. smtp.gmail.com)
-- SMTP_PORT: The port of the SMTP server (defaults to 465 for SSL) [Currently only 465 is supported]
+- SMTP_PORT: The port of the SMTP server. Use 465 (SSL); this is currently the only supported port.
 - OPENAI_API_KEY: Your OpenAI API key. Used to generate a short summary of the email. Not required when using a local LLM.
 - SUMMARY_PROVIDER: OPENAI or LOCAL. Which LLM generates the summary. LOCAL uses a self-hosted, OpenAI-compatible server such as Ollama. (defaults to OPENAI)
 - LOCAL_LLM_BASE_URL: The OpenAI-compatible base URL of your local LLM server. Only used when SUMMARY_PROVIDER is LOCAL. (defaults to http://localhost:11434/v1, Ollama's default)
 - LOCAL_LLM_MODEL: The model name to use on your local LLM server (e.g. llama3.2). Required when SUMMARY_PROVIDER is LOCAL.
-- ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to True)
-- ENABLE_EMOJIS: True of False. Toggle for if the summary should have emojis interpolated within it. (defaults to False)
+- ENABLE_SUMMARY: True or False. Toggle for if a summary should be generated. (defaults to False)
+- ENABLE_EMOJIS: True or False. Toggle for if the summary should have emojis interpolated within it. (defaults to False)
 - UNIT_SYSTEM: METRIC or IMPERIAL. (defaults to metric)
 - TIME_SYSTEM: 24HR or 12HR. (defaults to 24HR)
 - LATITUDE: The latitude you wish to use for the weather and timezone.
 - LONGITUDE: The longitude you wish to use for the weather and timezone.
-- ADDRESS: The address of which the weather and timezone should be used. (Use quotes)
+- ADDRESS: The address of which the weather and timezone should be used. (Use quotes). Ignored if LATITUDE and LONGITUDE are set.
 - WEATHER: True or False. Enables weather. (defaults to false)
 - TODOIST_API_KEY: Your Todoist API key
 - VIKUNJA_API_KEY: Your Vikunja API key
-  VIKUNJA_BASE_URL: Your Vikunja base url
+- VIKUNJA_BASE_URL: Your Vikunja base url
 - WEBCAL_LINKS: Link(s) for webcal or ics calendars of which the events should appear in the email. Use one string,
-  seperated by commas. Do not use quotes.
-- RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, seperated by commas.
-  Do not use quotes.
+  separated by commas. Do not use quotes. Only events happening today are included.
+- CALDAV_ACCOUNTS: CalDAV accounts (iCloud, Google, Microsoft, or any generic WebDAV server such as Nextcloud) whose
+  events should appear in the email. This is easiest to manage in the web UI, which can list each account's calendars so
+  you can choose which to include. If set through `.env`, it is a JSON array on one line, for example
+  `[{"type": "icloud", "username": "you@icloud.com", "password": "app-specific-password"}]`. `type` is one of `icloud`,
+  `google`, `microsoft` or `webdav`; `webdav` also needs a `url`. For iCloud and Google, use an app-specific password.
+  For Google Workspace and Microsoft 365 accounts that no longer allow passwords, put an OAuth2 access token in
+  `password` and add `"auth_type": "bearer"`.
+- RSS_LINKS: Link(s) for rss feeds of which the entries should appear in the email. Use one string, separated by commas.
+  Do not use quotes. Only entries published in the last 24 hours are included.
 - PUZZLES: True or False. Enables puzzles. (defaults to false)
 - PUZZLES_ANSWERS: True or False. Enables puzzle answers. Overridden by False on PUZZLES. (defaults to false)
 - WOTD: True or False. Enables the Word of the Day. (defaults to false)
 - QOTD: True or False. Enables the Quote of the Day. (defaults to false)
-- HOUR: The hour to send the email. (defaults to the time when the container started)
-- MINUTE: The minute to send the email. (defaults to the time when the container started)
+- HOUR: The hour to send the email, 0-23. (defaults to 6)
+- MINUTE: The minute to send the email, 0-59. (defaults to 0)
 - DISABLE_SCHEDULE: True or False. Disables the automatic scheduled send. Useful when triggering via the API instead. (defaults to False)
-- TIMEZONE: Timezone as a string. (not required if a latitude and longitude or an address are given, but will override
-  that timezone. Ensure that it is spelt correctly.)
+- TIMEZONE: Timezone as a string, e.g. `America/New_York`. Only used when no latitude and longitude or address is given;
+  otherwise the timezone is worked out from the location. Ensure that it is spelt correctly.
 - LOGGING_LEVEL: Level for logging (defaults to INFO). Options: 'DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL'.
 - ENCRYPTION_KEY: Fernet encryption key for passwords and API keys. One way to generate them could be ```python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"```
-- PASSWORD: Web UI password. Must be alphanumerical.
-- SECRET_KEY: Random alphanumerical string. Used for session cookies of the Web UI.
-- API_TOKEN: Secret token that enables the `POST /api/trigger-email` endpoint. When set, email sends can be triggered externally with `Authorization: Bearer <token>` — no web session required. If unset, the endpoint returns 403.
+- PASSWORD: Web UI password. After 5 failed login attempts in 5 minutes, further attempts from that address are blocked until the window passes.
+- SECRET_KEY: Random string. Used to sign the session cookies of the Web UI.
+- API_TOKEN: Secret token that enables the `POST /api/trigger-email` and `POST /api/trigger-email-with-location` endpoints. When set, email sends can be triggered externally with `Authorization: Bearer <token>` — no web session required. If unset, the endpoints return 403.
+  `trigger-email-with-location` takes a JSON body with numeric `latitude` and `longitude` and builds that email (weather, timezone, events) for that location instead of the configured one.
 
-NOTE: You MUST provide either a coordinate pair or an address.
+NOTE: Weather needs either a coordinate pair or an address. Without a location, `TIMEZONE` is used for dates and times.
 
 ## OpenAI Integration
-The OpenAI Integration allows a 2-3 sentence summary of the email near the top. 
+The OpenAI Integration allows a 2-3 sentence summary of the email near the top.
 
-Under the current API pricing (last updated February 18, 2026), this integration costs about \$0.104025 USD per year of operation,
-with very long emails (1250+170 input tokens per day, a maximum of 120 tokens of output per day). The output is limited at 120 
-tokens per day. The model used is GPT-4o mini, which allows for it to cost much less than a larger model. The current pricing 
-is $0.150 / 1M input tokens and \$0.600 / 1M output tokens.
+The summary uses the model named by `OPENAI_MODEL` in `src/generate_summary.py` (currently `gpt-6-luna`). It is not
+configurable through environment variables. Output is limited to 120 tokens per day, and the input is the day's weather,
+tasks and events, so it is typically around 1,400 tokens per day and more for very full days. Only the weather, tasks and
+events are sent to OpenAI; the other sections are not part of the summary.
 
-### Cost Breakdown
-$\text{Total Input Tokens per Year: } 1,420 \text{ tokens/day} \times 365 \text{ days} = 518,300 \text{ tokens}$
+Prices change, so this README does not quote a figure. You can estimate your cost from the
+[OpenAI pricing page](https://openai.com/api/pricing/) using this formula:
 
-$\text{Total Output Tokens per Year: } 120 \text{ tokens/day} \times 365 \text{ days} = 43,800 \text{ tokens}$
+$\text{Cost per year} = 365 \times \left(\frac{\text{input tokens per day}}{1{,}000{,}000} \times P_{in} + \frac{\text{output tokens per day}}{1{,}000{,}000} \times P_{out}\right)$
 
-$\text{Total Input Cost} = \frac{518,300}{1,000,000}\times0.150 = 0.077745 \text{ USD per year}$
-
-$\text{Total Output Cost} = \frac{43,800}{1,000,000}\times0.600 = 0.02628 \text{ USD per year}$
-
-$0.077745+0.02628=0.104025 \text{ USD per year}$
+where $P_{in}$ and $P_{out}$ are the model's prices in USD per 1M input and output tokens. For example, 1,400 input
+tokens and 120 output tokens per day is 511,000 input and 43,800 output tokens per year.
 
 ### Setup Instructions
 To set this up, make an account with OpenAI, or log in with one, and get your API key. Note: The OpenAI API is a different
@@ -127,6 +143,7 @@ summaries than OpenAI. Output is limited to 120 tokens, so "thinking" models may
 - Weather data provided by [Open-Meteo](https://open-meteo.com/)
 - Weather alerts provided by the [NWS API](https://www.weather.gov/documentation/services-web-api) (United States) and [MeteoAlarm](https://feeds.meteoalarm.org/) (Europe)
 - Quotes provided by [ZenQuotes API](https://zenquotes.io/).
+- Word of the Day provided by [Merriam-Webster](https://www.merriam-webster.com/word-of-the-day).
 
 ## Other Notes
 - Versioning follows [semver](https://semver.org).

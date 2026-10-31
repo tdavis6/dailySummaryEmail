@@ -1,9 +1,8 @@
 import logging
-import feedparser
-from bs4 import BeautifulSoup
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG)
+import feedparser
+import requests
+from bs4 import BeautifulSoup
 
 # URL of the Merriam-Webster Word of the Day RSS feed
 rss_feed_url = "https://www.merriam-webster.com/wotd/feed/rss2"
@@ -11,10 +10,15 @@ rss_feed_url = "https://www.merriam-webster.com/wotd/feed/rss2"
 
 def get_word_of_the_day():
     # Parse the RSS feed
-    feed = feedparser.parse(rss_feed_url)
+    # Fetch with requests so there is a timeout (feedparser.parse(url) has none)
+    response = requests.get(rss_feed_url, timeout=10)
+    response.raise_for_status()
+    feed = feedparser.parse(response.content)
     logging.debug(f"Feed parsed. Feed: {feed}")
 
     # Get the first entry from the feed
+    if not feed.entries:
+        raise RuntimeError("Word of the Day feed returned no entries.")
     entry = feed.entries[0]
     logging.debug(f"First entry: {entry}")
 

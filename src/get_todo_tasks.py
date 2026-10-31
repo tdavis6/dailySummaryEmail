@@ -1,8 +1,12 @@
-import logging
 import datetime
-import pytz
+import logging
+import re
+
 from get_todoist_tasks import get_todoist_tasks
 from get_vikunja_tasks import get_vikunja_tasks
+
+# Matches the "Due at 09:00" / "Due at 09:00 AM" metadata that process_tasks emits for timed tasks
+DUE_TIME_PATTERN = re.compile(r"Due at (\d{1,2}:\d{2}(?: [AP]M)?)")
 
 
 def format_time(datetime_obj, time_system):
@@ -183,8 +187,8 @@ def parse_task_sections(tasks_text, plain=False):
 
         if "⚠️ Overdue" in line or "🚨 Deadline passed" in line:
             sections["Overdue"].append(stripped)
-        elif "🕐 Due at" in line:
-            time_part = line.split("🕐 Due at ")[-1].split("&")[0].split("<")[0].strip()
+        elif (due_match := DUE_TIME_PATTERN.search(line)):
+            time_part = due_match.group(1)
             try:
                 if "AM" in time_part or "PM" in time_part:
                     due_time = datetime.datetime.strptime(time_part, "%I:%M %p")

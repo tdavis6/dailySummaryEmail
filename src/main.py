@@ -1,17 +1,19 @@
+import hmac
 import json
 import logging
 import os
 import signal
 import sys
 import threading
+import tempfile
 import time
 import traceback
-from datetime import datetime, timedelta
 from functools import wraps
 
 import pytz
 import waitress
 from apscheduler.executors.pool import ThreadPoolExecutor
+from apscheduler.jobstores.base import JobLookupError
 from apscheduler.schedulers.background import BackgroundScheduler
 from cryptography.fernet import Fernet
 from dotenv import load_dotenv
@@ -62,10 +64,19 @@ def load_config_from_json():
         return config
 
 
+def config_value(config, key, default=None):
+    """Return config[key], falling back to default when it is missing or blank.
+
+    initialize_config() stores "" for every unset key, so a plain dict.get(key, default)
+    would never apply the default.
+    """
+    value = config.get(key)
+    return default if value is None or value == "" else value
+
+
 def get_config_value(key, default=None):
     """Retrieve a specific configuration setting from the JSON file."""
-    config = load_config_from_json()
-    return config.get(key, default)
+    return config_value(load_config_from_json(), key, default)
 
 
 def save_config_to_json(config_data):
@@ -79,8 +90,72 @@ def save_config_to_json(config_data):
     config_data["LONGITUDE"] = encrypt_data(config_data.get("LONGITUDE", ""))
     config_data["ADDRESS"] = encrypt_data(config_data.get("ADDRESS", ""))
     config_data["CALDAV_ACCOUNTS"] = encrypt_data(config_data.get("CALDAV_ACCOUNTS", ""))
-    with open(CONFIG_FILE_PATH, "w") as json_file:
-        json.dump(config_data, json_file, indent=4)
+    # Write to a temp file and swap it in so a crash mid-write can't corrupt config.json
+    config_dir = os.path.dirname(CONFIG_FILE_PATH) or "."
+    fd, tmp_path = tempfile.mkstemp(dir=config_dir, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as json_file:
+            json.dump(config_data, json_file, indent=4)
+        os.replace(tmp_path, CONFIG_FILE_PATH)
+    except Exception:
+        if os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise
+
+
+# Secrets are never sent to the browser. The UI receives MASK for any secret that is set,
+# and sending MASK back on save means "unchanged".
+MASK = "********"
+SECRET_CONFIG_KEYS = ["SMTP_PASSWORD", "OPENAI_API_KEY", "TODOIST_API_KEY", "VIKUNJA_API_KEY"]
+
+
+def _parse_accounts(raw):
+    try:
+        accounts = json.loads(raw) if raw else []
+    except (json.JSONDecodeError, TypeError):
+        return []
+    return [a for a in accounts if isinstance(a, dict)] if isinstance(accounts, list) else []
+
+
+def _account_identity(account):
+    return (str(account.get("type", "")).lower(), account.get("username", ""), account.get("url", ""))
+
+
+def unmask_account(account, stored_accounts):
+    """Restore a masked CalDAV password from the stored account with the same identity."""
+    if account.get("password") != MASK:
+        return account
+    for stored in stored_accounts:
+        if _account_identity(stored) == _account_identity(account):
+            return {**account, "password": stored.get("password", "")}
+    return {**account, "password": ""}
+
+
+def mask_config(config):
+    """Return a copy of `config` that is safe to send to the browser."""
+    masked = dict(config)
+    for key in SECRET_CONFIG_KEYS:
+        if masked.get(key):
+            masked[key] = MASK
+    accounts = _parse_accounts(masked.get("CALDAV_ACCOUNTS"))
+    if accounts:
+        masked["CALDAV_ACCOUNTS"] = json.dumps(
+            [{**a, "password": MASK} if a.get("password") else a for a in accounts]
+        )
+    return masked
+
+
+def unmask_config(incoming, stored):
+    """Replace MASK placeholders in `incoming` with the real values from `stored`."""
+    result = dict(incoming)
+    for key in SECRET_CONFIG_KEYS:
+        if result.get(key) == MASK:
+            result[key] = stored.get(key, "")
+    accounts = _parse_accounts(result.get("CALDAV_ACCOUNTS"))
+    if accounts:
+        stored_accounts = _parse_accounts(stored.get("CALDAV_ACCOUNTS"))
+        result["CALDAV_ACCOUNTS"] = json.dumps([unmask_account(a, stored_accounts) for a in accounts])
+    return result
 
 
 def initialize_config():
@@ -165,6 +240,7 @@ def refresh_configuration_variables():
     address_old = str(ADDRESS).strip() if ADDRESS not in [None, ""] else ""
     hour_old, minute_old = HOUR, MINUTE
     disable_schedule_old = DISABLE_SCHEDULE
+    timezone_old = timezone
 
     config = load_config_from_json()
 
@@ -179,29 +255,29 @@ def refresh_configuration_variables():
     SUMMARY_PROVIDER = config.get("SUMMARY_PROVIDER") or "OPENAI"
     LOCAL_LLM_BASE_URL = config.get("LOCAL_LLM_BASE_URL")
     LOCAL_LLM_MODEL = config.get("LOCAL_LLM_MODEL")
-    ENABLE_SUMMARY = config.get("ENABLE_SUMMARY", "False")
-    ENABLE_EMOJIS = config.get("ENABLE_EMOJIS", "False")
-    UNIT_SYSTEM = config.get("UNIT_SYSTEM", "METRIC")
-    TIME_SYSTEM = config.get("TIME_SYSTEM", "24HR")
+    ENABLE_SUMMARY = config_value(config, "ENABLE_SUMMARY", "False")
+    ENABLE_EMOJIS = config_value(config, "ENABLE_EMOJIS", "False")
+    UNIT_SYSTEM = config_value(config, "UNIT_SYSTEM", "METRIC")
+    TIME_SYSTEM = config_value(config, "TIME_SYSTEM", "24HR")
     LATITUDE = config.get("LATITUDE")
     LONGITUDE = config.get("LONGITUDE")
     ADDRESS = config.get("ADDRESS")
-    WEATHER = config.get("WEATHER", "False")
+    WEATHER = config_value(config, "WEATHER", "False")
     TODOIST_API_KEY = config.get("TODOIST_API_KEY")
     VIKUNJA_API_KEY = config.get("VIKUNJA_API_KEY")
     VIKUNJA_BASE_URL = config.get("VIKUNJA_BASE_URL")
     WEBCAL_LINKS = config.get("WEBCAL_LINKS")
     CALDAV_ACCOUNTS = config.get("CALDAV_ACCOUNTS")
-    RSS_LINKS = config.get("RSS_LINKS", "False")
-    PUZZLES = config.get("PUZZLES", "False")
-    PUZZLES_ANSWERS = config.get("PUZZLES_ANSWERS", "False")
-    WOTD = config.get("WOTD", "False")
-    QOTD = config.get("QOTD", "False")
+    RSS_LINKS = config.get("RSS_LINKS")
+    PUZZLES = config_value(config, "PUZZLES", "False")
+    PUZZLES_ANSWERS = config_value(config, "PUZZLES_ANSWERS", "False")
+    WOTD = config_value(config, "WOTD", "False")
+    QOTD = config_value(config, "QOTD", "False")
     TIMEZONE = config.get("TIMEZONE", None)
     HOUR = config.get("HOUR")
     MINUTE = config.get("MINUTE")
-    LOGGING_LEVEL = config.get("LOGGING_LEVEL", "INFO").upper()
-    DISABLE_SCHEDULE = config.get("DISABLE_SCHEDULE", "False")
+    LOGGING_LEVEL = str(config_value(config, "LOGGING_LEVEL", "INFO")).upper()
+    DISABLE_SCHEDULE = config_value(config, "DISABLE_SCHEDULE", "False")
 
     new_lat = float(LATITUDE) if LATITUDE not in [None, ""] else None
     new_lng = float(LONGITUDE) if LONGITUDE not in [None, ""] else None
@@ -230,29 +306,36 @@ def refresh_configuration_variables():
 
     # Always re-derive timezone from coordinates when available so that a
     # stale TIMEZONE value in config.json never wins over the actual location.
+    # If nothing usable can be derived, keep the previous timezone rather than
+    # leaving the app with none.
     try:
         if LATITUDE and LONGITUDE:
             TIMEZONE = get_timezone(LATITUDE, LONGITUDE)
         elif not TIMEZONE or not TIMEZONE.strip():
             logging.warning("Cannot derive TIMEZONE; missing lat/long.")
             TIMEZONE = None
-        timezone = pytz.timezone(TIMEZONE) if TIMEZONE else None
-        logging.info(f"Timezone validated and set to: {timezone}")
+        if TIMEZONE:
+            timezone = pytz.timezone(TIMEZONE)
+            logging.info(f"Timezone validated and set to: {timezone}")
+        else:
+            logging.warning(f"Keeping previous timezone: {timezone}")
     except Exception as e:
-        logging.critical(f"Error validating TIMEZONE: {e}")
-        timezone = None
+        logging.critical(f"Error validating TIMEZONE: {e}. Keeping previous timezone: {timezone}")
 
     if LOGGING_LEVEL != logging_level_old:
         change_logging_level()
 
     if str(disable_schedule_old) != str(DISABLE_SCHEDULE):
         if DISABLE_SCHEDULE in ["True", "true", True]:
-            if scheduler.get_job("daily_email_job"):
-                scheduler.remove_job("daily_email_job")
+            remove_email_job()
             logging.info("Scheduling disabled.")
         else:
             reschedule_email_job()
-    elif HOUR and MINUTE and (str(hour_old) != str(HOUR) or str(minute_old) != str(MINUTE)):
+    elif (
+        str(hour_old) != str(HOUR)
+        or str(minute_old) != str(MINUTE)
+        or timezone != timezone_old
+    ):
         reschedule_email_job()
 
     logging.info("Configuration refreshed successfully.")
@@ -364,7 +447,7 @@ def change_logging_level():
 def get_weather():
     if WEATHER in ["True", "true", True]:
         weather = get_forecast(
-            LATITUDE, LONGITUDE, country_code, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone
+            LATITUDE, LONGITUDE, country_code, city_state_str, UNIT_SYSTEM, TIME_SYSTEM, timezone, VERSION
         )
         logging.debug("Weather data obtained.")
         logging.debug(f"Weather data: {weather}")
@@ -379,7 +462,7 @@ def get_todo():
         )
         logging.debug("Todo data obtained.")
         return todo_html, todo_plain
-    logging.warning("Todo content is None or empty.")
+    logging.debug("No task provider configured; skipping tasks.")
     return "", ""
 
 
@@ -388,7 +471,7 @@ def get_rss_feed():
         rss = get_rss(RSS_LINKS, timezone, TIME_SYSTEM)
         logging.debug("RSS data obtained.")
         return rss
-    logging.warning("RSS content is None or empty.")
+    logging.debug("No RSS feeds configured; skipping RSS.")
     return ""
 
 
@@ -418,155 +501,105 @@ def get_puzzles_of_the_day():
     return "", ""
 
 
-def prepare_send_email():
-    """Gather all content and send the daily summary email."""
+def _safe_section(name, func, default=""):
+    """Run one content section; on failure log it and return `default` so the rest of the email still sends."""
     try:
-        logging.debug("prepare_send_email called.")
-
-        date_string = get_current_date_in_timezone(timezone)
-        logging.debug("Date string obtained.")
-
-        weather_string = get_weather() or ""
-        logging.debug("Weather string obtained.")
-
-        todo_html_string, todo_plain_string = get_todo()
-        logging.debug("Todo string obtained.")
-
-        calendar_events = get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, CALDAV_ACCOUNTS)
-        logging.debug("Calendar events obtained.")
-
-        rss_string = get_rss_feed() or ""
-        logging.debug("RSS string obtained.")
-
-        wotd_string = get_word_of_the_day() or ""
-        logging.debug("Word of the Day string obtained.")
-
-        quote_string = get_quote_of_the_day() or ""
-        logging.debug("Quote of the Day string obtained.")
-
-        puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
-        logging.debug("Puzzles strings obtained.")
-
-        send_email(
-            VERSION,
-            timezone,
-            RECIPIENT_EMAIL,
-            RECIPIENT_NAME,
-            SENDER_EMAIL,
-            SMTP_USERNAME,
-            SMTP_PASSWORD,
-            SMTP_HOST,
-            SMTP_PORT,
-            OPENAI_API_KEY,
-            ENABLE_SUMMARY,
-            ENABLE_EMOJIS,
-            date_string,
-            weather_string,
-            todo_html_string,
-            todo_plain_string,
-            calendar_events,
-            rss_string,
-            puzzles_string,
-            wotd_string,
-            quote_string,
-            puzzles_ans_string,
-            summary_provider=SUMMARY_PROVIDER,
-            local_llm_base_url=LOCAL_LLM_BASE_URL,
-            local_llm_model=LOCAL_LLM_MODEL,
-        )
-
+        return func() or default
     except Exception as e:
-        logging.critical(f"Error sending email: {e}")
-        logging.critical(traceback.format_exc())
+        logging.error(f"Could not build the '{name}' section: {e}")
+        logging.debug(traceback.format_exc())
+        return default
+
+
+def _compose_and_send(loc_timezone, weather_func):
+    """Gather every section (each isolated from the others' failures) and send the email.
+
+    Raises if the email itself cannot be sent, so callers can report the failure.
+    """
+    date_string = get_current_date_in_timezone(loc_timezone)
+    weather_string = _safe_section("weather", weather_func)
+    todo_html_string, todo_plain_string = _safe_section("tasks", get_todo, ("", ""))
+    calendar_events = _safe_section(
+        "calendar", lambda: get_cal_data(WEBCAL_LINKS, loc_timezone, TIME_SYSTEM, CALDAV_ACCOUNTS)
+    )
+    rss_string = _safe_section("rss", get_rss_feed)
+    wotd_string = _safe_section("word of the day", get_word_of_the_day)
+    quote_string = _safe_section("quote of the day", get_quote_of_the_day)
+    puzzles_string, puzzles_ans_string = _safe_section("puzzles", get_puzzles_of_the_day, ("", ""))
+
+    send_email(
+        VERSION,
+        loc_timezone,
+        RECIPIENT_EMAIL,
+        RECIPIENT_NAME,
+        SENDER_EMAIL,
+        SMTP_USERNAME,
+        SMTP_PASSWORD,
+        SMTP_HOST,
+        SMTP_PORT,
+        OPENAI_API_KEY,
+        ENABLE_SUMMARY,
+        ENABLE_EMOJIS,
+        date_string,
+        weather_string,
+        todo_html_string,
+        todo_plain_string,
+        calendar_events,
+        rss_string,
+        puzzles_string,
+        wotd_string,
+        quote_string,
+        puzzles_ans_string,
+        summary_provider=SUMMARY_PROVIDER,
+        local_llm_base_url=LOCAL_LLM_BASE_URL,
+        local_llm_model=LOCAL_LLM_MODEL,
+    )
+
+
+def prepare_send_email():
+    """Gather all content and send the daily summary email. Raises if the send fails."""
+    logging.debug("prepare_send_email called.")
+    _compose_and_send(timezone, get_weather)
 
 
 def prepare_send_email_with_location(lat, lng):
-    """Gather all content and send the daily summary email using the provided coordinates."""
+    """Gather all content and send the daily summary email using the provided coordinates.
+
+    Raises if the send fails.
+    """
+    logging.debug(f"prepare_send_email_with_location called with lat={lat}, lng={lng}.")
+
+    # Resolve metadata (country code, city/state) from provided coordinates
+    resolved_lat, resolved_lng, resolved_country, resolved_city_state = get_coordinates(
+        f"{lat},{lng}", VERSION
+    )
+    if resolved_lat is None:
+        logging.warning("Reverse-geocode for provided location failed; using raw coordinates.")
+        resolved_lat, resolved_lng = lat, lng
+        resolved_country = "us"
+        resolved_city_state = ""
+
+    # Derive timezone from provided coordinates (fall back to configured timezone)
     try:
-        logging.debug(f"prepare_send_email_with_location called with lat={lat}, lng={lng}.")
-
-        # Resolve metadata (country code, city/state) from provided coordinates
-        resolved_lat, resolved_lng, resolved_country, resolved_city_state = get_coordinates(
-            f"{lat},{lng}", VERSION
-        )
-        if resolved_lat is None:
-            logging.warning("Reverse-geocode for provided location failed; using raw coordinates.")
-            resolved_lat, resolved_lng = lat, lng
-            resolved_country = "us"
-            resolved_city_state = ""
-
-        # Derive timezone from provided coordinates (fall back to configured timezone)
-        try:
-            loc_timezone_str = get_timezone(resolved_lat, resolved_lng)
-            loc_timezone = pytz.timezone(loc_timezone_str) if loc_timezone_str else timezone
-        except Exception as e:
-            logging.warning(f"Could not derive timezone for provided location: {e}. Using configured timezone.")
-            loc_timezone = timezone
-
-        date_string = get_current_date_in_timezone(loc_timezone)
-        logging.debug("Date string obtained.")
-
-        if WEATHER in ["True", "true", True]:
-            weather_string = get_forecast(
-                resolved_lat, resolved_lng, resolved_country, resolved_city_state,
-                UNIT_SYSTEM, TIME_SYSTEM, loc_timezone
-            ) or ""
-        else:
-            weather_string = ""
-        logging.debug("Weather string obtained.")
-
-        todo_html_string, todo_plain_string = get_todo()
-        logging.debug("Todo string obtained.")
-
-        calendar_events = get_cal_data(WEBCAL_LINKS, loc_timezone, TIME_SYSTEM, CALDAV_ACCOUNTS)
-        logging.debug("Calendar events obtained.")
-
-        rss_string = get_rss_feed() or ""
-        logging.debug("RSS string obtained.")
-
-        wotd_string = get_word_of_the_day() or ""
-        logging.debug("Word of the Day string obtained.")
-
-        quote_string = get_quote_of_the_day() or ""
-        logging.debug("Quote of the Day string obtained.")
-
-        puzzles_string, puzzles_ans_string = get_puzzles_of_the_day() or ("", "")
-        logging.debug("Puzzles strings obtained.")
-
-        send_email(
-            VERSION,
-            loc_timezone,
-            RECIPIENT_EMAIL,
-            RECIPIENT_NAME,
-            SENDER_EMAIL,
-            SMTP_USERNAME,
-            SMTP_PASSWORD,
-            SMTP_HOST,
-            SMTP_PORT,
-            OPENAI_API_KEY,
-            ENABLE_SUMMARY,
-            ENABLE_EMOJIS,
-            date_string,
-            weather_string,
-            todo_html_string,
-            todo_plain_string,
-            calendar_events,
-            rss_string,
-            puzzles_string,
-            wotd_string,
-            quote_string,
-            puzzles_ans_string,
-            summary_provider=SUMMARY_PROVIDER,
-            local_llm_base_url=LOCAL_LLM_BASE_URL,
-            local_llm_model=LOCAL_LLM_MODEL,
-        )
-
+        loc_timezone_str = get_timezone(resolved_lat, resolved_lng)
+        loc_timezone = pytz.timezone(loc_timezone_str) if loc_timezone_str else timezone
     except Exception as e:
-        logging.critical(f"Error sending email with location: {e}")
-        logging.critical(traceback.format_exc())
+        logging.warning(f"Could not derive timezone for provided location: {e}. Using configured timezone.")
+        loc_timezone = timezone
+
+    def location_weather():
+        if WEATHER not in ["True", "true", True]:
+            return ""
+        return get_forecast(
+            resolved_lat, resolved_lng, resolved_country, resolved_city_state,
+            UNIT_SYSTEM, TIME_SYSTEM, loc_timezone, VERSION
+        )
+
+    _compose_and_send(loc_timezone, location_weather)
 
 
 def scheduled_email_job():
+    # The cron trigger repeats on its own, so the job must not be removed and re-added here.
     if not scheduler.running:
         logging.error("Scheduler is not running. Aborting job execution.")
         return
@@ -574,12 +607,18 @@ def scheduled_email_job():
     try:
         prepare_send_email()
         logging.info("scheduled_email_job executed successfully.")
-        reschedule_email_job()
-    except RuntimeError as e:
-        logging.error(f"RuntimeError in scheduled_email_job: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error in scheduled_email_job: {e}")
+        logging.error(f"scheduled_email_job failed: {e}")
         logging.error(traceback.format_exc())
+
+
+def remove_email_job():
+    """Remove the daily job if it exists. Returns True if a job was removed."""
+    try:
+        scheduler.remove_job("daily_email_job")
+        return True
+    except JobLookupError:
+        return False
 
 
 def reschedule_email_job():
@@ -587,38 +626,20 @@ def reschedule_email_job():
         logging.info("Scheduling is disabled. Skipping reschedule.")
         return
     try:
-        scheduler.remove_job("daily_email_job")
-        if HOUR and MINUTE:
-            scheduler.add_job(
-                scheduled_email_job, "cron", hour=int(HOUR), minute=int(MINUTE), id="daily_email_job"
-            )
-            logging.info(f"Daily email job rescheduled at {HOUR}:{MINUTE}.")
+        remove_email_job()
+        # Compare against None/"" explicitly: a minute of 0 (int or "0") is valid.
+        if HOUR not in (None, "") and MINUTE not in (None, ""):
+            hour, minute = int(HOUR), int(MINUTE)
         else:
-            scheduler.add_job(
-                scheduled_email_job, "cron", hour=6, minute=0, id="daily_email_job"
-            )
-            logging.warning("HOUR or MINUTE not properly configured, using 06:00.")
+            hour, minute = 6, 0
+            logging.warning("HOUR or MINUTE not configured, using 06:00.")
+        scheduler.add_job(
+            scheduled_email_job, "cron", hour=hour, minute=minute, id="daily_email_job",
+            timezone=timezone,
+        )
+        logging.info(f"Daily email job scheduled at {hour:02d}:{minute:02d}.")
     except Exception as e:
         logging.error(f"Failed to reschedule daily email job: {e}")
-
-
-def format_wait_time(seconds):
-    """Convert seconds into a human-readable hours/minutes/seconds string."""
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    return f"{int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"
-
-
-def get_seconds_until_next_schedule(hour, minute, timezone):
-    """Calculate the seconds until the next scheduled time."""
-    if isinstance(timezone, str):
-        timezone = pytz.timezone(timezone)
-    now = datetime.now(timezone).astimezone(timezone)
-    next_schedule = now.replace(hour=int(hour), minute=int(minute), second=0, microsecond=0)
-    if now >= next_schedule:
-        next_schedule += timedelta(days=1)
-    logging.debug(f"Current time: {now}, Next scheduled time: {next_schedule}")
-    return (next_schedule - now).seconds
 
 
 # ---------------------------------------------------------------------------
@@ -632,6 +653,14 @@ app = Flask(__name__, template_folder="../templates", static_folder="../static")
 CORS(app)
 
 load_dotenv()
+
+# Fail fast (before the web thread starts) if the session secret is missing.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY not found. Please set the SECRET_KEY environment variable.")
+app.secret_key = SECRET_KEY
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["SESSION_COOKIE_HTTPONLY"] = True
 
 with open("./version.json", "r") as f:
     VERSION = json.load(f)["version"]
@@ -686,7 +715,7 @@ VIKUNJA_API_KEY = get_config_value("VIKUNJA_API_KEY")
 VIKUNJA_BASE_URL = get_config_value("VIKUNJA_BASE_URL")
 WEBCAL_LINKS = get_config_value("WEBCAL_LINKS")
 CALDAV_ACCOUNTS = get_config_value("CALDAV_ACCOUNTS")
-RSS_LINKS = get_config_value("RSS_LINKS", "False")
+RSS_LINKS = get_config_value("RSS_LINKS")
 PUZZLES = get_config_value("PUZZLES", "False")
 PUZZLES_ANSWERS = get_config_value("PUZZLES_ANSWERS", "False")
 WOTD = get_config_value("WOTD", "False")
@@ -710,6 +739,10 @@ logging.info(f"Logging level set to: {LOGGING_LEVEL}")
 
 # Ensure timezone is correctly loaded
 try:
+    if not (LATITUDE and LONGITUDE) and ADDRESS and ADDRESS.strip():
+        # Only an address was configured: geocode it so the timezone can be derived from the result
+        if refresh_location_cache() is None:
+            logging.warning("Could not geocode ADDRESS; falling back to TIMEZONE if one is configured.")
     if LATITUDE and LONGITUDE:
         timezone_str = get_timezone(LATITUDE, LONGITUDE)
         timezone = pytz.timezone(timezone_str)
@@ -731,16 +764,42 @@ scheduler = BackgroundScheduler(executors=executors, timezone=timezone)
 # Routes
 # ---------------------------------------------------------------------------
 
+LOGIN_MAX_FAILURES = 5
+LOGIN_WINDOW_SECONDS = 300
+_login_failures = {}  # client address -> timestamps of recent failed attempts
+_login_lock = threading.Lock()
+
+
+def _recent_login_failures(client):
+    """Return the client's failures inside the window. Caller must hold _login_lock."""
+    cutoff = time.monotonic() - LOGIN_WINDOW_SECONDS
+    recent = [t for t in _login_failures.get(client, []) if t > cutoff]
+    if recent:
+        _login_failures[client] = recent
+    else:
+        _login_failures.pop(client, None)
+    return recent
+
+
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("logged_in"):
         return redirect(url_for("home"))
     if request.method == "POST":
-        password = request.form.get("password")
+        client = request.remote_addr or "unknown"
+        with _login_lock:
+            if len(_recent_login_failures(client)) >= LOGIN_MAX_FAILURES:
+                logging.warning(f"Login throttled for {client}.")
+                return render_template("login.html", error="Too many failed attempts. Try again later."), 429
+        password = request.form.get("password") or ""
         if check_password_hash(hashed_password, password):
+            with _login_lock:
+                _login_failures.pop(client, None)
             session["logged_in"] = True
             return redirect(url_for("home"))
-        return render_template("login.html", error="Invalid password")
+        with _login_lock:
+            _login_failures.setdefault(client, []).append(time.monotonic())
+        return render_template("login.html", error="Invalid password"), 401
     return render_template("login.html")
 
 
@@ -756,18 +815,14 @@ def login_required(f):
 @app.route("/")
 @login_required
 def home():
-    current_config = load_config_from_json()
-    return render_template(
-        "index.html", logged_in=session.get("logged_in"), app_version=VERSION, config=current_config
-    )
+    return render_template("index.html", logged_in=session.get("logged_in"), app_version=VERSION)
 
 
 @app.route("/api/config", methods=["GET"])
 @login_required
 def api_get_config():
     try:
-        config = load_config_from_json()
-        return jsonify(config)
+        return jsonify(mask_config(load_config_from_json()))
     except Exception as e:
         logging.error(f"Error retrieving configuration: {e}")
         return jsonify({"error": "Failed to load configuration"}), 500
@@ -777,7 +832,7 @@ def api_get_config():
 @login_required
 def api_save_config():
     try:
-        data = request.json
+        data = unmask_config(request.json or {}, load_config_from_json())
         save_config_to_json(data)
         refresh_configuration_variables()
         return jsonify({"message": "Configuration saved successfully!"})
@@ -804,8 +859,7 @@ def schedule_email():
         data = request.json
         hour = data.get("hour", 0)
         minute = data.get("minute", 0)
-        if scheduler.get_job("daily_email_job"):
-            scheduler.remove_job("daily_email_job")
+        remove_email_job()
         scheduler.add_job(
             scheduled_email_job,
             "cron",
@@ -823,8 +877,9 @@ def schedule_email():
 @login_required
 def interrupt_schedule():
     try:
-        scheduler.remove_job("daily_email_job")
-        return jsonify({"message": "Email schedule interrupted!"}), 200
+        if remove_email_job():
+            return jsonify({"message": "Email schedule interrupted!"}), 200
+        return jsonify({"message": "No email schedule is currently active."}), 200
     except Exception as e:
         return jsonify({"message": f"Failed to interrupt schedule: {e}"}), 500
 
@@ -836,6 +891,8 @@ def api_caldav_calendar_list():
     account = (request.json or {}).get("account", {})
     if not account:
         return jsonify({"error": "No account provided."}), 400
+    stored_accounts = _parse_accounts(load_config_from_json().get("CALDAV_ACCOUNTS"))
+    account = unmask_account(account, stored_accounts)
     try:
         calendars = list_caldav_calendars(account)
         return jsonify({"calendars": calendars})
@@ -853,7 +910,7 @@ def api_key_required(f):
         if not auth_header.startswith("Bearer "):
             return jsonify({"error": "Missing or malformed Authorization header. Expected: Bearer <token>"}), 401
         token = auth_header.split(" ", 1)[1]
-        if token != API_TOKEN:
+        if not hmac.compare_digest(token.encode(), API_TOKEN.encode()):
             return jsonify({"error": "Invalid API token."}), 401
         return f(*args, **kwargs)
     return decorated_function
@@ -926,10 +983,6 @@ if __name__ == "__main__":
 
     def run_flask():
         global _waitress_server
-        SECRET_KEY = os.getenv("SECRET_KEY")
-        if not SECRET_KEY:
-            raise RuntimeError("SECRET_KEY not found. Please set the SECRET_KEY environment variable.")
-        app.secret_key = SECRET_KEY
         from waitress.server import create_server
         _waitress_server = create_server(app, host="0.0.0.0", port=8080)
         logging.info("Waitress server started on port 8080.")
@@ -968,8 +1021,7 @@ if __name__ == "__main__":
 
     save_config_to_json(config_data)
 
-    if scheduler.get_job("daily_email_job"):
-        scheduler.remove_job("daily_email_job")
+    remove_email_job()
 
     DISABLE_SCHEDULE = config_data.get("DISABLE_SCHEDULE", "False")
     if DISABLE_SCHEDULE in ["True", "true", True]:

@@ -90,31 +90,3 @@ document.addEventListener('DOMContentLoaded', (event) => {
             });
     });
 });
-
-document.addEventListener("DOMContentLoaded", () => {
-    const loginForm = document.querySelector("form");
-
-    loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault(); // Prevent default form submission
-
-        const password = document.querySelector("#password").value;
-        const response = await fetch("/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ password }),
-        });
-
-        const result = await response.json();
-
-        if (response.ok) {
-            window.location.href = "/"; // Redirect to home on success
-        } else {
-            const errorMessage = document.createElement("p");
-            errorMessage.classList.add("error");
-            errorMessage.textContent = result.error || "Login failed.";
-            document.querySelector(".container").appendChild(errorMessage);
-        }
-    });
-});

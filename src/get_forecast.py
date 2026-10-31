@@ -55,7 +55,7 @@ _METEOALARM_SLUGS = {
 _HTTP_TIMEOUT_SECONDS = 10
 _HTTP_INITIAL_RETRY_DELAY_SECONDS = 10
 _HTTP_MAX_RETRY_DELAY_SECONDS = 60
-_HTTP_MAX_ELAPSED_SECONDS = 300  # give up after 5 minutes total
+_HTTP_MAX_ELAPSED_SECONDS = 120  # give up after 2 minutes total
 _TRANSIENT_HTTP_STATUS_CODES = {408, 429, 500, 502, 503, 504}
 
 
@@ -398,8 +398,9 @@ def get_forecast(
         response = _get_with_timeout_retry(weather_url)
         forecast_data = response.json()
     except requests.RequestException as e:
+        # Return nothing rather than an error message so it doesn't end up in the email or summary prompt
         logging.error(f"Failed to retrieve forecast data: {e}")
-        return f"Failed to retrieve forecast data: {e}"
+        return ""
 
     # ------------------------------------------------------------------
     # Fetch AQI data
@@ -431,7 +432,7 @@ def get_forecast(
         index = dates.index(today)
     except ValueError:
         logging.error(f"Today's date {today} not found in forecast data.")
-        return f"Today's date {today} not found in forecast data."
+        return ""
 
     min_temp = daily_data["temperature_2m_min"][index]
     max_temp = daily_data["temperature_2m_max"][index]
@@ -590,8 +591,8 @@ def get_forecast(
         else:
             outfit_suggestions += "It's windy and cold — a windproof, insulated outer layer is essential. "
 
-    rain_codes = {51, 53, 55, 56, 57, 61, 63, 65, 80, 81, 82, 95, 96, 99}
-    snow_codes = {66, 67, 71, 73, 75, 77, 85, 86}
+    rain_codes = {51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82, 95, 96, 99}
+    snow_codes = {71, 73, 75, 77, 85, 86}
     if weathercode in rain_codes:
         outfit_suggestions += "Rain is expected. Carry an umbrella or wear waterproof clothing. "
     elif weathercode in snow_codes:

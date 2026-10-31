@@ -81,16 +81,6 @@ def send_email(
         text = ""  # Initialize the plain text content
         html_text = ""  # Initialize the HTML content
 
-        # Apply emojis to each section
-        #weather_string = add_emojis(weather_string)
-        #todo_string = add_emojis(todo_string)
-        #cal_string = add_emojis(cal_string)
-        #rss_string = add_emojis(rss_string)
-        #puzzles_string = add_emojis(puzzles_string)
-        #wotd_string = add_emojis(wotd_string)
-        #quote_string = add_emojis(quote_string)
-        #puzzles_ans_string = add_emojis(puzzles_ans_string)
-
         # Append sections
         if weather_string: text, html_text = append_section(text, html_text, weather_string, "weather")
 
@@ -106,16 +96,17 @@ def send_email(
 
         # Get summary
         use_local_llm = str(summary_provider).upper() == "LOCAL"
-        if (use_local_llm or openai_api_key is not None) and enable_summary in ["True", "true", True]:
+        if (use_local_llm or openai_api_key) and enable_summary in ["True", "true", True]:
             summary = generate_summary(text, openai_api_key, summary_provider, local_llm_base_url, local_llm_model)
-            if summary is None: summary = "Error generating summary."
-            summary = add_emojis(summary) if enable_emjois in ["True", "true", True] else summary
-            logging.debug(f"enable_emojis is set to {enable_emjois}")
-            logging.debug("Summary obtained")
-
-            text = (summary + text) if summary else text
-            summary_html = f"<div class='section summary'>{convert_section(summary)}</div>" if summary else ""
-            html_text = summary_html + html_text
+            if summary:
+                if enable_emjois in ["True", "true", True]:
+                    summary = add_emojis(summary)
+                logging.debug("Summary obtained")
+                text = summary + text
+                html_text = f"<div class='section summary'>{convert_section(summary)}</div>" + html_text
+            else:
+                # Failure is already logged; don't put an error message in the recipient's email
+                logging.warning("Summary generation failed; sending the email without a summary.")
 
         if rss_string: text, html_text = append_section(text, html_text, rss_string, "rss")
         if puzzles_string: text, html_text = append_section(text, html_text, puzzles_string, "puzzles")
@@ -130,7 +121,6 @@ def send_email(
             logging.warning("date_string is None, empty, or whitespace.")
             text = "# Date Not Available\n\n" + text
 
-        html_content = markdown.markdown(html_text, extensions=["markdown.extensions.fenced_code"])
         html_content = html_text if html_text else "<div class='section'>No additional content available</div>"
         current_datetime = datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S %z")
         logging.debug(f"Current datetime: {current_datetime}")
@@ -298,17 +288,3 @@ def send_email(
         logging.critical(f"Error sending email: {e}")
         logging.critical(traceback.format_exc())
         raise
-
-
-# deprecated code. used for animating the whole content block up on open. removed for compatibility.
-"""                @keyframes slideUp {{
-                    from {{
-                        transform: translateY(50%);
-                        opacity: 0;
-                    }}
-                    to {{
-                        transform: translateY(0);
-                        opacity: 1;
-                    }}
-                }}
-"""

@@ -1,4 +1,7 @@
+import logging
 from datetime import datetime, date, timedelta
+from urllib.parse import quote_plus
+
 from get_ical_events import get_ics_events
 from get_caldav_events import get_caldav_events
 
@@ -43,11 +46,20 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, caldav_accounts=None):
 
     if WEBCAL_LINKS:
         for link in WEBCAL_LINKS.split(","):
-            ics_events = get_ics_events(url=link, timezone=timezone)
-            events.extend(ics_events)
+            link = link.strip()
+            if not link:
+                continue
+            # One bad calendar must not take down the others
+            try:
+                events.extend(get_ics_events(url=link, timezone=timezone))
+            except Exception as e:
+                logging.error(f"Skipping calendar {link[:60]}: {e}")
 
     if caldav_accounts:
-        events.extend(get_caldav_events(caldav_accounts, timezone))
+        try:
+            events.extend(get_caldav_events(caldav_accounts, timezone))
+        except Exception as e:
+            logging.error(f"Skipping CalDAV accounts: {e}")
 
     # Unify all event start/end to aware datetimes in the same timezone
     for event in events:
@@ -106,7 +118,7 @@ def get_cal_data(WEBCAL_LINKS, timezone, TIME_SYSTEM, caldav_accounts=None):
         # Append location if available
         location = event.get("location")
         if location:
-            maps_link = f"https://maps.apple.com/?q={location.replace(' ', '+')}"
+            maps_link = f"https://maps.apple.com/?q={quote_plus(str(location))}"
             text += f"\n\n[Directions]({maps_link})"
 
     return text

@@ -1,13 +1,13 @@
 import requests
 
+
 def get_qotd():
-    url = "https://zenquotes.io/api/today"
-    text = ""
+    response = requests.get("https://zenquotes.io/api/today", timeout=10)
+    response.raise_for_status()
+    quote = response.json()[0]
 
-    response = requests.get(url).json()
-
-    text += "\n\n# Quote of the Day"
-    text += f"\n{response[0]['q']}"
-    text += f"\n- *{response[0]['a']}*"
+    text = "\n\n# Quote of the Day"
+    text += f"\n{quote['q']}"
+    text += f"\n- *{quote['a']}*"
 
     return text

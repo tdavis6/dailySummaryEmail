@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   dailySummaryEmail:
     image: git.tylerdavis.net/tyler/dailysummaryemail:latest # Or :latest-dev for alpha/beta/RC releases

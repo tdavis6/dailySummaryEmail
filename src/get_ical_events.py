@@ -1,15 +1,17 @@
-import requests
-from icalendar import Calendar
-from datetime import datetime, date, timedelta
-from dateutil.rrule import rrulestr
 import logging
+from datetime import datetime, date, timedelta
 
-# Configuration for retries and logging
+import pytz
+import requests
+from dateutil.rrule import rrulestr
+from icalendar import Calendar
+from icalendar.prop import vRecur
+
+# Configuration for retries
 MAX_RETRIES = 3
 TIMEOUT = 5  # seconds
-MAX_FUTURE_YEARS = 5
-
-logging.basicConfig(level=logging.DEBUG)  # Set to DEBUG for detailed log
+# Recurring events are only expanded this far past today; only today's events are ever used.
+EXPANSION_LOOKAHEAD_DAYS = 3
 
 
 def fetch_icalendar(url):
@@ -31,6 +33,79 @@ def fetch_icalendar(url):
                 return None
 
 
+def _as_date(value):
+    return value.date() if isinstance(value, datetime) else value
+
+
+def _normalize_until(rrule, start):
+    """Return the RRULE as a string whose UNTIL is compatible with DTSTART.
+
+    dateutil requires UNTIL to be UTC when DTSTART is timezone-aware and naive when
+    DTSTART is naive/a date. Calendars in the wild often violate this.
+    """
+    rule = dict(rrule)
+    until_values = rule.get("UNTIL")
+    if until_values:
+        start_is_aware = isinstance(start, datetime) and start.tzinfo is not None
+        fixed = []
+        for until in until_values:
+            if start_is_aware:
+                if not isinstance(until, datetime):
+                    until = datetime.combine(until, datetime.max.time().replace(microsecond=0))
+                if until.tzinfo is None:
+                    until = start.tzinfo.localize(until) if hasattr(start.tzinfo, "localize") else until.replace(tzinfo=start.tzinfo)
+                until = until.astimezone(pytz.utc)
+            else:
+                if isinstance(until, datetime):
+                    if until.tzinfo is not None:
+                        until = until.astimezone(pytz.utc).replace(tzinfo=None)
+                else:
+                    until = datetime.combine(until, datetime.max.time().replace(microsecond=0))
+            fixed.append(until)
+        rule["UNTIL"] = fixed
+    return vRecur(rule).to_ical().decode()
+
+
+def _collect_exdates(component):
+    exdates = component.get("exdate", [])
+    if not isinstance(exdates, list):
+        exdates = [exdates]
+    result = []
+    for ex in exdates:
+        result.extend(d.dt for d in ex.dts)
+    return result
+
+
+def _is_excluded(occurrence, exdates):
+    """True if `occurrence` matches an EXDATE (which may be a date or a datetime)."""
+    for ex in exdates:
+        if isinstance(ex, datetime) and isinstance(occurrence, datetime):
+            try:
+                if ex == occurrence:
+                    return True
+            except TypeError:
+                # naive vs aware: fall through to a wall-clock comparison
+                if ex.replace(tzinfo=None) == occurrence.replace(tzinfo=None):
+                    return True
+        elif _as_date(ex) == _as_date(occurrence):
+            return True
+    return False
+
+
+def _expand_recurrence(component, start, duration):
+    """Yield (start, end) for each occurrence of a recurring VEVENT, up to the lookahead cutoff."""
+    rule = rrulestr(_normalize_until(component.get("rrule"), start), dtstart=start)
+    exdates = _collect_exdates(component)
+    cutoff = date.today() + timedelta(days=EXPANSION_LOOKAHEAD_DAYS)
+
+    for dt in rule:
+        if _as_date(dt) > cutoff:
+            break  # occurrences are ascending, so nothing later can matter
+        if _is_excluded(dt, exdates):
+            continue
+        yield dt, dt + duration
+
+
 def parse_icalendar(ical_string):
     if not ical_string:
         return []
@@ -40,85 +115,66 @@ def parse_icalendar(ical_string):
     exceptions = {}
 
     for component in calendar.walk():
-        if component.name == "VEVENT":
-            start = component.get("dtstart")
-            end = component.get("dtend")
-            summary = component.get("summary")
-            location = component.get("location")
-            uid = component.get("uid")
-            recurrence_id = component.get("recurrence-id")
+        if component.name != "VEVENT":
+            continue
 
-            if recurrence_id:
-                logging.debug("Processing recurring exception")
-                ex_start = recurrence_id.dt
-                exceptions[(uid, ex_start)] = component
-                continue
+        start = component.get("dtstart")
+        if not start:
+            continue
+        summary = component.get("summary")
+        location = component.get("location")
+        uid = component.get("uid")
+        recurrence_id = component.get("recurrence-id")
 
-            if start and end:
-                description = component.get("description")
-                rrule = component.get("rrule")
-                start = start.dt
-                end = end.dt
-                event_duration = end - start
+        if recurrence_id:
+            logging.debug("Processing recurring exception")
+            exceptions[(uid, recurrence_id.dt)] = component
+            continue
 
-                if rrule:
-                    rule = rrulestr(rrule.to_ical().decode(), dtstart=start)
-                    exdates = component.get("exdate", [])
-                    exdate_list = []
+        description = component.get("description")
+        start = start.dt
 
-                    if exdates:
-                        if not isinstance(exdates, list):
-                            exdates = [exdates]
+        end = component.get("dtend")
+        if end:
+            end = end.dt
+        elif component.get("duration"):
+            end = start + component.get("duration").dt
+        else:
+            # RFC 5545: a date-only event lasts one day; a timed event with no end is instantaneous
+            end = start + timedelta(days=1) if not isinstance(start, datetime) else start
+        event_duration = end - start
 
-                        for ex in exdates:
-                            exdate_list.extend(d.dt for d in ex.dts)
+        base = {
+            "summary": str(summary) if summary else "No Title",
+            "location": location,
+            "uid": uid,
+            "description": str(description) if description else None,
+        }
 
-                    for dt in rule:
-                        if dt.year >= datetime.now().year + MAX_FUTURE_YEARS:
-                            break  # Skip dates that are too far in the future
+        if component.get("rrule"):
+            try:
+                for occ_start, occ_end in _expand_recurrence(component, start, event_duration):
+                    events.append({**base, "start": occ_start, "end": occ_end})
+            except Exception as e:
+                logging.warning(f"Skipping recurring event '{base['summary']}' (uid={uid}): {e}")
+        else:
+            events.append({**base, "start": start, "end": end})
 
-                        if dt in exdate_list:
-                            continue  # Skip dates specified in EXDATE
-
-                        try:
-                            event = {
-                                "start": dt,
-                                "end": dt + event_duration,
-                                "summary": str(summary) if summary else "No Title",
-                                "location": location,
-                                "uid": uid,
-                                "description": str(description) if description else None,
-                                "description": str(description) if description else None,
-                            }
-                            logging.debug(f"Adding recurring event: {event}")
-                            events.append(event)
-                        except Exception as e:
-                            logging.critical(f"Error creating event: {e}")
-                else:
-                    event = {
-                        "start": start,
-                        "end": end,
-                        "summary": str(summary) if summary else "No Title",
-                        "location": location,
-                        "uid": uid,
-                        "description": str(description) if description else None,
-                    }
-                    events.append(event)
-
-    # Process exceptions to recurring events
+    # Apply modified instances of recurring events
     for (uid, ex_start), ex_component in exceptions.items():
         for event in events:
             if event["uid"] == uid and event["start"] == ex_start:
-                event["start"] = ex_component.get("dtstart").dt
-                event["end"] = ex_component.get("dtend").dt
-                event["summary"] = (
-                    str(ex_component.get("summary"))
-                    if ex_component.get("summary")
-                    else "No Title"
-                )
-            if location:
-                apple_maps_link = f"https://maps.apple.com/?q={location}"
-                event["apple_maps_link"] = apple_maps_link
+                new_start = ex_component.get("dtstart").dt
+                new_end = ex_component.get("dtend")
+                new_end = new_end.dt if new_end else new_start + (event["end"] - event["start"])
+                event["start"] = new_start
+                event["end"] = new_end
+                if ex_component.get("summary"):
+                    event["summary"] = str(ex_component.get("summary"))
+                if ex_component.get("location"):
+                    event["location"] = ex_component.get("location")
+                if ex_component.get("description"):
+                    event["description"] = str(ex_component.get("description"))
 
     return events
 
@@ -153,11 +209,6 @@ def is_event_today(event_start, event_end, timezone):
         raise
 
 
-def is_all_day_event(event):
-    logging.debug("Checking for all-day event")
-    start = event["start"]
-    end = event["end"]
-
 def convert_all_day_event(event, timezone):
     try:
         if isinstance(event["start"], date) and not isinstance(event["start"], datetime):
@@ -168,13 +219,6 @@ def convert_all_day_event(event, timezone):
         logging.critical(f"Error in convert_all_day_event: {e}")
         raise
     return event
-    end = event["end"]
-    return (
-            isinstance(start, date)
-            and not isinstance(start, datetime)
-            and isinstance(end, date)
-            and not isinstance(end, datetime)
-    )
 
 
 def get_ics_events(url, timezone):

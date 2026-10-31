@@ -7,7 +7,7 @@ def get_vikunja_tasks(VIKUNJA_API_KEY, VIKUNJA_BASE_URL):
         "Content-Type": "application/json",
     }
     try:
-        response = requests.get(f"{VIKUNJA_BASE_URL}/api/v1/tasks/all", headers=headers)
+        response = requests.get(f"{VIKUNJA_BASE_URL}/api/v1/tasks/all", headers=headers, timeout=15)
         response.raise_for_status()
         vikunja_data = response.json()
 

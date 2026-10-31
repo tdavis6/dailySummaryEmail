@@ -52,7 +52,7 @@ jobs:
 
           if [[ "$BRANCH" == "dev" ]]; then
             git fetch origin stable --depth=1
-            STABLE=$(git show origin/stable:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
+            STABLE_VERSION=$(git show origin/stable:version.json 2>/dev/null | jq -r '.version' 2>/dev/null || true)
 
             if [[ -n "$STABLE_VERSION" && "$VERSION" == "$STABLE_VERSION" ]]; then
               SHOULD_RELEASE=false

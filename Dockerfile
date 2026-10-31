@@ -28,4 +28,7 @@ COPY version.json ./version.json
 
 EXPOSE 8080
 
+HEALTHCHECK --interval=60s --timeout=5s --start-period=60s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/login', timeout=4)" || exit 1
+
 CMD ["python", "src/main.py"]

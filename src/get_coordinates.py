@@ -4,16 +4,21 @@ import time
 from geopy.exc import GeocoderUnavailable, GeocoderTimedOut
 from geopy.geocoders import Nominatim
 
+MAX_ATTEMPTS = 4
+RETRY_DELAY_SECONDS = 15
+
 
 def get_coordinates(address, version="unknown"):
     """
     Geocode an address to coordinates using Nominatim.
     Returns (latitude, longitude, country_code, city_state_str) or (None, None, None, None) on failure.
-    Only calls Nominatim once per invocation; retries only on transient unavailability.
+    Retries a bounded number of times on transient unavailability, then gives up.
     """
+    geolocator = Nominatim(user_agent=f"dailySummaryEmail/{version}")
+    attempt = 0
     while True:
+        attempt += 1
         try:
-            geolocator = Nominatim(user_agent=f"dailySummaryEmail/{version}")
             location = geolocator.geocode(address, addressdetails=True, language="en")
 
             if location is None:
@@ -51,9 +56,16 @@ def get_coordinates(address, version="unknown"):
             return latitude, longitude, country_code, city_state_str
 
         except (GeocoderUnavailable, GeocoderTimedOut):
-            logging.warning("Geocoder unavailable or timed out. Retrying in 30 seconds...")
-            time.sleep(30)
-            continue
+            if attempt >= MAX_ATTEMPTS:
+                logging.error(
+                    f"Geocoder still unavailable after {MAX_ATTEMPTS} attempts; giving up on '{address}'."
+                )
+                return None, None, None, None
+            logging.warning(
+                f"Geocoder unavailable or timed out (attempt {attempt}/{MAX_ATTEMPTS}). "
+                f"Retrying in {RETRY_DELAY_SECONDS} seconds..."
+            )
+            time.sleep(RETRY_DELAY_SECONDS)
 
         except Exception as e:
             logging.error(f"Unexpected error while geocoding address '{address}': {e}")
